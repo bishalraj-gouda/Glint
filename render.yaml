@@ -1,0 +1,17 @@
+services:
+  - type: web
+    name: glint-placement-portal
+    runtime: python
+    region: oregon
+    plan: free
+    buildCommand: "bash build.sh"
+    startCommand: "gunicorn wsgi:app --bind 0.0.0.0:$PORT --workers 2 --threads 4 --timeout 120"
+    envVars:
+      - key: FLASK_ENV
+        value: production
+      - key: SECRET_KEY
+        generateValue: true
+      - key: AI_DEMO_MODE
+        value: "true"
+      - key: GEMINI_API_KEY
+        sync: false
