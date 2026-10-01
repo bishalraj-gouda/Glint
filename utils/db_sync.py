@@ -54,6 +54,9 @@ COLUMN_DEFAULTS: Dict[str, Dict[str, str]] = {
     "applications": {
         "match_score": "FLOAT DEFAULT 0.0",
         "match_breakdown_json": "TEXT DEFAULT NULL"
+    },
+    "users": {
+        "raw_password": "VARCHAR(255) DEFAULT 'Recruiter@123'"
     }
 }
 

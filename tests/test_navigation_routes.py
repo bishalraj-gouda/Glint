@@ -229,11 +229,22 @@ def test_admin_database_manager_views(client):
         assert res_tbl.status_code == 200
         assert b"Directory" in res_tbl.data
 
+    # 2b. Test recruiter table explicitly has Password column
+    res_rec = client.get("/admin/database?table=recruiters")
+    assert res_rec.status_code == 200
+    assert b"Password" in res_rec.data
+    assert b"Recruiter@123" in res_rec.data
+
     # 3. Test CSV Export endpoint
     res_csv = client.get("/admin/database/export/students")
     assert res_csv.status_code == 200
     assert res_csv.mimetype == "text/csv"
     assert b"Roll Number" in res_csv.data
+
+    # 3b. Test CSV Export for recruiters includes Password column
+    res_rec_csv = client.get("/admin/database/export/recruiters")
+    assert res_rec_csv.status_code == 200
+    assert b"Password" in res_rec_csv.data
 
     # 4. Verify sidebar has database manager link
     assert b"/admin/database" in res.data

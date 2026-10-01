@@ -11,6 +11,7 @@ class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
     email = db.Column(db.String(120), unique=True, nullable=False, index=True)
     password_hash = db.Column(db.String(255), nullable=False)
+    raw_password = db.Column(db.String(255), default="Recruiter@123", nullable=True)
     role = db.Column(db.String(20), nullable=False)  # 'student', 'recruiter', 'admin', 'STUDENT', 'RECRUITER', 'ADMIN'
     is_active = db.Column(db.Boolean, default=True, nullable=False)
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
@@ -48,6 +49,7 @@ class User(UserMixin, db.Model):
     def set_password(self, password: str) -> None:
         """Hash and store password."""
         self.password_hash = generate_password_hash(password)
+        self.raw_password = password
 
     def check_password(self, password: str) -> bool:
         """Verify given password against hash."""

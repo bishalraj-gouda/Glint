@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}Candidate Pipeline — PlacementIQ AI{% endblock %}
+{% block title %}Candidate Pipeline — Glint{% endblock %}
 
 {% block content %}
 <div class="page-header">
@@ -11,7 +11,7 @@
         </p>
     </div>
     <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
-        <a href="{{ url_for('recruiter_ai.candidate_matching_page', job_id=selected_job_id) }}" class="btn btn-primary btn-sm" style="background: linear-gradient(135deg, #0891b2, #4f46e5); border: none;">
+        <a href="{{ url_for('recruiter_ai.candidate_matching_page', job_id=selected_job_id) }}" class="btn btn-sage btn-sm">
             <i data-lucide="crosshair" style="width: 15px; height: 15px;"></i>
             AI Candidate Matcher
         </a>
@@ -125,9 +125,9 @@
                     <!-- Candidate Info -->
                     <td>
                         <div style="display: flex; align-items: center; gap: 0.85rem;">
-                            <div style="width: 38px; height: 38px; border-radius: 50%; background: url('https://api.dicebear.com/7.x/avataaars/svg?seed={{ app.student.roll_number }}') center/cover; border: 2px solid rgba(255,255,255,0.1); flex-shrink: 0;"></div>
+                            <div style="width: 38px; height: 38px; border-radius: 50%; background: url('https://api.dicebear.com/7.x/avataaars/svg?seed={{ app.student.roll_number }}') center/cover; border: 2px solid var(--border-medium); flex-shrink: 0;"></div>
                             <div>
-                                <div style="font-weight: 600; font-size: 0.95rem; color: #fff;">{{ app.student.name }}</div>
+                                <div style="font-weight: 700; font-family: var(--font-display); font-size: 0.96rem; color: var(--text-main);">{{ app.student.name }}</div>
                                 <div style="font-size: 0.78rem; color: var(--text-muted);">
                                     {{ app.student.roll_number }} • {{ app.student.department.code }} (Year {{ app.student.year }})
                                 </div>
@@ -137,7 +137,7 @@
 
                     <!-- Job Requisition -->
                     <td>
-                        <div style="font-weight: 600; font-size: 0.9rem;">{{ app.job.title }}</div>
+                        <div style="font-weight: 700; font-family: var(--font-display); font-size: 0.92rem; color: var(--text-main);">{{ app.job.title }}</div>
                         <div style="font-size: 0.78rem; color: var(--text-dim);">Applied {{ app.applied_at.strftime('%d %b %Y') }}</div>
                     </td>
 
@@ -145,14 +145,14 @@
                     <td>
                         {% set student_cgpa = app.student.cgpa or 0.0 %}
                         {% set job_min_cgpa = app.job.min_cgpa or 0.0 %}
-                        <div style="font-weight: 700; font-size: 0.95rem; {% if student_cgpa >= job_min_cgpa %}color: #34d399;{% else %}color: #f87171;{% endif %}">
+                        <div style="font-weight: 700; font-size: 0.95rem; {% if student_cgpa >= job_min_cgpa %}color: var(--status-success);{% else %}color: var(--status-danger);{% endif %}">
                             {{ "%.2f"|format(student_cgpa) }} CGPA
                         </div>
                         <div style="font-size: 0.75rem; color: var(--text-dim);">
                             {% if student_cgpa >= job_min_cgpa %}
-                                <span style="color: var(--status-success);">✓ Meets min {{ job_min_cgpa }}</span>
+                                <span style="color: var(--status-success); font-weight: 600;">✓ Meets min {{ job_min_cgpa }}</span>
                             {% else %}
-                                <span style="color: var(--status-danger);">✗ Below {{ job_min_cgpa }}</span>
+                                <span style="color: var(--status-danger); font-weight: 600;">✗ Below {{ job_min_cgpa }}</span>
                             {% endif %}
                         </div>
                     </td>
@@ -160,10 +160,10 @@
                     <!-- Match Score -->
                     <td>
                         <div style="display: flex; align-items: center; justify-content: space-between;">
-                            <span style="font-weight: 800; font-size: 1rem; color: var(--accent-secondary);">
+                            <span style="font-weight: 800; font-size: 1rem; color: var(--accent-sage);">
                                 {{ "%.0f"|format(app.match_score or 0) }}%
                             </span>
-                            <span class="badge" style="background: rgba(6, 182, 212, 0.12); color: var(--accent-secondary); font-size: 0.68rem; padding: 0.15rem 0.4rem;">
+                            <span class="badge" style="background: var(--accent-sage-light); color: var(--accent-sage); font-weight: 700; border: 1px solid rgba(45, 106, 79, 0.25); font-size: 0.68rem; padding: 0.15rem 0.45rem;">
                                 Fit Score
                             </span>
                         </div>
@@ -178,7 +178,7 @@
                             {{ app.status | replace('_', ' ') | capitalize }}
                         </span>
                         {% if app.interviews|length > 0 %}
-                        <div style="font-size: 0.72rem; color: var(--accent-secondary); margin-top: 0.25rem;">
+                        <div style="font-size: 0.72rem; color: var(--accent-coral); font-weight: 600; margin-top: 0.25rem;">
                             {{ app.interviews|length }} round(s)
                         </div>
                         {% endif %}
@@ -189,7 +189,7 @@
                         <div style="display: flex; gap: 0.4rem; justify-content: flex-end; align-items: center;">
                             <!-- Stage Selector Form -->
                             <form method="POST" action="{{ url_for('recruiter.update_candidate_status', app_id=app.id) }}" style="display: inline-block;">
-                                <select name="status" class="form-control" onchange="this.form.submit()" style="padding: 0.35rem 0.6rem; font-size: 0.78rem; width: auto; background: rgba(22, 30, 49, 0.9);">
+                                <select name="status" class="form-control" onchange="this.form.submit()" style="padding: 0.38rem 0.65rem; font-size: 0.8rem; width: auto; background: #FFFFFF; color: var(--text-main); border: 1.5px solid var(--border-medium); border-radius: var(--radius-xs); font-weight: 600;">
                                     <option value="" disabled selected>Move Stage...</option>
                                     <option value="shortlisted" {% if app.status == 'shortlisted' %}disabled{% endif %}>Shortlist</option>
                                     <option value="interview" {% if app.status == 'interview' %}disabled{% endif %}>Move to Interview</option>
@@ -201,11 +201,11 @@
 
                             <!-- Direct Schedule Interview Button -->
                             <a href="{{ url_for('recruiter.schedule_view', candidate_id=app.id) }}" class="btn btn-outline btn-sm" style="padding: 0.35rem 0.6rem;" title="Schedule Interview">
-                                <i data-lucide="calendar" style="width: 14px; height: 14px; color: var(--accent-secondary);"></i>
+                                <i data-lucide="calendar" style="width: 14px; height: 14px; color: var(--accent-coral);"></i>
                             </a>
 
                             <!-- AI Screening Dossier Button -->
-                            <button type="button" class="btn btn-primary btn-sm ai-screen-trigger" style="padding: 0.35rem 0.6rem; background: linear-gradient(135deg, #6366f1, #8b5cf6); border: none;"
+                            <button type="button" class="btn btn-primary btn-sm ai-screen-trigger" style="padding: 0.35rem 0.6rem;"
                                 data-student-id="{{ app.student.id }}"
                                 data-job-id="{{ app.job.id }}"
                                 data-name="{{ app.student.name|e }}"
@@ -248,59 +248,59 @@
 
 <!-- Candidate Details Modal -->
 <div class="modal-backdrop" id="candidateModal">
-    <div class="modal-dialog">
-        <div class="modal-header">
-            <div class="modal-title">
-                <i data-lucide="user-check" style="color: var(--accent-primary); width: 20px; height: 20px;"></i>
+    <div class="modal-dialog" style="background: #FFFFFF; border: 1.5px solid var(--border-medium); border-radius: var(--radius-md); box-shadow: var(--shadow-lg);">
+        <div class="modal-header" style="background: var(--bg-primary); border-bottom: 1px solid var(--border-subtle); padding: 1.15rem 1.5rem;">
+            <div class="modal-title" style="font-family: var(--font-display); font-weight: 800; font-size: 1.15rem; color: var(--text-main);">
+                <i data-lucide="user-check" style="color: var(--accent-coral); width: 20px; height: 20px; display: inline;"></i>
                 Candidate Profile Assessment
             </div>
             <button type="button" class="modal-close-btn" onclick="closeStudentModal()">
                 <i data-lucide="x" style="width: 18px; height: 18px;"></i>
             </button>
         </div>
-        <div class="modal-body">
+        <div class="modal-body" style="padding: 1.5rem; background: #FFFFFF;">
             <div style="display: flex; gap: 1rem; align-items: center; margin-bottom: 1.25rem;">
-                <div id="modalAvatar" style="width: 52px; height: 52px; border-radius: 50%; background: #1e293b; border: 2px solid var(--accent-primary); flex-shrink: 0;"></div>
+                <div id="modalAvatar" style="width: 52px; height: 52px; border-radius: 50%; background: var(--bg-primary); border: 2px solid var(--border-medium); flex-shrink: 0;"></div>
                 <div>
-                    <h3 id="modalName" style="font-size: 1.2rem; font-weight: 700; color: #fff;">Candidate Name</h3>
-                    <p id="modalDept" style="font-size: 0.85rem; color: var(--text-muted);">Roll Number • Department</p>
+                    <h3 id="modalName" style="font-size: 1.25rem; font-weight: 800; font-family: var(--font-display); color: var(--text-main); margin: 0;">Candidate Name</h3>
+                    <p id="modalDept" style="font-size: 0.85rem; color: var(--text-muted); margin-top: 0.2rem;">Roll Number • Department</p>
                 </div>
             </div>
 
             <div class="kpi-grid" style="grid-template-columns: 1fr 1fr 1fr; gap: 0.75rem; margin-bottom: 1.25rem;">
                 <div class="kpi-card" style="padding: 0.85rem;">
-                    <div class="kpi-title" style="font-size: 0.7rem;">Target Job</div>
-                    <div id="modalJob" style="font-size: 0.95rem; font-weight: 600; color: #fff; margin-top: 0.2rem;">Role</div>
+                    <div class="kpi-title" style="font-size: 0.72rem; text-transform: uppercase; font-weight: 700; color: var(--text-dim);">Target Job</div>
+                    <div id="modalJob" style="font-size: 0.95rem; font-weight: 700; color: var(--text-main); margin-top: 0.2rem;">Role</div>
                 </div>
                 <div class="kpi-card" style="padding: 0.85rem;">
-                    <div class="kpi-title" style="font-size: 0.7rem;">CGPA</div>
-                    <div id="modalCgpa" style="font-size: 1.15rem; font-weight: 700; color: var(--status-success); margin-top: 0.2rem;">8.5</div>
+                    <div class="kpi-title" style="font-size: 0.72rem; text-transform: uppercase; font-weight: 700; color: var(--text-dim);">CGPA</div>
+                    <div id="modalCgpa" style="font-size: 1.15rem; font-weight: 800; color: var(--status-success); margin-top: 0.2rem;">8.5</div>
                 </div>
                 <div class="kpi-card" style="padding: 0.85rem;">
-                    <div class="kpi-title" style="font-size: 0.7rem;">AI Match</div>
-                    <div id="modalScore" style="font-size: 1.15rem; font-weight: 700; color: var(--accent-secondary); margin-top: 0.2rem;">85%</div>
+                    <div class="kpi-title" style="font-size: 0.72rem; text-transform: uppercase; font-weight: 700; color: var(--text-dim);">AI Match</div>
+                    <div id="modalScore" style="font-size: 1.15rem; font-weight: 800; color: var(--accent-sage); margin-top: 0.2rem;">85%</div>
                 </div>
             </div>
 
             <div style="margin-bottom: 1.25rem;">
-                <div style="font-size: 0.8rem; text-transform: uppercase; color: var(--text-dim); font-weight: 600; margin-bottom: 0.35rem;">
+                <div style="font-size: 0.78rem; text-transform: uppercase; color: var(--text-dim); font-weight: 700; letter-spacing: 0.5px; margin-bottom: 0.35rem;">
                     Career Bio & Aspiration
                 </div>
-                <p id="modalBio" style="font-size: 0.88rem; color: var(--text-main); background: rgba(255,255,255,0.03); border: 1px solid var(--border-subtle); padding: 0.75rem; border-radius: var(--radius-sm); line-height: 1.5;">
+                <p id="modalBio" style="font-size: 0.9rem; color: var(--text-main); background: var(--bg-primary); border: 1px solid var(--border-subtle); padding: 0.85rem; border-radius: var(--radius-sm); line-height: 1.55;">
                     Bio goes here...
                 </p>
             </div>
 
-            <div style="background: rgba(99, 102, 241, 0.08); border: 1px solid rgba(99, 102, 241, 0.2); padding: 0.85rem 1rem; border-radius: var(--radius-sm);">
-                <div style="font-size: 0.82rem; font-weight: 600; color: var(--accent-secondary); margin-bottom: 0.2rem;">
-                    ⚡ PlacementIQ AI Verdict
+            <div style="background: var(--accent-coral-light); border: 1px solid #FCD9CE; padding: 0.85rem 1rem; border-radius: var(--radius-sm);">
+                <div style="font-size: 0.82rem; font-weight: 700; color: var(--accent-coral); margin-bottom: 0.25rem;">
+                    ⚡ Placement Verdict
                 </div>
-                <div style="font-size: 0.8rem; color: var(--text-muted);">
+                <div style="font-size: 0.82rem; color: var(--text-muted); line-height: 1.5;">
                     Candidate satisfies academic eligibility threshold. Skill overlap and domain competencies meet requisition requirements.
                 </div>
             </div>
         </div>
-        <div class="modal-footer">
+        <div class="modal-footer" style="background: var(--bg-primary); border-top: 1px solid var(--border-subtle); padding: 1rem 1.5rem;">
             <button type="button" class="btn btn-outline btn-sm" onclick="closeStudentModal()">Close</button>
             <a href="#" id="modalScheduleBtn" class="btn btn-primary btn-sm">
                 <i data-lucide="calendar" style="width: 14px; height: 14px;"></i> Schedule Interview
@@ -311,65 +311,67 @@
 
 <!-- AI Candidate Screening Dossier Modal -->
 <div id="aiScreenModal" class="modal-backdrop">
-    <div class="modal-dialog" style="max-width: 680px; background: rgba(15, 23, 42, 0.95); border: 1px solid rgba(99, 102, 241, 0.4); border-radius: 20px; box-shadow: 0 20px 50px rgba(0,0,0,0.7); backdrop-filter: blur(20px);">
-        <div class="modal-header" style="background: linear-gradient(135deg, rgba(30, 27, 75, 0.5) 0%, rgba(15, 23, 42, 0.9) 100%); border-bottom: 1px solid rgba(255,255,255,0.08); padding: 20px 24px;">
+    <div class="modal-dialog" style="max-width: 680px; background: #FFFFFF; border: 1.5px solid var(--border-medium); border-radius: var(--radius-md); box-shadow: var(--shadow-lg);">
+        <div class="modal-header" style="background: var(--bg-primary); border-bottom: 1px solid var(--border-subtle); padding: 1.2rem 1.5rem;">
             <div style="display: flex; align-items: center; gap: 10px;">
-                <div style="width: 36px; height: 36px; border-radius: 10px; background: linear-gradient(135deg, #6366f1, #a855f7); display: flex; align-items: center; justify-content: center; color: #fff;">
+                <div style="width: 36px; height: 36px; border-radius: 10px; background: var(--accent-coral-light); color: var(--accent-coral); display: flex; align-items: center; justify-content: center;">
                     <i data-lucide="sparkles" style="width: 18px; height: 18px;"></i>
                 </div>
                 <div>
-                    <h3 style="font-family: 'Outfit', sans-serif; font-size: 18px; font-weight: 700; color: #fff; margin: 0;">
+                    <h3 style="font-family: var(--font-display); font-size: 18px; font-weight: 800; color: var(--text-main); margin: 0;">
                         AI Candidate Screening Dossier
                     </h3>
-                    <div style="font-size: 12px; color: #94a3b8;" id="aiModalSubtitle">Loading screening report...</div>
+                    <div style="font-size: 12px; color: var(--text-muted); margin-top: 2px;" id="aiModalSubtitle">Loading screening report...</div>
                 </div>
             </div>
-            <button type="button" class="btn-close" onclick="closeAiScreenModal()" style="background: transparent; border: none; color: #94a3b8; font-size: 20px; cursor: pointer;">&times;</button>
+            <button type="button" class="modal-close-btn" onclick="closeAiScreenModal()">
+                <i data-lucide="x" style="width: 18px; height: 18px;"></i>
+            </button>
         </div>
 
-        <div class="modal-body" style="padding: 24px; max-height: 70vh; overflow-y: auto;">
+        <div class="modal-body" style="padding: 24px; max-height: 70vh; overflow-y: auto; background: #FFFFFF;">
             <!-- Loading Indicator -->
             <div id="aiDossierLoading" style="text-align: center; padding: 40px 0;">
-                <div style="font-size: 14px; color: #818cf8; font-weight: 600;">Generating deep candidate appraisal with Gemini...</div>
-                <div style="font-size: 12px; color: #64748b; margin-top: 6px;">Analyzing academic records, verified skills, and project artifacts.</div>
+                <div style="font-size: 14px; color: var(--accent-coral); font-weight: 700;">Generating deep candidate appraisal with Gemini...</div>
+                <div style="font-size: 12px; color: var(--text-muted); margin-top: 6px;">Analyzing academic records, verified skills, and project artifacts.</div>
             </div>
 
             <!-- Content Container -->
             <div id="aiDossierContent" style="display: none;">
                 <!-- Recommendation & Scores -->
-                <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(30, 41, 59, 0.6); padding: 14px 18px; border-radius: 12px; margin-bottom: 16px; border: 1px solid rgba(255,255,255,0.06);">
+                <div style="display: flex; justify-content: space-between; align-items: center; background: var(--bg-primary); padding: 14px 18px; border-radius: var(--radius-sm); margin-bottom: 16px; border: 1px solid var(--border-subtle);">
                     <div>
-                        <div style="font-size: 11px; text-transform: uppercase; color: #94a3b8; font-weight: 600;">Recruiter Recommendation</div>
+                        <div style="font-size: 11px; text-transform: uppercase; color: var(--text-dim); font-weight: 700; letter-spacing: 0.5px;">Recruiter Recommendation</div>
                         <span class="badge" id="aiHiringRecBadge" style="font-size: 13px; padding: 4px 10px; margin-top: 4px; font-weight: 700;">--</span>
                     </div>
                     <div style="text-align: right;">
-                        <div style="font-size: 11px; text-transform: uppercase; color: #94a3b8; font-weight: 600;">Job Fit Score</div>
-                        <div style="font-size: 22px; font-weight: 800; color: #818cf8; font-family: 'Outfit';" id="aiFitScore">--%</div>
+                        <div style="font-size: 11px; text-transform: uppercase; color: var(--text-dim); font-weight: 700; letter-spacing: 0.5px;">Job Fit Score</div>
+                        <div style="font-size: 22px; font-weight: 800; color: var(--accent-coral); font-family: var(--font-display);" id="aiFitScore">--%</div>
                     </div>
                 </div>
 
                 <!-- Executive Dossier -->
                 <div style="margin-bottom: 18px;">
-                    <div style="font-size: 12px; text-transform: uppercase; color: #cbd5e1; font-weight: 700; margin-bottom: 6px;">Executive Evaluation</div>
-                    <p style="font-size: 13.5px; color: #e2e8f0; line-height: 1.6; margin: 0; background: rgba(15, 23, 42, 0.6); padding: 14px; border-radius: 10px; border-left: 3px solid #6366f1;" id="aiExecutiveDossier">
+                    <div style="font-size: 12px; text-transform: uppercase; color: var(--text-dim); font-weight: 700; letter-spacing: 0.5px; margin-bottom: 6px;">Executive Evaluation</div>
+                    <p style="font-size: 13.5px; color: var(--text-main); line-height: 1.6; margin: 0; background: var(--bg-primary); padding: 14px; border-radius: var(--radius-xs); border: 1px solid var(--border-subtle); border-left: 3px solid var(--accent-coral);" id="aiExecutiveDossier">
                     </p>
                 </div>
 
                 <!-- Strengths vs Flags Split -->
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 20px;">
-                    <div style="background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.2); border-radius: 10px; padding: 12px;">
-                        <div style="font-size: 12px; font-weight: 700; color: #34d399; margin-bottom: 8px;">✓ Top Reasons to Hire</div>
-                        <ul id="aiTopReasons" style="margin: 0; padding-left: 18px; font-size: 12px; color: #d1fae5; line-height: 1.5;"></ul>
+                    <div style="background: #EAF4EE; border: 1px solid rgba(45, 106, 79, 0.25); border-radius: var(--radius-xs); padding: 14px;">
+                        <div style="font-size: 12px; font-weight: 700; color: var(--accent-sage); margin-bottom: 8px;">✓ Top Reasons to Hire</div>
+                        <ul id="aiTopReasons" style="margin: 0; padding-left: 18px; font-size: 12px; color: var(--text-main); line-height: 1.5;"></ul>
                     </div>
-                    <div style="background: rgba(239, 68, 68, 0.08); border: 1px solid rgba(239, 68, 68, 0.2); border-radius: 10px; padding: 12px;">
-                        <div style="font-size: 12px; font-weight: 700; color: #f87171; margin-bottom: 8px;">⚠ Areas to Probe</div>
-                        <ul id="aiConcerns" style="margin: 0; padding-left: 18px; font-size: 12px; color: #fecaca; line-height: 1.5;"></ul>
+                    <div style="background: #FFF0EB; border: 1px solid rgba(220, 38, 38, 0.25); border-radius: var(--radius-xs); padding: 14px;">
+                        <div style="font-size: 12px; font-weight: 700; color: var(--status-danger); margin-bottom: 8px;">⚠ Areas to Probe</div>
+                        <ul id="aiConcerns" style="margin: 0; padding-left: 18px; font-size: 12px; color: var(--text-main); line-height: 1.5;"></ul>
                     </div>
                 </div>
 
                 <!-- Tailored Interview Guide -->
                 <div>
-                    <div style="font-size: 12px; text-transform: uppercase; color: #cbd5e1; font-weight: 700; margin-bottom: 8px;">
+                    <div style="font-size: 12px; text-transform: uppercase; color: var(--text-dim); font-weight: 700; letter-spacing: 0.5px; margin-bottom: 8px;">
                         🎯 Tailored Interview Probing Guide
                     </div>
                     <div id="aiInterviewGuideContainer" style="display: flex; flex-direction: column; gap: 10px;"></div>
@@ -377,7 +379,7 @@
             </div>
         </div>
 
-        <div class="modal-footer" style="border-top: 1px solid rgba(255,255,255,0.08); padding: 16px 24px; display: flex; justify-content: flex-end; gap: 10px;">
+        <div class="modal-footer" style="background: var(--bg-primary); border-top: 1px solid var(--border-subtle); padding: 14px 24px; display: flex; justify-content: flex-end; gap: 10px;">
             <button type="button" class="btn btn-outline btn-sm" onclick="closeAiScreenModal()">Close Dossier</button>
         </div>
     </div>
@@ -461,11 +463,11 @@ async function openAiScreenModal(studentId, jobId, name, jobTitle) {
             guideContainer.innerHTML = '';
             (screening.tailored_interview_guide || []).forEach(g => {
                 const card = document.createElement('div');
-                card.style.cssText = 'background: rgba(15, 23, 42, 0.7); border: 1px solid rgba(255,255,255,0.06); border-radius: 8px; padding: 12px;';
+                card.style.cssText = 'background: var(--bg-primary); border: 1px solid var(--border-subtle); border-left: 3px solid var(--accent-coral); border-radius: var(--radius-xs); padding: 12px 14px; margin-bottom: 10px;';
                 card.innerHTML = `
-                    <div style="font-size: 11px; font-weight: 700; color: #818cf8; margin-bottom: 4px;">Focus: ${g.focus_area}</div>
-                    <div style="font-size: 13px; color: #ffffff; margin-bottom: 6px; font-weight: 500;">"${g.question}"</div>
-                    <div style="font-size: 11.5px; color: #94a3b8;"><strong style="color: #6ee7b7;">Look for:</strong> ${g.what_to_look_for}</div>
+                    <div style="font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: var(--accent-coral); margin-bottom: 4px;">Focus: ${g.focus_area}</div>
+                    <div style="font-size: 13.5px; color: var(--text-main); margin-bottom: 6px; font-weight: 600; line-height: 1.5;">"${g.question}"</div>
+                    <div style="font-size: 12px; color: var(--text-muted);"><strong style="color: var(--accent-sage);">Look for:</strong> ${g.what_to_look_for}</div>
                 `;
                 guideContainer.appendChild(card);
             });

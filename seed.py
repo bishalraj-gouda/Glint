@@ -104,6 +104,24 @@ def seed(override_url: str = None):
                 avatar_url="https://api.dicebear.com/7.x/avataaars/svg?seed=DEMO-2026"
             )
             db.session.add(student_profile)
+            db.session.flush()
+
+            # Attach demo skills so the Check Fit modal and AI features work
+            from models.skill import Skill, StudentSkill
+            demo_skills = [
+                ("Python", "advanced"), ("JavaScript", "advanced"), ("React.js", "advanced"),
+                ("SQL", "advanced"), ("Docker", "intermediate"), ("REST APIs", "advanced"),
+                ("Git & GitHub", "advanced"),
+            ]
+            for sk_name, level in demo_skills:
+                skill = Skill.query.filter(Skill.name.ilike(sk_name)).first()
+                if skill:
+                    db.session.add(StudentSkill(
+                        student_id=student_profile.id,
+                        skill_id=skill.id,
+                        proficiency_level=level,
+                        verified=False
+                    ))
             db.session.commit()
             print("  [+] Created demo student account: student@demo.com")
         else:

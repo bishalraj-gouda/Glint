@@ -4,150 +4,255 @@
 
 {% block extra_css %}
 <style>
+    /* Career Profile Light Theme Layout */
+    .profile-hero {
+        background: #FFFDFC;
+        border: 1px solid var(--border-subtle);
+        border-radius: var(--radius-lg);
+        padding: 1.5rem 1.75rem;
+        margin-bottom: 1.5rem;
+        box-shadow: var(--shadow-sm);
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        flex-wrap: wrap;
+        gap: 1rem;
+    }
+
     .profile-grid {
         display: grid;
         grid-template-columns: 340px 1fr;
-        gap: 24px;
+        gap: 1.5rem;
+        align-items: start;
     }
+
     @media (max-width: 992px) {
         .profile-grid {
             grid-template-columns: 1fr;
         }
     }
+
     .profile-card {
-        background: rgba(15, 23, 42, 0.75);
-        border: 1px solid rgba(255, 255, 255, 0.08);
-        border-radius: 18px;
-        padding: 24px;
-        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
-    }
-    .form-group {
-        margin-bottom: 18px;
-    }
-    .form-label {
-        display: block;
-        font-size: 13px;
-        font-weight: 600;
-        color: #cbd5e1;
-        margin-bottom: 6px;
-    }
-    .form-control-custom {
-        width: 100%;
-        background: rgba(30, 41, 59, 0.6);
-        border: 1px solid rgba(255, 255, 255, 0.12);
-        border-radius: 10px;
-        color: #ffffff;
-        font-size: 14px;
-        padding: 10px 14px;
-        box-sizing: border-box;
+        background: #FFFFFF;
+        border: 1px solid var(--border-subtle);
+        border-radius: var(--radius-lg);
+        padding: 1.5rem;
+        box-shadow: var(--shadow-sm);
         transition: all 0.2s ease;
     }
+
+    .form-group {
+        margin-bottom: 1.15rem;
+    }
+
+    .form-label {
+        display: block;
+        font-size: 0.84rem;
+        font-weight: 700;
+        color: var(--text-main);
+        margin-bottom: 0.4rem;
+    }
+
+    .form-control-custom {
+        width: 100%;
+        background: #FAF7F2;
+        border: 1px solid var(--border-subtle);
+        border-radius: var(--radius-sm);
+        color: var(--text-main);
+        font-size: 0.9rem;
+        padding: 0.65rem 0.9rem;
+        box-sizing: border-box;
+        transition: all 0.18s ease;
+        font-family: inherit;
+    }
+
     .form-control-custom:focus {
         outline: none;
-        border-color: #6366f1;
-        box-shadow: 0 0 12px rgba(99, 102, 241, 0.3);
-        background: rgba(30, 41, 59, 0.9);
+        background: #FFFFFF;
+        border-color: var(--accent-coral);
+        box-shadow: 0 0 0 3px rgba(231, 111, 81, 0.15);
     }
+
+    .form-control-custom[disabled] {
+        background: #F3EFEA;
+        color: var(--text-muted);
+        border-color: var(--border-subtle);
+        cursor: not-allowed;
+    }
+
     .github-stat-box {
-        background: rgba(30, 41, 59, 0.5);
-        border: 1px solid rgba(255, 255, 255, 0.08);
-        border-radius: 12px;
-        padding: 14px;
+        background: #FAF7F2;
+        border: 1px solid var(--border-subtle);
+        border-radius: var(--radius-md);
+        padding: 0.85rem 0.5rem;
         text-align: center;
+        transition: all 0.15s ease;
     }
+
+    .github-stat-box:hover {
+        background: #F4EFE6;
+    }
+
     .github-stat-val {
-        font-family: 'Outfit', sans-serif;
-        font-size: 22px;
+        font-family: var(--font-display);
+        font-size: 1.45rem;
         font-weight: 800;
-        color: #38bdf8;
+        color: var(--text-main);
+        line-height: 1.2;
     }
+
     .github-stat-lbl {
-        font-size: 11px;
+        font-size: 0.72rem;
         text-transform: uppercase;
-        color: #94a3b8;
-        font-weight: 600;
+        letter-spacing: 0.5px;
+        color: var(--text-dim);
+        font-weight: 700;
         margin-top: 2px;
     }
+
     .repo-card {
-        background: rgba(15, 23, 42, 0.6);
-        border: 1px solid rgba(255, 255, 255, 0.08);
-        border-radius: 12px;
-        padding: 14px 16px;
-        margin-bottom: 10px;
-        transition: border-color 0.2s;
+        background: #FFFFFF;
+        border: 1px solid var(--border-subtle);
+        border-radius: var(--radius-md);
+        padding: 0.85rem 1rem;
+        margin-bottom: 0.65rem;
+        transition: all 0.18s ease;
     }
+
     .repo-card:hover {
-        border-color: rgba(99, 102, 241, 0.4);
+        border-color: var(--accent-coral);
+        box-shadow: var(--shadow-sm);
+        transform: translateY(-1px);
+    }
+
+    .social-link-item {
+        display: flex;
+        align-items: center;
+        gap: 0.55rem;
+        padding: 0.5rem 0.75rem;
+        border-radius: var(--radius-sm);
+        background: #FAF7F2;
+        border: 1px solid var(--border-subtle);
+        color: var(--text-main);
+        text-decoration: none;
+        font-size: 0.84rem;
+        font-weight: 600;
+        transition: all 0.15s ease;
+    }
+
+    .social-link-item:hover {
+        background: #F2ECE1;
+        border-color: var(--border-medium);
+        color: var(--accent-coral);
+    }
+
+    .skill-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.45rem;
+        background: #FAF7F2;
+        border: 1px solid var(--border-subtle);
+        border-radius: var(--radius-sm);
+        padding: 0.4rem 0.75rem;
+        font-size: 0.84rem;
+        color: var(--text-main);
+        transition: all 0.15s ease;
+    }
+
+    .skill-chip:hover {
+        border-color: var(--border-medium);
+        background: #F4EFE6;
     }
 </style>
 {% endblock %}
 
 {% block content %}
 <div class="profile-page-wrapper">
-    <!-- Header -->
-    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 24px; flex-wrap: wrap; gap: 16px;">
+    <!-- Hero / Page Header -->
+    <div class="profile-hero">
         <div>
-            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 6px;">
-                <span class="badge" style="background: rgba(99, 102, 241, 0.2); color: #818cf8; border: 1px solid rgba(99, 102, 241, 0.4);">
-                    <i data-lucide="user-check" style="width: 13px; height: 13px; vertical-align: middle;"></i> Candidate Dossier
-                </span>
-                <span class="badge badge-shortlisted">Readiness: {{ student.readiness_score }}%</span>
+            <div style="display: inline-flex; align-items: center; gap: 0.45rem; background: #FFF0EB; border: 1px solid #FCD9CE; padding: 0.25rem 0.85rem; border-radius: 9999px; font-size: 0.78rem; font-weight: 700; color: var(--accent-coral); margin-bottom: 0.45rem;">
+                <i data-lucide="user-check" style="width: 13px; height: 13px;"></i>
+                Candidate Dossier
             </div>
-            <h1 style="font-family: 'Outfit', sans-serif; font-size: 30px; font-weight: 800; color: #ffffff; margin: 0;">
-                Profile & External Portfolio Integration
-            </h1>
-            <p style="color: #94a3b8; font-size: 14px; margin-top: 6px;">
-                Manage recruiter handles, GitHub code activity, and target career preferences.
+            <h1 class="page-title" style="margin-bottom: 0.35rem; font-size: 1.75rem;">Career Profile & Portfolio</h1>
+            <p class="page-description" style="margin-bottom: 0; max-width: 650px;">
+                Manage public handles, GitHub project telemetry, technical skills, and campus placement target preferences.
             </p>
+        </div>
+        <div style="display: flex; gap: 0.65rem; align-items: center; flex-wrap: wrap;">
+            <span class="badge badge-shortlisted" style="font-size: 0.85rem; padding: 0.4rem 0.95rem;">
+                Readiness: {{ student.readiness_score }}%
+            </span>
+            <a href="{{ url_for('student.jobs_view') }}" class="btn btn-outline btn-sm btn-pill">
+                <i data-lucide="briefcase" style="width: 14px; height: 14px; color: var(--accent-coral);"></i>
+                Active Campus Drives
+            </a>
         </div>
     </div>
 
     <!-- Main Grid -->
     <div class="profile-grid">
         <!-- Left Column: Student Identity & Summary -->
-        <div>
-            <div class="profile-card" style="text-align: center; margin-bottom: 20px;">
-                <div style="position: relative; width: 90px; height: 90px; margin: 0 auto 16px;">
-                    <img src="{{ student.avatar_url or 'https://api.dicebear.com/7.x/avataaars/svg?seed=' + student.roll_number }}" alt="{{ student.name }}" style="width: 100%; height: 100%; border-radius: 50%; border: 3px solid #6366f1; background: #1e293b;">
+        <div style="display: flex; flex-direction: column; gap: 1.25rem;">
+            <!-- Profile Overview Card -->
+            <div class="profile-card" style="text-align: center; border-top: 4px solid var(--accent-coral);">
+                <div style="position: relative; width: 88px; height: 88px; margin: 0 auto 1rem;">
+                    <img src="{{ student.avatar_url or 'https://api.dicebear.com/7.x/avataaars/svg?seed=' + student.roll_number }}" 
+                         alt="{{ student.name }}" 
+                         style="width: 100%; height: 100%; border-radius: 50%; border: 3px solid var(--accent-coral); background: #FAF7F2; object-fit: cover;">
                 </div>
-                <h3 style="font-family: 'Outfit', sans-serif; font-size: 20px; font-weight: 700; color: #ffffff; margin: 0 0 4px 0;">
+                <h2 style="font-family: var(--font-display); font-size: 1.3rem; font-weight: 800; color: var(--text-main); margin-bottom: 0.25rem;">
                     {{ student.name }}
-                </h3>
-                <div style="color: #a5b4fc; font-size: 13px; font-weight: 600; margin-bottom: 8px;">
+                </h2>
+                <div style="color: var(--accent-coral); font-size: 0.88rem; font-weight: 700; margin-bottom: 0.85rem;">
                     {{ student.headline or student.target_role }}
                 </div>
-                <div style="display: flex; justify-content: center; gap: 8px; flex-wrap: wrap; margin-bottom: 16px;">
-                    <span class="badge" style="background: rgba(255, 255, 255, 0.08); color: #cbd5e1; font-size: 11px;">
+
+                <!-- Academic Metadata Pills -->
+                <div style="display: flex; justify-content: center; gap: 0.45rem; flex-wrap: wrap; margin-bottom: 1.15rem;">
+                    <span class="badge" style="background: #FAF7F2; border: 1px solid var(--border-subtle); color: var(--text-muted); font-size: 0.74rem;">
                         Roll: {{ student.roll_number }}
                     </span>
-                    <span class="badge" style="background: rgba(255, 255, 255, 0.08); color: #cbd5e1; font-size: 11px;">
-                        {{ student.department.code if student.department else 'General' }} | Year {{ student.year }}
+                    <span class="badge" style="background: #FAF7F2; border: 1px solid var(--border-subtle); color: var(--text-muted); font-size: 0.74rem;">
+                        {{ student.department.code if student.department else 'General' }} • Year {{ student.year }}
                     </span>
-                    <span class="badge" style="background: rgba(16, 185, 129, 0.15); color: #6ee7b7; font-size: 11px;">
+                    <span class="badge badge-eligible" style="font-size: 0.74rem;">
                         CGPA: {{ student.cgpa }}
                     </span>
                 </div>
 
-                <div style="border-top: 1px solid rgba(255, 255, 255, 0.08); padding-top: 14px; text-align: left;">
-                    <div style="font-size: 11px; text-transform: uppercase; color: #94a3b8; font-weight: 700; margin-bottom: 8px;">Public Socials & Portfolios</div>
-                    <div style="display: flex; flex-direction: column; gap: 8px; font-size: 13px;">
+                <!-- Socials & Portfolios Section -->
+                <div style="border-top: 1px solid var(--border-subtle); padding-top: 1rem; text-align: left;">
+                    <div style="font-size: 0.74rem; text-transform: uppercase; letter-spacing: 0.6px; color: var(--text-dim); font-weight: 700; margin-bottom: 0.65rem;">
+                        Public Profiles & Portfolios
+                    </div>
+                    <div style="display: flex; flex-direction: column; gap: 0.5rem;">
                         {% if student.github_url %}
-                        <a href="{{ student.github_url }}" target="_blank" style="color: #38bdf8; text-decoration: none; display: flex; align-items: center; gap: 8px;">
-                            <i data-lucide="github" style="width: 14px; height: 14px;"></i> GitHub Profile
+                        <a href="{{ student.github_url }}" target="_blank" class="social-link-item">
+                            <i data-lucide="github" style="width: 15px; height: 15px; color: var(--text-main);"></i>
+                            <span>GitHub Profile</span>
+                            <i data-lucide="external-link" style="width: 12px; height: 12px; margin-left: auto; color: var(--text-dim);"></i>
                         </a>
                         {% endif %}
                         {% if student.linkedin_url %}
-                        <a href="{{ student.linkedin_url }}" target="_blank" style="color: #818cf8; text-decoration: none; display: flex; align-items: center; gap: 8px;">
-                            <i data-lucide="linkedin" style="width: 14px; height: 14px;"></i> LinkedIn Profile
+                        <a href="{{ student.linkedin_url }}" target="_blank" class="social-link-item">
+                            <i data-lucide="linkedin" style="width: 15px; height: 15px; color: #0A66C2;"></i>
+                            <span>LinkedIn Profile</span>
+                            <i data-lucide="external-link" style="width: 12px; height: 12px; margin-left: auto; color: var(--text-dim);"></i>
                         </a>
                         {% endif %}
                         {% if student.portfolio_url %}
-                        <a href="{{ student.portfolio_url }}" target="_blank" style="color: #a855f7; text-decoration: none; display: flex; align-items: center; gap: 8px;">
-                            <i data-lucide="globe" style="width: 14px; height: 14px;"></i> Personal Portfolio
+                        <a href="{{ student.portfolio_url }}" target="_blank" class="social-link-item">
+                            <i data-lucide="globe" style="width: 15px; height: 15px; color: var(--accent-iris);"></i>
+                            <span>Personal Portfolio</span>
+                            <i data-lucide="external-link" style="width: 12px; height: 12px; margin-left: auto; color: var(--text-dim);"></i>
                         </a>
                         {% endif %}
                         {% if not student.github_url and not student.linkedin_url and not student.portfolio_url %}
-                        <span style="color: #64748b; font-size: 12px; font-style: italic;">No external links connected yet.</span>
+                        <div style="color: var(--text-dim); font-size: 0.82rem; font-style: italic; background: #FAF7F2; padding: 0.65rem 0.85rem; border-radius: var(--radius-sm); border: 1px dashed var(--border-subtle); text-align: center;">
+                            No external links connected yet. Add them in the form.
+                        </div>
                         {% endif %}
                     </div>
                 </div>
@@ -155,60 +260,71 @@
 
             <!-- GitHub Telemetry Card -->
             {% set gh = student.github_data %}
-            <div class="profile-card" id="github-telemetry-section">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
-                    <div style="font-size: 14px; font-weight: 700; color: #ffffff; display: flex; align-items: center; gap: 8px;">
-                        <i data-lucide="github" style="width: 16px; height: 16px; color: #38bdf8;"></i> GitHub Activity Telemetry
+            <div class="profile-card" id="github-telemetry-section" style="border-top: 4px solid var(--accent-sage);">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.85rem;">
+                    <div style="font-size: 0.94rem; font-weight: 800; color: var(--text-main); display: flex; align-items: center; gap: 0.45rem;">
+                        <i data-lucide="github" style="width: 16px; height: 16px; color: var(--text-main);"></i> GitHub Activity
                     </div>
                     {% if gh and gh.synced_at %}
-                    <span style="font-size: 10px; color: #10b981; background: rgba(16, 185, 129, 0.15); padding: 2px 8px; border-radius: 10px;">Synced</span>
+                    <span class="badge badge-eligible" style="font-size: 0.7rem; padding: 0.2rem 0.6rem;">
+                        Synced
+                    </span>
                     {% endif %}
                 </div>
 
                 {% if gh and gh.public_repos_count %}
-                <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 16px;">
+                <!-- Metrics Row -->
+                <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0.5rem; margin-bottom: 1rem;">
                     <div class="github-stat-box">
-                        <div class="github-stat-val">{{ gh.public_repos_count }}</div>
+                        <div class="github-stat-val" style="color: var(--accent-coral);">{{ gh.public_repos_count }}</div>
                         <div class="github-stat-lbl">Repos</div>
                     </div>
                     <div class="github-stat-box">
-                        <div class="github-stat-val" style="color: #facc15;">{{ gh.total_stars }}</div>
+                        <div class="github-stat-val" style="color: #D97706;">{{ gh.total_stars }}</div>
                         <div class="github-stat-lbl">Stars</div>
                     </div>
                     <div class="github-stat-box">
-                        <div class="github-stat-val" style="color: #a855f7;">{{ gh.total_forks }}</div>
+                        <div class="github-stat-val" style="color: var(--accent-iris);">{{ gh.total_forks }}</div>
                         <div class="github-stat-lbl">Forks</div>
                     </div>
                 </div>
 
-                <div style="margin-bottom: 14px;">
-                    <div style="font-size: 11px; text-transform: uppercase; color: #94a3b8; font-weight: 700; margin-bottom: 8px;">Discovered Languages</div>
-                    <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+                <!-- Languages -->
+                <div style="margin-bottom: 1rem;">
+                    <div style="font-size: 0.74rem; text-transform: uppercase; letter-spacing: 0.6px; color: var(--text-dim); font-weight: 700; margin-bottom: 0.45rem;">
+                        Primary Languages
+                    </div>
+                    <div style="display: flex; gap: 0.35rem; flex-wrap: wrap;">
                         {% for lang_item in gh.primary_languages %}
-                        <span class="tag-bubble" style="font-size: 11px; background: rgba(56, 189, 248, 0.12); color: #7dd3fc; border: 1px solid rgba(56, 189, 248, 0.25);">
+                        <span class="sticker-tag" style="font-size: 0.72rem; padding: 0.2rem 0.55rem; background: #FAF7F2; border-color: var(--border-subtle); color: var(--text-main); font-weight: 700;">
                             {{ lang_item.language }} ({{ lang_item.count }})
                         </span>
                         {% endfor %}
                     </div>
                 </div>
 
+                <!-- Top Repos -->
                 {% if gh.top_repositories %}
                 <div>
-                    <div style="font-size: 11px; text-transform: uppercase; color: #94a3b8; font-weight: 700; margin-bottom: 8px;">Top Public Repositories</div>
+                    <div style="font-size: 0.74rem; text-transform: uppercase; letter-spacing: 0.6px; color: var(--text-dim); font-weight: 700; margin-bottom: 0.45rem;">
+                        Top Public Repositories
+                    </div>
                     {% for repo in gh.top_repositories[:3] %}
                     <div class="repo-card">
-                        <div style="display: flex; justify-content: space-between; align-items: flex-start;">
-                            <a href="{{ repo.url }}" target="_blank" style="color: #e2e8f0; font-size: 13px; font-weight: 600; text-decoration: none;">
+                        <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 0.5rem;">
+                            <a href="{{ repo.url }}" target="_blank" style="color: var(--text-main); font-size: 0.86rem; font-weight: 700; text-decoration: none;">
                                 {{ repo.name }}
                             </a>
-                            <span style="font-size: 11px; color: #facc15; display: inline-flex; align-items: center; gap: 2px;">
-                                <i data-lucide="star" style="width: 11px; height: 11px;"></i> {{ repo.stars }}
+                            <span style="font-size: 0.75rem; color: #D97706; font-weight: 700; display: inline-flex; align-items: center; gap: 2px;">
+                                <i data-lucide="star" style="width: 12px; height: 12px; fill: #FDE68A;"></i> {{ repo.stars }}
                             </span>
                         </div>
-                        <div style="font-size: 11.5px; color: #94a3b8; margin: 4px 0;">
+                        {% if repo.description %}
+                        <div style="font-size: 0.78rem; color: var(--text-muted); margin: 0.25rem 0 0.4rem; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; line-height: 1.4;">
                             {{ repo.description }}
                         </div>
-                        <span style="font-size: 10px; color: #38bdf8; background: rgba(56, 189, 248, 0.1); padding: 2px 6px; border-radius: 6px;">
+                        {% endif %}
+                        <span class="badge" style="background: #FAF7F2; border: 1px solid var(--border-subtle); color: var(--text-dim); font-size: 0.7rem; padding: 0.15rem 0.45rem;">
                             {{ repo.language }}
                         </span>
                     </div>
@@ -217,12 +333,12 @@
                 {% endif %}
 
                 {% else %}
-                <div style="text-align: center; padding: 20px; color: #94a3b8; font-size: 12.5px;">
-                    Provide your GitHub profile URL to automatically fetch repositories, track star telemetry, and enrich candidate profile skills.
+                <div style="text-align: center; padding: 1.5rem 1rem; color: var(--text-muted); font-size: 0.84rem; background: #FAF7F2; border-radius: var(--radius-sm); border: 1px dashed var(--border-subtle);">
+                    Connect your GitHub profile URL to automatically fetch repositories, track star telemetry, and enrich candidate skills.
                 </div>
                 {% endif %}
 
-                <button type="button" id="btn-sync-github-async" class="btn btn-secondary" style="width: 100%; margin-top: 14px; font-size: 12.5px; display: inline-flex; align-items: center; justify-content: center; gap: 6px;">
+                <button type="button" id="btn-sync-github-async" class="btn btn-outline btn-sm btn-pill" style="width: 100%; margin-top: 1rem; font-weight: 700;">
                     <i data-lucide="refresh-cw" id="sync-icon" style="width: 14px; height: 14px;"></i> Sync GitHub Telemetry
                 </button>
             </div>
@@ -231,109 +347,131 @@
         <!-- Right Column: Profile Edit Form & Portfolio Integration -->
         <div>
             <div class="profile-card">
-                <h3 style="font-family: 'Outfit', sans-serif; font-size: 20px; font-weight: 700; color: #ffffff; margin-bottom: 20px;">
-                    Edit Profile Details & Recruiter Handles
-                </h3>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem; padding-bottom: 0.75rem; border-bottom: 1px solid var(--border-subtle);">
+                    <div>
+                        <h2 style="font-family: var(--font-display); font-size: 1.25rem; font-weight: 800; color: var(--text-main); margin-bottom: 2px;">
+                            Edit Profile & Recruiter Handles
+                        </h2>
+                        <div style="font-size: 0.82rem; color: var(--text-muted);">
+                            Changes will reflect on recruiter shortlisting and candidate matcher views.
+                        </div>
+                    </div>
+                    <span class="badge" style="background: #FFF0EB; color: var(--accent-coral); border: 1px solid #FCD9CE; font-size: 0.74rem;">
+                        Verified Student
+                    </span>
+                </div>
 
                 <form method="POST" action="{{ url_for('student.profile_view') }}">
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                    <!-- Institutional Identifiers (Read-only) -->
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
                         <div class="form-group">
                             <label class="form-label">Full Name</label>
-                            <input type="text" class="form-control-custom" value="{{ student.name }}" disabled style="opacity: 0.7; cursor: not-allowed;">
+                            <input type="text" class="form-control-custom" value="{{ student.name }}" disabled>
                         </div>
                         <div class="form-group">
-                            <label class="form-label">College Email</label>
-                            <input type="text" class="form-control-custom" value="{{ student.user.email if student.user else '' }}" disabled style="opacity: 0.7; cursor: not-allowed;">
+                            <label class="form-label">Institutional Email</label>
+                            <input type="text" class="form-control-custom" value="{{ student.user.email if student.user else '' }}" disabled>
                         </div>
                     </div>
 
                     <div class="form-group">
                         <label class="form-label">Professional Headline</label>
-                        <input type="text" name="headline" class="form-control-custom" value="{{ student.headline or '' }}" placeholder="e.g. Aspiring Full Stack Engineer | Python & React Enthusiast">
+                        <input type="text" name="headline" class="form-control-custom" value="{{ student.headline or '' }}" placeholder="e.g. Aspiring Full Stack Engineer | Python & React Specialist">
                     </div>
 
                     <div class="form-group">
-                        <label class="form-label">Bio / Career Pitch</label>
-                        <textarea name="bio" rows="3" class="form-control-custom" placeholder="Brief summary of your technical interests, projects, and career aspirations...">{{ student.bio or '' }}</textarea>
+                        <label class="form-label">Career Pitch & Bio</label>
+                        <textarea name="bio" rows="3" class="form-control-custom" placeholder="Brief summary of your technical interests, notable projects, and career aspirations...">{{ student.bio or '' }}</textarea>
                     </div>
 
                     <!-- Skills Management Section -->
-                    <div id="skills-edit-section" style="border-top: 1px solid rgba(255, 255, 255, 0.08); padding-top: 18px; margin-top: 18px;">
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 8px;">
-                            <h4 style="font-family: 'Outfit', sans-serif; font-size: 16px; font-weight: 700; color: #ffffff; display: flex; align-items: center; gap: 8px; margin: 0;">
-                                <i data-lucide="sparkles" style="width: 16px; height: 16px; color: #10b981;"></i> Technical Skills & Competencies
-                            </h4>
-                            <span class="badge" style="background: rgba(16, 185, 129, 0.15); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.3);">
+                    <div id="skills-edit-section" style="border-top: 1px solid var(--border-subtle); padding-top: 1.25rem; margin-top: 1.25rem;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; flex-wrap: wrap; gap: 0.5rem;">
+                            <h3 style="font-family: var(--font-display); font-size: 1.05rem; font-weight: 800; color: var(--text-main); display: flex; align-items: center; gap: 0.45rem; margin: 0;">
+                                <i data-lucide="sparkles" style="width: 16px; height: 16px; color: var(--accent-coral);"></i> Technical Skills & Competencies
+                            </h3>
+                            <span class="badge badge-eligible" style="font-size: 0.74rem;">
                                 {{ student.student_skills|length }} Profiled
                             </span>
                         </div>
-                        <p style="color: #94a3b8; font-size: 12.5px; margin-bottom: 14px;">
-                            These skills are used by campus recruiters and the job matching engine to match you with active drive requisitions.
+                        <p style="color: var(--text-muted); font-size: 0.82rem; margin-bottom: 0.85rem;">
+                            These competencies are used by campus recruiters and the automated AI matching engine to match you with active drive requisitions.
                         </p>
 
                         <!-- Existing Skills Chips with Delete buttons -->
-                        <div style="display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px;">
+                        <div style="display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 1rem;">
                             {% for ss in student.student_skills %}
-                            <div style="display: inline-flex; align-items: center; gap: 6px; background: rgba(30, 41, 59, 0.8); border: 1px solid rgba(255, 255, 255, 0.15); border-radius: 8px; padding: 5px 10px; font-size: 13px; color: #f1f5f9;">
-                                <span style="font-weight: 700;">{{ ss.skill.name }}</span>
-                                <span style="font-size: 11px; color: #10b981; background: rgba(16, 185, 129, 0.2); padding: 1px 6px; border-radius: 4px; text-transform: capitalize;">{{ ss.proficiency_level }}</span>
-                                <button type="button" onclick="removeSkill({{ ss.skill_id }}, '{{ ss.skill.name|replace('\'', '\\\'') }}')" style="background: transparent; border: none; color: #94a3b8; cursor: pointer; display: flex; align-items: center; padding: 2px; border-radius: 4px; transition: color 0.15s ease;" onmouseover="this.style.color='#f87171'" onmouseout="this.style.color='#94a3b8'" title="Remove skill">
+                            <div class="skill-chip">
+                                <span style="font-weight: 700; color: var(--text-main);">{{ ss.skill.name }}</span>
+                                <span class="badge" style="font-size: 0.7rem; padding: 1px 6px; text-transform: capitalize; background: {% if ss.proficiency_level in ['advanced', 'expert'] %}#EAF4EE; color: var(--accent-sage); border: 1px solid #CDE7D8;{% elif ss.proficiency_level == 'intermediate' %}#FFF8E7; color: var(--status-warning); border: 1px solid #FDE68A;{% else %}#F3F0FF; color: var(--accent-iris); border: 1px solid #DDD6FE;{% endif %}">
+                                    {{ ss.proficiency_level }}
+                                </span>
+                                <button type="button" 
+                                        onclick="removeSkill({{ ss.skill_id }}, '{{ ss.skill.name|replace('\'', '\\\'') }}')" 
+                                        style="background: transparent; border: none; color: var(--text-dim); cursor: pointer; display: flex; align-items: center; padding: 2px; border-radius: 4px; transition: color 0.15s ease;" 
+                                        onmouseover="this.style.color='var(--status-danger)'" 
+                                        onmouseout="this.style.color='var(--text-dim)'" 
+                                        title="Remove skill">
                                     <i data-lucide="x" style="width: 13px; height: 13px;"></i>
                                 </button>
                             </div>
                             {% else %}
-                            <span style="color: #64748b; font-size: 13px; font-style: italic;">No skills added yet. Use the tool below to add your technical skills.</span>
+                            <div style="color: var(--text-dim); font-size: 0.85rem; font-style: italic; background: #FAF7F2; padding: 0.75rem 1rem; border-radius: var(--radius-sm); border: 1px dashed var(--border-subtle); width: 100%;">
+                                No skills added yet. Use the tool below to profile your technical stack.
+                            </div>
                             {% endfor %}
                         </div>
 
                         <!-- Add Skill Input Row -->
-                        <div style="background: rgba(15, 23, 42, 0.5); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 12px; padding: 12px 14px; display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
-                            <input type="text" id="new-skill-name" class="form-control-custom" placeholder="e.g. Python, React, Docker, SQL..." style="flex: 1; min-width: 180px; margin: 0;">
-                            <select id="new-skill-prof" class="form-control-custom" style="width: 140px; margin: 0; cursor: pointer;">
+                        <div style="background: #FAF7F2; border: 1px solid var(--border-subtle); border-radius: var(--radius-md); padding: 0.85rem 1rem; display: flex; gap: 0.65rem; align-items: center; flex-wrap: wrap;">
+                            <input type="text" id="new-skill-name" class="form-control-custom" placeholder="e.g. Python, React, Docker, PostgreSQL..." style="flex: 1; min-width: 190px; background: #FFFFFF;">
+                            <select id="new-skill-prof" class="form-control-custom" style="width: 140px; background: #FFFFFF; cursor: pointer;">
                                 <option value="intermediate">Intermediate</option>
                                 <option value="beginner">Beginner</option>
                                 <option value="advanced">Advanced</option>
                                 <option value="expert">Expert</option>
                             </select>
-                            <button type="button" onclick="addNewSkill()" class="btn btn-secondary" style="font-size: 13px; padding: 9px 14px; display: inline-flex; align-items: center; gap: 6px;">
+                            <button type="button" onclick="addNewSkill()" class="btn btn-primary btn-sm btn-pill" style="gap: 0.35rem;">
                                 <i data-lucide="plus" style="width: 14px; height: 14px;"></i> Add Skill
                             </button>
                         </div>
                     </div>
 
-                    <div style="border-top: 1px solid rgba(255, 255, 255, 0.08); padding-top: 18px; margin-top: 18px;">
-                        <h4 style="font-family: 'Outfit', sans-serif; font-size: 16px; font-weight: 700; color: #ffffff; margin-bottom: 14px; display: flex; align-items: center; gap: 8px;">
-                            <i data-lucide="link" style="width: 16px; height: 16px; color: #818cf8;"></i> External Handles & Portfolios
-                        </h4>
+                    <!-- External Handles & Portfolios -->
+                    <div style="border-top: 1px solid var(--border-subtle); padding-top: 1.25rem; margin-top: 1.25rem;">
+                        <h3 style="font-family: var(--font-display); font-size: 1.05rem; font-weight: 800; color: var(--text-main); margin-bottom: 0.85rem; display: flex; align-items: center; gap: 0.45rem;">
+                            <i data-lucide="link" style="width: 16px; height: 16px; color: var(--accent-coral);"></i> External Handles & Links
+                        </h3>
 
                         <div class="form-group">
-                            <label class="form-label">
-                                <i data-lucide="github" style="width: 13px; height: 13px; display: inline;"></i> GitHub Profile URL or Username
+                            <label class="form-label" style="display: flex; align-items: center; gap: 0.35rem;">
+                                <i data-lucide="github" style="width: 14px; height: 14px;"></i> GitHub Profile URL or Username
                             </label>
                             <input type="text" id="github-url-input" name="github_url" class="form-control-custom" value="{{ student.github_url or '' }}" placeholder="https://github.com/username">
                         </div>
 
                         <div class="form-group">
-                            <label class="form-label">
-                                <i data-lucide="linkedin" style="width: 13px; height: 13px; display: inline;"></i> LinkedIn Profile URL
+                            <label class="form-label" style="display: flex; align-items: center; gap: 0.35rem;">
+                                <i data-lucide="linkedin" style="width: 14px; height: 14px; color: #0A66C2;"></i> LinkedIn Profile URL
                             </label>
                             <input type="text" name="linkedin_url" class="form-control-custom" value="{{ student.linkedin_url or '' }}" placeholder="https://linkedin.com/in/username">
                         </div>
 
                         <div class="form-group">
-                            <label class="form-label">
-                                <i data-lucide="globe" style="width: 13px; height: 13px; display: inline;"></i> Personal Portfolio / Website URL
+                            <label class="form-label" style="display: flex; align-items: center; gap: 0.35rem;">
+                                <i data-lucide="globe" style="width: 14px; height: 14px; color: var(--accent-iris);"></i> Personal Portfolio / Website URL
                             </label>
                             <input type="text" name="portfolio_url" class="form-control-custom" value="{{ student.portfolio_url or '' }}" placeholder="https://yourportfolio.dev">
                         </div>
                     </div>
 
-                    <div style="border-top: 1px solid rgba(255, 255, 255, 0.08); padding-top: 18px; margin-top: 18px;">
-                        <h4 style="font-family: 'Outfit', sans-serif; font-size: 16px; font-weight: 700; color: #ffffff; margin-bottom: 14px;">
+                    <!-- Placement Preferences -->
+                    <div style="border-top: 1px solid var(--border-subtle); padding-top: 1.25rem; margin-top: 1.25rem;">
+                        <h3 style="font-family: var(--font-display); font-size: 1.05rem; font-weight: 800; color: var(--text-main); margin-bottom: 0.85rem;">
                             Placement Preferences
-                        </h4>
+                        </h3>
 
-                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
                             <div class="form-group">
                                 <label class="form-label">Target Role</label>
                                 <input type="text" name="target_role" class="form-control-custom" value="{{ student.target_role }}">
@@ -346,15 +484,16 @@
 
                         <div class="form-group">
                             <label class="form-label">Preferred Industries</label>
-                            <input type="text" name="preferred_industries" class="form-control-custom" value="{{ student.preferred_industries or '' }}" placeholder="Technology, AI, Fintech">
+                            <input type="text" name="preferred_industries" class="form-control-custom" value="{{ student.preferred_industries or '' }}" placeholder="Technology, AI, Fintech, SaaS">
                         </div>
                     </div>
 
-                    <div style="display: flex; gap: 12px; justify-content: flex-end; margin-top: 24px;">
-                        <button type="submit" name="sync_github" value="1" class="btn btn-secondary" style="display: inline-flex; align-items: center; gap: 6px;">
+                    <!-- Form Footer Buttons -->
+                    <div style="display: flex; gap: 0.75rem; justify-content: flex-end; margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid var(--border-subtle); flex-wrap: wrap;">
+                        <button type="submit" name="sync_github" value="1" class="btn btn-outline btn-pill" style="gap: 0.4rem;">
                             <i data-lucide="refresh-cw" style="width: 15px; height: 15px;"></i> Save & Sync GitHub
                         </button>
-                        <button type="submit" class="btn btn-primary" style="display: inline-flex; align-items: center; gap: 6px;">
+                        <button type="submit" class="btn btn-primary btn-pill" style="gap: 0.4rem;">
                             <i data-lucide="save" style="width: 15px; height: 15px;"></i> Save Profile
                         </button>
                     </div>
@@ -376,7 +515,7 @@
             syncBtn.addEventListener('click', async function() {
                 const url = githubInput ? githubInput.value.trim() : '';
                 syncBtn.disabled = true;
-                if (syncIcon) syncIcon.style.animation = 'spin 0.8s linear infinite';
+                if (syncIcon) syncIcon.classList.add('spin');
 
                 try {
                     const res = await fetch("{{ url_for('student.api_sync_github') }}", {
@@ -386,17 +525,30 @@
                     });
                     const data = await res.json();
                     if (data.success) {
-                        alert(data.message);
-                        window.location.reload();
+                        if (window.showGlobalToast) {
+                            window.showGlobalToast(data.message || 'GitHub telemetry synced successfully!');
+                        } else {
+                            alert(data.message || 'GitHub telemetry synced!');
+                        }
+                        setTimeout(() => window.location.reload(), 800);
                     } else {
-                        alert(data.error || 'Failed to sync GitHub data');
+                        const errMsg = data.error || 'Failed to sync GitHub data';
+                        if (window.showGlobalToast) {
+                            window.showGlobalToast(`⚠️ ${errMsg}`);
+                        } else {
+                            alert(errMsg);
+                        }
                     }
                 } catch (e) {
                     console.error(e);
-                    alert('Error connecting to GitHub sync API');
+                    if (window.showGlobalToast) {
+                        window.showGlobalToast('⚠️ Error connecting to GitHub sync API');
+                    } else {
+                        alert('Error connecting to GitHub sync API');
+                    }
                 } finally {
                     syncBtn.disabled = false;
-                    if (syncIcon) syncIcon.style.animation = 'none';
+                    if (syncIcon) syncIcon.classList.remove('spin');
                 }
             });
         }
@@ -409,7 +561,11 @@
         const proficiency = profSelect ? profSelect.value : 'intermediate';
 
         if (!skillName) {
-            alert('Please enter a skill name.');
+            if (window.showGlobalToast) {
+                window.showGlobalToast('Please enter a skill name.');
+            } else {
+                alert('Please enter a skill name.');
+            }
             return;
         }
 
@@ -421,13 +577,25 @@
             });
             const data = await res.json();
             if (data.success) {
-                window.location.reload();
+                if (window.showGlobalToast) {
+                    window.showGlobalToast(`✓ Added ${skillName} (${proficiency})`);
+                }
+                setTimeout(() => window.location.reload(), 400);
             } else {
-                alert(data.error || 'Failed to add skill.');
+                const errMsg = data.error || 'Failed to add skill.';
+                if (window.showGlobalToast) {
+                    window.showGlobalToast(`⚠️ ${errMsg}`);
+                } else {
+                    alert(errMsg);
+                }
             }
         } catch (err) {
             console.error(err);
-            alert('Error connecting to skill service.');
+            if (window.showGlobalToast) {
+                window.showGlobalToast('⚠️ Error connecting to skill service.');
+            } else {
+                alert('Error connecting to skill service.');
+            }
         }
     }
 
@@ -441,13 +609,25 @@
             });
             const data = await res.json();
             if (data.success) {
-                window.location.reload();
+                if (window.showGlobalToast) {
+                    window.showGlobalToast(`Removed ${skillName}`);
+                }
+                setTimeout(() => window.location.reload(), 400);
             } else {
-                alert(data.error || 'Failed to delete skill.');
+                const errMsg = data.error || 'Failed to delete skill.';
+                if (window.showGlobalToast) {
+                    window.showGlobalToast(`⚠️ ${errMsg}`);
+                } else {
+                    alert(errMsg);
+                }
             }
         } catch (err) {
             console.error(err);
-            alert('Error deleting skill.');
+            if (window.showGlobalToast) {
+                window.showGlobalToast('⚠️ Error deleting skill.');
+            } else {
+                alert('Error deleting skill.');
+            }
         }
     }
 </script>

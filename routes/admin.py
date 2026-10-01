@@ -104,7 +104,7 @@ TABLE_METADATA = {
         "singular": "Recruiter",
         "icon": "briefcase",
         "description": "Corporate campus recruiter accounts and liaison contacts",
-        "columns": ["ID", "Recruiter Name", "Company", "Designation", "Phone", "Email", "Actions"]
+        "columns": ["ID", "Recruiter Name", "Company", "Designation", "Phone", "Email", "Password", "Actions"]
     },
     "companies": {
         "title": "Companies",
@@ -244,12 +244,14 @@ def database_view():
         for r in items:
             comp_name = r.company.name if r.company else "—"
             email_val = r.user.email if r.user else "—"
+            pwd_val = (r.user.raw_password if (r.user and r.user.raw_password) else "Recruiter@123") if r.user else "—"
+            pwd_cell = f'<div style="display:inline-flex;align-items:center;gap:6px;"><code style="background:#FAF7F2;border:1px solid #EAE3D7;padding:3px 8px;border-radius:6px;font-family:monospace;font-size:0.84rem;color:#1F1C18;font-weight:700;">{pwd_val}</code><button type="button" class="btn-action-icon" style="padding:3px 6px;" onclick="navigator.clipboard.writeText(\'{pwd_val}\');if(window.showGlobalToast)window.showGlobalToast(\'Copied recruiter password: {pwd_val}\');" title="Copy Password"><i data-lucide="copy" style="width:12px;height:12px;"></i></button></div>'
             rows_data.append({
                 "id": r.id,
-                "cells": [r.id, r.name, comp_name, r.designation or "—", r.phone or "—", email_val],
+                "cells": [r.id, r.name, comp_name, r.designation or "—", r.phone or "—", email_val, pwd_cell],
                 "raw": {
                     "id": r.id, "name": r.name, "company": comp_name, "designation": r.designation,
-                    "phone": r.phone, "email": email_val, "user_id": r.user_id
+                    "phone": r.phone, "email": email_val, "password": pwd_val, "user_id": r.user_id
                 }
             })
 
@@ -426,9 +428,10 @@ def export_table_csv(table_name):
         for s in Student.query.all():
             writer.writerow([s.id, s.roll_number, s.name, s.department.code if s.department else "", s.cgpa or "", s.graduation_year or ""])
     elif table_key == "recruiters":
-        writer.writerow(["ID", "Name", "Company", "Designation", "Phone", "Email"])
+        writer.writerow(["ID", "Name", "Company", "Designation", "Phone", "Email", "Password"])
         for r in Recruiter.query.all():
-            writer.writerow([r.id, r.name, r.company.name if r.company else "", r.designation or "", r.phone or "", r.user.email if r.user else ""])
+            pwd_val = (r.user.raw_password if (r.user and r.user.raw_password) else "Recruiter@123") if r.user else ""
+            writer.writerow([r.id, r.name, r.company.name if r.company else "", r.designation or "", r.phone or "", r.user.email if r.user else "", pwd_val])
     elif table_key == "companies":
         writer.writerow(["ID", "Name", "Industry", "Location", "Website", "Active Jobs"])
         for c in Company.query.all():

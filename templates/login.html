@@ -1,5 +1,8 @@
 {% extends "base.html" %}
 
+{% set hide_navigation = true %}
+{% set hide_sidebar = true %}
+
 {% block title %}Sign In — Glint{% endblock %}
 
 {% block content %}
@@ -19,11 +22,11 @@
                     1-Click Instant Demo Profiles:
                 </div>
                 <div class="demo-account-pills" style="margin-bottom: 0.65rem;">
-                    <button type="button" class="pill-btn" onclick="fillDemoAccount('rahul.sharma@campus.edu', 'Student@123')">
-                        🎓 Student (Rahul)
+                    <button type="button" class="pill-btn" onclick="fillDemoAccount('student@demo.com', 'Student@123')">
+                        🎓 Student Demo
                     </button>
-                    <button type="button" class="pill-btn" onclick="fillDemoAccount('priya.recruiter@nexustech.com', 'Recruiter@123')">
-                        🏢 Recruiter (Priya)
+                    <button type="button" class="pill-btn" onclick="fillDemoAccount('recruiter@demo.com', 'Recruiter@123')">
+                        🏢 Recruiter Demo
                     </button>
                     <button type="button" class="pill-btn" onclick="fillDemoAccount('admin@placementiq.ai', 'Admin@123')">
                         🏛️ Placement Admin

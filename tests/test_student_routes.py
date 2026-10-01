@@ -203,3 +203,14 @@ def test_resume_intelligence_page(authenticated_student):
     resp = authenticated_student.get("/student/ai/resume-intelligence")
     assert resp.status_code == 200
     assert b"Resume" in resp.data or b"ATS" in resp.data
+
+
+def test_student_jobs_opportunities_view(authenticated_student):
+    """Test that clicking Opportunities on sidebar shows dedicated Ongoing Campus Drives."""
+    resp = authenticated_student.get("/student/jobs")
+    assert resp.status_code == 200
+    assert b"Ongoing Campus Drives &amp; Opportunities" in resp.data or b"Ongoing Campus Drives & Opportunities" in resp.data
+    assert b"Active Campus Recruitment Drives" in resp.data
+    assert b"Check Fit &amp; Gaps" in resp.data or b"Check Fit & Gaps" in resp.data
+    assert b"Quick Apply" in resp.data
+

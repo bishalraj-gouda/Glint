@@ -1,5 +1,5 @@
 import os
-from flask import Flask, render_template, session, redirect, url_for
+from flask import Flask, render_template, session, redirect, url_for, request
 from config import config_by_name
 from extensions import db, login_manager, migrate
 from routes import register_blueprints
@@ -39,7 +39,7 @@ def create_app(config_name: str = None) -> Flask:
     # Automatically ensure SQLite schema and all model columns exist
     sync_database_schema(app)
 
-    # Landing page route
+    # Root route - direct login screen
     @app.route("/")
     def index():
         if "user_id" in session:
@@ -50,7 +50,7 @@ def create_app(config_name: str = None) -> Flask:
                 return redirect(url_for("recruiter.dashboard"))
             elif role == "admin":
                 return redirect(url_for("admin.dashboard"))
-        return render_template("landing.html")
+        return redirect(url_for("auth.login"))
 
     # Direct API route alias for skill gap analyze
     @app.route("/api/skill-gap/analyze", methods=["GET", "POST"])
@@ -62,6 +62,15 @@ def create_app(config_name: str = None) -> Flask:
     # Global template context processor
     @app.context_processor
     def inject_global_template_vars():
+        endpoint = request.endpoint or ""
+        path = request.path or ""
+        if endpoint in ["auth.login", "auth.register"] or path in ["/login", "/register"]:
+            return {
+                "current_user": None,
+                "session_user_role": "",
+                "session_display_name": "",
+                "session_company_name": ""
+            }
         user = get_current_user()
         return {
             "current_user": user,

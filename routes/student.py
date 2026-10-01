@@ -197,26 +197,44 @@ def api_sync_github():
 @student_bp.route("/jobs")
 @student_required
 def jobs_view():
-    """Student job exploration view."""
+    """Student ongoing campus recruitment drives and opportunities view."""
     user = get_current_user()
     student = user.student_profile
-    jobs = Job.query.filter_by(status="active").all()
-    recent_apps = Application.query.filter_by(student_id=student.id).order_by(Application.applied_at.desc()).limit(5).all()
-    upcoming_interviews = (
-        Interview.query.join(Application)
-        .filter(Application.student_id == student.id, Interview.status == "scheduled")
-        .order_by(Interview.scheduled_date.asc())
-        .limit(3)
-        .all()
-    )
+    if not student:
+        return redirect(url_for("auth.login"))
+
+    # Fetch active campus drives
+    jobs = Job.query.filter_by(status="active").order_by(Job.id.desc()).all()
+    applied_job_ids = [app.job_id for app in student.applications]
+
+    # Computed drive metrics
+    total_drives = len(jobs)
+    eligible_drives = sum(1 for j in jobs if student.cgpa >= j.min_cgpa)
+    applied_count = len(applied_job_ids)
+
+    # Top package & unique role categories
+    max_salary = 0.0
+    categories = set()
+    for j in jobs:
+        sal = j.salary_max or j.salary_min or 0.0
+        if sal > max_salary:
+            max_salary = sal
+        if j.role_category:
+            categories.add(j.role_category)
+
+    max_salary_str = f"₹{max_salary:.1f} LPA" if max_salary > 0 else "Competitive"
+
     return render_template(
-        "student/dashboard.html",
+        "student/jobs.html",
         student=student,
-        recent_apps=recent_apps,
-        upcoming_interviews=upcoming_interviews,
-        recommended_jobs=jobs[:4],
-        active_page="jobs",
-        jobs=jobs
+        jobs=jobs,
+        applied_job_ids=applied_job_ids,
+        total_drives=total_drives,
+        eligible_drives=eligible_drives,
+        applied_count=applied_count,
+        max_salary_str=max_salary_str,
+        categories=sorted(list(categories)),
+        active_page="jobs"
     )
 
 
@@ -234,13 +252,14 @@ def applications_view():
         .limit(3)
         .all()
     )
-    recommended_jobs = Job.query.filter_by(status="active").limit(4).all()
+    active_jobs = Job.query.filter_by(status="active").order_by(Job.id.desc()).all()
     return render_template(
         "student/dashboard.html",
         student=student,
         recent_apps=apps,
         upcoming_interviews=upcoming_interviews,
-        recommended_jobs=recommended_jobs,
+        active_jobs=active_jobs,
+        recommended_jobs=active_jobs,
         active_page="applications",
         applications=apps
     )
@@ -259,13 +278,14 @@ def interviews_view():
         .all()
     )
     recent_apps = Application.query.filter_by(student_id=student.id).order_by(Application.applied_at.desc()).limit(5).all()
-    recommended_jobs = Job.query.filter_by(status="active").limit(4).all()
+    active_jobs = Job.query.filter_by(status="active").order_by(Job.id.desc()).all()
     return render_template(
         "student/dashboard.html",
         student=student,
         recent_apps=recent_apps,
         upcoming_interviews=interviews,
-        recommended_jobs=recommended_jobs,
+        active_jobs=active_jobs,
+        recommended_jobs=active_jobs,
         active_page="interviews",
         interviews=interviews
     )

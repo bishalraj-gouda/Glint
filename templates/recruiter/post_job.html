@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}Post Opportunity — PlacementIQ AI{% endblock %}
+{% block title %}Post Opportunity — Glint{% endblock %}
 
 {% block content %}
 <div class="page-header">
@@ -23,8 +23,8 @@
 </div>
 
 <!-- Quick Template Fillers -->
-<div style="margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap; background: rgba(99, 102, 241, 0.08); border: 1px solid rgba(99, 102, 241, 0.2); padding: 0.85rem 1.25rem; border-radius: var(--radius-sm);">
-    <span style="font-size: 0.85rem; font-weight: 600; color: var(--accent-secondary); display: flex; align-items: center; gap: 0.4rem;">
+<div style="margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap; background: var(--accent-coral-light); border: 1px solid #FCD9CE; padding: 0.85rem 1.25rem; border-radius: var(--radius-sm);">
+    <span style="font-size: 0.85rem; font-weight: 700; color: var(--accent-coral); display: flex; align-items: center; gap: 0.4rem;">
         <i data-lucide="sparkles" style="width: 16px; height: 16px;"></i>
         Quick Pre-fill Template:
     </span>
@@ -153,19 +153,19 @@
     <!-- Right: Live Preview & Existing Requisitions -->
     <div>
         <!-- Live Preview Card -->
-        <div class="glass-panel" style="border: 1px solid var(--border-glow); background: linear-gradient(180deg, rgba(22, 30, 49, 0.75) 0%, rgba(15, 23, 42, 0.9) 100%);">
+        <div class="glass-panel" style="border: 1.5px solid var(--border-medium); background: #FFFFFF; box-shadow: var(--shadow-sm);">
             <div class="panel-header">
-                <div class="panel-title" style="font-size: 0.95rem;">
-                    <i data-lucide="eye" style="color: var(--accent-secondary); width: 18px; height: 18px;"></i>
+                <div class="panel-title" style="font-size: 0.95rem; font-family: var(--font-display); font-weight: 700; color: var(--text-main);">
+                    <i data-lucide="eye" style="color: var(--accent-coral); width: 18px; height: 18px;"></i>
                     Live Student View Preview
                 </div>
-                <span class="badge badge-eligible">Live</span>
+                <span class="badge badge-eligible">Live Preview</span>
             </div>
             
             <div style="margin-bottom: 0.75rem;">
-                <div style="font-size: 1.15rem; font-weight: 700; color: #fff;" id="prevTitle">Job Title</div>
-                <div style="font-size: 0.85rem; color: var(--accent-secondary); margin-top: 0.2rem;" id="prevCompany">
-                    {{ company.name }} • <span id="prevLocation">Bangalore / Hybrid</span>
+                <div style="font-size: 1.15rem; font-weight: 800; font-family: var(--font-display); color: var(--text-main); letter-spacing: -0.3px;" id="prevTitle">Job Title</div>
+                <div style="font-size: 0.85rem; color: var(--accent-secondary); margin-top: 0.2rem; font-weight: 600;" id="prevCompany">
+                    {{ company.name }} • <span id="prevLocation" style="color: var(--text-muted); font-weight: 500;">Bangalore / Hybrid</span>
                 </div>
             </div>
 
@@ -175,16 +175,16 @@
                 <span class="badge badge-applied" id="prevCategory">Software Development</span>
             </div>
 
-            <div style="font-size: 0.84rem; color: var(--text-muted); line-height: 1.5; margin-bottom: 1rem; max-height: 100px; overflow-hidden; text-overflow: ellipsis;" id="prevDesc">
+            <div style="font-size: 0.86rem; color: var(--text-muted); line-height: 1.6; margin-bottom: 1rem; max-height: 110px; overflow: hidden; text-overflow: ellipsis;" id="prevDesc">
                 Job responsibilities and criteria will appear here as you draft...
             </div>
 
             <div style="border-top: 1px solid var(--border-subtle); padding-top: 0.75rem;">
-                <div style="font-size: 0.75rem; text-transform: uppercase; color: var(--text-dim); margin-bottom: 0.5rem; font-weight: 600;">
+                <div style="font-size: 0.75rem; text-transform: uppercase; color: var(--text-dim); margin-bottom: 0.5rem; font-weight: 700; letter-spacing: 0.5px;">
                     Target Competencies
                 </div>
                 <div id="prevSkills" style="display: flex; flex-wrap: wrap; gap: 0.4rem;">
-                    <span style="font-size: 0.78rem; color: var(--text-dim); font-style: italic;">No skills selected yet</span>
+                    <span style="font-size: 0.8rem; color: var(--text-dim); font-style: italic;">No skills selected yet</span>
                 </div>
             </div>
         </div>
@@ -192,45 +192,45 @@
         <!-- AI Match System Explanation -->
         <div class="glass-panel">
             <div class="panel-header">
-                <div class="panel-title" style="font-size: 0.95rem;">
-                    <i data-lucide="cpu" style="color: var(--accent-purple); width: 18px; height: 18px;"></i>
+                <div class="panel-title" style="font-size: 0.95rem; font-family: var(--font-display); font-weight: 700; color: var(--text-main);">
+                    <i data-lucide="cpu" style="color: var(--accent-iris); width: 18px; height: 18px;"></i>
                     Explainable AI Matching
                 </div>
             </div>
-            <p style="font-size: 0.82rem; color: var(--text-muted); line-height: 1.5; margin-bottom: 0.75rem;">
-                When you publish this role, PlacementIQ AI automatically evaluates every registered student:
+            <p style="font-size: 0.84rem; color: var(--text-muted); line-height: 1.6; margin-bottom: 0.75rem;">
+                When you publish this role, Glint automatically evaluates every registered student:
             </p>
-            <ul style="font-size: 0.8rem; color: var(--text-muted); padding-left: 1.25rem; line-height: 1.6;">
-                <li><strong style="color: #fff;">Skill Overlap (45%):</strong> Matches required skills against verified profile taxonomy</li>
-                <li><strong style="color: #fff;">Projects Fit (15%):</strong> Semantic match of student GitHub & portfolio repos</li>
-                <li><strong style="color: #fff;">Academic Cut-off (10%):</strong> Automatic filter on CGPA threshold</li>
-                <li><strong style="color: #fff;">Experience Fit (10%):</strong> Internship & practical project depth</li>
+            <ul style="font-size: 0.82rem; color: var(--text-muted); padding-left: 1.25rem; line-height: 1.7;">
+                <li><strong style="color: var(--text-main); font-weight: 700;">Skill Overlap (45%):</strong> Matches required skills against verified profile taxonomy</li>
+                <li><strong style="color: var(--text-main); font-weight: 700;">Projects Fit (15%):</strong> Semantic match of student GitHub & portfolio repos</li>
+                <li><strong style="color: var(--text-main); font-weight: 700;">Academic Cut-off (10%):</strong> Automatic filter on CGPA threshold</li>
+                <li><strong style="color: var(--text-main); font-weight: 700;">Experience Fit (10%):</strong> Internship & practical project depth</li>
             </ul>
         </div>
 
         <!-- Current Active Postings -->
         <div class="glass-panel">
             <div class="panel-header">
-                <div class="panel-title" style="font-size: 0.95rem;">
-                    <i data-lucide="briefcase" style="color: var(--accent-secondary); width: 18px; height: 18px;"></i>
+                <div class="panel-title" style="font-size: 0.95rem; font-family: var(--font-display); font-weight: 700; color: var(--text-main);">
+                    <i data-lucide="briefcase" style="color: var(--accent-coral); width: 18px; height: 18px;"></i>
                     Active Requisitions ({{ existing_jobs|length }})
                 </div>
             </div>
             {% for j in existing_jobs %}
-            <div style="background: rgba(255, 255, 255, 0.02); border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); padding: 0.75rem; margin-bottom: 0.6rem;">
-                <div style="font-weight: 600; font-size: 0.88rem;">{{ j.title }}</div>
-                <div style="font-size: 0.78rem; color: var(--accent-secondary);">
+            <div style="background: var(--bg-primary); border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); padding: 0.85rem; margin-bottom: 0.65rem;">
+                <div style="font-weight: 700; font-family: var(--font-display); font-size: 0.92rem; color: var(--text-main);">{{ j.title }}</div>
+                <div style="font-size: 0.8rem; color: var(--accent-sage); font-weight: 600; margin-top: 0.15rem;">
                     {{ j.salary_formatted }} • Min CGPA: {{ j.min_cgpa }}
                 </div>
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 0.4rem; font-size: 0.75rem; color: var(--text-dim);">
-                    <span>Applicants: {{ j.applications|length }}</span>
-                    <a href="{{ url_for('recruiter.candidates_view', job_id=j.id) }}" style="color: var(--accent-primary); text-decoration: none; font-weight: 600;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 0.5rem; font-size: 0.76rem; color: var(--text-dim);">
+                    <span>Applicants: <strong style="color: var(--text-main);">{{ j.applications|length }}</strong></span>
+                    <a href="{{ url_for('recruiter.candidates_view', job_id=j.id) }}" style="color: var(--accent-coral); text-decoration: none; font-weight: 700;">
                         View Pipeline →
                     </a>
                 </div>
             </div>
             {% else %}
-            <p style="color: var(--text-dim); font-size: 0.82rem;">No existing job requisitions.</p>
+            <p style="color: var(--text-dim); font-size: 0.84rem;">No existing job requisitions.</p>
             {% endfor %}
         </div>
     </div>

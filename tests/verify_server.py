@@ -8,13 +8,13 @@ def test_live_server():
     print("1. Testing Landing Page...")
     r = s.get(f"{BASE_URL}/")
     assert r.status_code == 200, f"Landing failed: {r.status_code}"
-    assert "Turn Campus Skills Into" in r.text
+    assert "campus talent" in r.text or "Glint" in r.text
     print("   [OK] Landing page rendered successfully.")
 
     print("2. Testing Login Page...")
     r = s.get(f"{BASE_URL}/login")
     assert r.status_code == 200
-    assert "Sign In to PlacementIQ AI" in r.text
+    assert "Welcome to Glint" in r.text or "Sign In" in r.text
     print("   [OK] Login page rendered successfully.")
 
     print("3. Testing Register Page...")
@@ -35,12 +35,13 @@ def test_live_server():
     }, allow_redirects=True)
     assert r.status_code == 200
     assert "Rahul Sharma" in r.text
-    assert "Placement Readiness" in r.text
+    assert "Open Drives" in r.text or "Active Campus" in r.text
     print("   [OK] Student logged in and dashboard rendered.")
 
     print("6. Testing Student Unauthorized Access to Admin...")
-    r = s.get(f"{BASE_URL}/admin/dashboard", allow_redirects=True)
-    assert "Access denied" in r.text
+    r = s.get(f"{BASE_URL}/admin/dashboard")
+    assert r.status_code == 403
+    assert "Access Forbidden" in r.text or "403" in r.text
     print("   [OK] Student role restriction strictly enforced.")
 
     print("7. Testing Logout...")
@@ -65,9 +66,9 @@ def test_live_server():
         "password": "Admin@123"
     }, allow_redirects=True)
     assert r.status_code == 200
-    assert "Placement Command Center" in r.text
+    assert "Placement Command Dashboard" in r.text
     assert "Placement Rate" in r.text
-    print("   [OK] Admin logged in and command center rendered.")
+    print("   [OK] Admin logged in and command dashboard rendered.")
 
     print("10. Testing 404 Page...")
     r = s.get(f"{BASE_URL}/non-existent-route-999")

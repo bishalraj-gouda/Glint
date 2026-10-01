@@ -30,8 +30,8 @@ def apply_to_job():
     if existing:
         return jsonify({"error": "You have already applied for this job", "application_id": existing.id}), 409
 
-    # Basic eligibility check
-    status = "eligible" if student.cgpa >= job.min_cgpa else "applied"
+    # All new applications start as "applied"; recruiter advances the pipeline
+    status = "applied"
 
     application = Application(
         job_id=job.id,

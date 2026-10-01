@@ -1,0 +1,981 @@
+{% extends "base.html" %}
+
+{% block title %}Ongoing Campus Drives & Opportunities — Glint{% endblock %}
+
+{% block extra_css %}
+<style>
+/* Ongoing Campus Drives Portal Styles */
+.drives-hero {
+    background: #FFFDFC;
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-lg);
+    padding: 1.5rem 1.75rem;
+    margin-bottom: 1.5rem;
+    box-shadow: var(--shadow-sm);
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    flex-wrap: wrap;
+    gap: 1.25rem;
+}
+
+.drives-kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+    gap: 1.15rem;
+    margin-bottom: 1.75rem;
+}
+
+.drives-kpi-card {
+    background: #FFFFFF;
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-md);
+    padding: 1.25rem;
+    box-shadow: var(--shadow-sm);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    transition: all 0.2s ease;
+}
+
+.drives-kpi-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+}
+
+.drives-filter-panel {
+    background: #FFFFFF;
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-md);
+    padding: 1.25rem;
+    margin-bottom: 1.5rem;
+    box-shadow: var(--shadow-sm);
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.drives-search-bar {
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+    flex-wrap: wrap;
+}
+
+.drives-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(460px, 1fr));
+    gap: 1.35rem;
+}
+
+@media (max-width: 992px) {
+    .drives-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.drive-card {
+    background: #FFFFFF;
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-lg);
+    padding: 1.5rem;
+    box-shadow: var(--shadow-sm);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+    position: relative;
+    overflow: hidden;
+}
+
+.drive-card:hover {
+    transform: translateY(-3px);
+    border-color: var(--border-medium);
+    box-shadow: var(--shadow-md);
+}
+
+.drive-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: var(--accent-coral);
+    opacity: 0.85;
+}
+
+.drive-card.eligible::before {
+    background: var(--accent-sage);
+}
+
+.drive-card.applied::before {
+    background: var(--accent-iris);
+}
+
+.company-monogram {
+    width: 46px;
+    height: 46px;
+    border-radius: var(--radius-md);
+    background: linear-gradient(135deg, #FFF0EB 0%, #FFE3D8 100%);
+    color: var(--accent-coral);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 800;
+    font-size: 1.15rem;
+    border: 1px solid #FCD9CE;
+    flex-shrink: 0;
+}
+
+.drive-card.eligible .company-monogram {
+    background: linear-gradient(135deg, #EAF4EE 0%, #D8EDE0 100%);
+    color: var(--accent-sage);
+    border-color: #CDE7D8;
+}
+
+.eligibility-strip {
+    background: #FAF7F2;
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-sm);
+    padding: 0.65rem 0.85rem;
+    font-size: 0.82rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    margin: 0.75rem 0;
+}
+
+.eligibility-strip.eligible {
+    background: #F4FAF6;
+    border-color: #D3ECE0;
+    color: var(--accent-sage);
+}
+
+.eligibility-strip.shortfall {
+    background: #FFFDF5;
+    border-color: #FEE8B6;
+    color: var(--status-warning);
+}
+
+.filter-chip-btn {
+    background: #FAF7F2;
+    border: 1px solid var(--border-subtle);
+    color: var(--text-muted);
+    font-size: 0.82rem;
+    font-weight: 600;
+    padding: 0.35rem 0.85rem;
+    border-radius: 9999px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+}
+
+.filter-chip-btn:hover {
+    background: #F2ECE1;
+    color: var(--text-main);
+    border-color: var(--border-medium);
+}
+
+.filter-chip-btn.active {
+    background: var(--text-main);
+    color: #FFFFFF;
+    border-color: var(--text-main);
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Page Header / Hero Banner -->
+<div class="drives-hero">
+    <div>
+        <div style="display: inline-flex; align-items: center; gap: 0.45rem; background: #FFF0EB; border: 1px solid #FCD9CE; padding: 0.25rem 0.85rem; border-radius: 9999px; font-size: 0.78rem; font-weight: 700; color: var(--accent-coral); margin-bottom: 0.5rem;">
+            <i data-lucide="briefcase" style="width: 13px; height: 13px;"></i>
+            Active Campus Recruitment Drives
+        </div>
+        <h1 class="page-title" style="margin-bottom: 0.35rem; font-size: 1.75rem;">Ongoing Campus Drives & Opportunities</h1>
+        <p class="page-description" style="margin-bottom: 0; max-width: 680px;">
+            Explore active recruitment drives accepting applications for your batch. Verify academic eligibility, evaluate role fit and skill deficits, and apply directly.
+        </p>
+    </div>
+    <div style="display: flex; gap: 0.65rem; align-items: center; flex-wrap: wrap;">
+        <a href="{{ url_for('student.applications_view') }}" class="btn btn-outline btn-sm btn-pill">
+            <i data-lucide="file-check" style="width: 14px; height: 14px; color: var(--accent-sage);"></i>
+            My Submissions ({{ applied_count }})
+        </a>
+        <a href="{{ url_for('student_ai.skill_gaps_page') }}" class="btn btn-outline btn-sm btn-pill">
+            <i data-lucide="target" style="width: 14px; height: 14px; color: var(--accent-coral);"></i>
+            Skill Gap Audit
+        </a>
+    </div>
+</div>
+
+<!-- Bento KPI Metric Cards -->
+<div class="drives-kpi-grid">
+    <!-- Total Active Drives -->
+    <div class="drives-kpi-card" style="border-top: 3px solid var(--accent-coral);">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+            <span style="font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-dim);">Active Drives</span>
+            <div style="width: 32px; height: 32px; border-radius: 50%; background: #FFF0EB; color: var(--accent-coral); display: flex; align-items: center; justify-content: center;">
+                <i data-lucide="briefcase" style="width: 16px; height: 16px;"></i>
+            </div>
+        </div>
+        <div style="font-family: var(--font-display); font-size: 2rem; font-weight: 800; color: var(--text-main); line-height: 1;">
+            {{ total_drives }}
+        </div>
+        <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.4rem;">
+            Campus openings currently accepting applications
+        </div>
+    </div>
+
+    <!-- Eligible Drives (CGPA Met) -->
+    <div class="drives-kpi-card" style="border-top: 3px solid var(--accent-sage);">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+            <span style="font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-dim);">Eligible Drives</span>
+            <div style="width: 32px; height: 32px; border-radius: 50%; background: #EAF4EE; color: var(--accent-sage); display: flex; align-items: center; justify-content: center;">
+                <i data-lucide="check-circle-2" style="width: 16px; height: 16px;"></i>
+            </div>
+        </div>
+        <div style="font-family: var(--font-display); font-size: 2rem; font-weight: 800; color: var(--accent-sage); line-height: 1;">
+            {{ eligible_drives }}
+        </div>
+        <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.4rem;">
+            Meets or exceeds your CGPA of {{ "%.2f"|format(student.cgpa) }}
+        </div>
+    </div>
+
+    <!-- Applied Submissions -->
+    <div class="drives-kpi-card" style="border-top: 3px solid var(--status-warning);">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+            <span style="font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-dim);">Applications Sent</span>
+            <div style="width: 32px; height: 32px; border-radius: 50%; background: #FFF8E7; color: var(--status-warning); display: flex; align-items: center; justify-content: center;">
+                <i data-lucide="send" style="width: 16px; height: 16px;"></i>
+            </div>
+        </div>
+        <div id="kpi-applied-count" style="font-family: var(--font-display); font-size: 2rem; font-weight: 800; color: var(--status-warning); line-height: 1;">
+            {{ applied_count }}
+        </div>
+        <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.4rem;">
+            Positions currently in recruiter evaluation
+        </div>
+    </div>
+</div>
+
+<!-- Interactive Search, Filter & Sorting Bar -->
+<div class="drives-filter-panel">
+    <div class="drives-search-bar">
+        <div style="position: relative; flex: 1; min-width: 260px;">
+            <i data-lucide="search" style="position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); width: 17px; height: 17px; color: var(--text-dim);"></i>
+            <input type="text" 
+                   id="drive-search-input" 
+                   placeholder="Search ongoing drives by company, job title, stack, or location..." 
+                   class="filter-search-input" 
+                   style="width: 100%; padding-left: 2.75rem; height: 42px; font-size: 0.9rem;" 
+                   onkeyup="filterDrives()">
+        </div>
+        <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
+            <span style="font-size: 0.82rem; font-weight: 700; color: var(--text-dim);">Sort:</span>
+            <select id="drive-sort-select" onchange="sortDrives()" class="filter-search-input" style="height: 42px; padding: 0.35rem 0.85rem; font-size: 0.85rem; font-weight: 600; min-width: 170px;">
+                <option value="newest">Newest First</option>
+                <option value="salary-desc">Highest CTC</option>
+                <option value="cgpa-asc">Lowest CGPA Cutoff</option>
+                <option value="company-asc">Company (A-Z)</option>
+            </select>
+        </div>
+    </div>
+
+    <!-- Filter Pills Row -->
+    <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.75rem; padding-top: 0.5rem; border-top: 1px solid var(--border-subtle);">
+        <div style="display: flex; align-items: center; gap: 0.45rem; flex-wrap: wrap;" id="filter-pills-container">
+            <button type="button" class="filter-chip-btn active" onclick="setDriveFilter('all', this)">
+                <i data-lucide="layers" style="width: 13px; height: 13px;"></i> All Drives ({{ total_drives }})
+            </button>
+            <button type="button" class="filter-chip-btn" onclick="setDriveFilter('eligible', this)">
+                <i data-lucide="check" style="width: 13px; height: 13px; color: var(--accent-sage);"></i> CGPA Eligible ({{ eligible_drives }})
+            </button>
+            <button type="button" class="filter-chip-btn" onclick="setDriveFilter('unapplied', this)">
+                <i data-lucide="sparkles" style="width: 13px; height: 13px; color: var(--accent-coral);"></i> Ready to Apply ({{ total_drives - applied_count }})
+            </button>
+            <button type="button" class="filter-chip-btn" onclick="setDriveFilter('applied', this)">
+                <i data-lucide="check-check" style="width: 13px; height: 13px; color: var(--accent-iris);"></i> Already Applied ({{ applied_count }})
+            </button>
+            <button type="button" class="filter-chip-btn" onclick="setDriveFilter('high_ctc', this)">
+                <i data-lucide="award" style="width: 13px; height: 13px; color: var(--accent-honey);"></i> High CTC (≥ 10 LPA)
+            </button>
+            {% for cat in categories %}
+            <button type="button" class="filter-chip-btn" onclick="setDriveFilter('cat:{{ cat|lower }}', this)">
+                {{ cat }}
+            </button>
+            {% endfor %}
+        </div>
+        <div id="drives-count-indicator" style="font-size: 0.82rem; font-weight: 700; color: var(--text-muted);">
+            Showing {{ total_drives }} campus drives
+        </div>
+    </div>
+</div>
+
+<!-- Ongoing Drives Grid Container -->
+<div class="drives-grid" id="drives-grid">
+    {% for job in jobs %}
+    {% set is_applied = job.id in applied_job_ids %}
+    {% set is_eligible = student.cgpa >= job.min_cgpa %}
+    {% set max_sal = job.salary_max or job.salary_min or 0.0 %}
+    <div class="drive-card {% if is_applied %}applied{% elif is_eligible %}eligible{% endif %}"
+         id="job-card-{{ job.id }}"
+         data-job-id="{{ job.id }}"
+         data-applied="{{ 'true' if is_applied else 'false' }}"
+         data-eligible="{{ 'true' if is_eligible else 'false' }}"
+         data-salary="{{ max_sal }}"
+         data-cgpa="{{ job.min_cgpa }}"
+         data-company="{{ job.company.name|lower }}"
+         data-category="{{ job.role_category|lower if job.role_category else '' }}"
+         data-search="{{ job.title|lower }} {{ job.company.name|lower }} {{ job.location|lower if job.location else '' }} {{ job.role_category|lower if job.role_category else '' }} {{ job.description|lower if job.description else '' }} {% for sk in job.skills %}{{ sk.name|lower }} {% endfor %}">
+        
+        <!-- Card Top Section -->
+        <div>
+            <!-- Company & Package Header -->
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 0.75rem; margin-bottom: 0.85rem;">
+                <div style="display: flex; align-items: center; gap: 0.75rem;">
+                    <div class="company-monogram">
+                        {{ job.company.name[:2]|upper }}
+                    </div>
+                    <div>
+                        <div style="display: flex; align-items: center; gap: 0.35rem;">
+                            <span style="font-weight: 800; font-size: 1rem; color: var(--text-main);">{{ job.company.name }}</span>
+                            <span title="Verified Campus Recruiter" style="color: var(--accent-coral);"><i data-lucide="check-circle" style="width: 14px; height: 14px; fill: #FFF0EB;"></i></span>
+                        </div>
+                        <div style="font-size: 0.8rem; color: var(--text-muted); display: flex; align-items: center; gap: 0.4rem; margin-top: 1px;">
+                            <span>{{ job.location or 'Campus Drive / Hybrid' }}</span>
+                            <span>•</span>
+                            <span>{{ job.company.industry or 'Technology' }}</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="badge badge-shortlisted" style="font-size: 0.82rem; font-weight: 800; padding: 0.35rem 0.85rem; white-space: nowrap;">
+                    {{ job.salary_formatted }}
+                </div>
+            </div>
+
+            <!-- Role Title & Category -->
+            <div style="margin-bottom: 0.65rem;">
+                <h2 style="font-size: 1.15rem; font-weight: 800; color: var(--text-main); margin-bottom: 0.25rem; line-height: 1.3;">
+                    {{ job.title }}
+                </h2>
+                <div style="display: flex; align-items: center; gap: 0.45rem; flex-wrap: wrap;">
+                    <span class="badge" style="background: #FAF7F2; color: var(--text-muted); font-size: 0.72rem; border: 1px solid var(--border-subtle); padding: 0.15rem 0.55rem;">
+                        {{ job.role_category or 'Full-Time Engineering' }}
+                    </span>
+                    <span class="badge" style="background: #FAF7F2; color: var(--text-muted); font-size: 0.72rem; border: 1px solid var(--border-subtle); padding: 0.15rem 0.55rem;">
+                        {{ job.experience_level or 'Fresher (0-1 yrs)' }}
+                    </span>
+                    <span class="badge" style="background: #FAF7F2; color: var(--text-muted); font-size: 0.72rem; border: 1px solid var(--border-subtle); padding: 0.15rem 0.55rem;">
+                        Batch 2026
+                    </span>
+                </div>
+            </div>
+
+            <!-- Job Description Snippet -->
+            {% if job.description %}
+            <p style="font-size: 0.84rem; color: var(--text-muted); line-height: 1.5; margin-bottom: 0.75rem; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">
+                {{ job.description }}
+            </p>
+            {% endif %}
+
+            <!-- Required Skills Tag Cloud -->
+            <div style="display: flex; flex-wrap: wrap; gap: 0.4rem; margin-bottom: 0.85rem;">
+                {% for sk in job.skills %}
+                    <span class="sticker-tag" style="font-size: 0.72rem; padding: 0.2rem 0.55rem; background: #FAF7F2; border-color: var(--border-subtle);">
+                        {{ sk.name }}
+                    </span>
+                {% endfor %}
+            </div>
+
+            <!-- Academic Cutoff & Eligibility Status Strip -->
+            <div class="eligibility-strip {% if is_eligible %}eligible{% else %}shortfall{% endif %}">
+                <div style="display: flex; align-items: center; gap: 0.4rem;">
+                    {% if is_eligible %}
+                        <i data-lucide="check-circle" style="width: 15px; height: 15px; color: var(--accent-sage);"></i>
+                        <span style="font-weight: 700;">Academic Cutoff Met</span>
+                        <span style="font-size: 0.78rem; opacity: 0.85;">(Min {{ "%.1f"|format(job.min_cgpa) }} vs Your {{ "%.2f"|format(student.cgpa) }})</span>
+                    {% else %}
+                        <i data-lucide="alert-triangle" style="width: 15px; height: 15px; color: var(--status-warning);"></i>
+                        <span style="font-weight: 700;">Cutoff Shortfall</span>
+                        <span style="font-size: 0.78rem; opacity: 0.85;">(Needs +{{ "%.1f"|format(job.min_cgpa - student.cgpa) }} CGPA)</span>
+                    {% endif %}
+                </div>
+                <div style="font-size: 0.76rem; color: var(--text-dim); display: flex; align-items: center; gap: 4px;">
+                    <i data-lucide="layers" style="width: 13px; height: 13px;"></i>
+                    <span>Allowed: {{ job.eligible_departments or 'All Branches' }}</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Card Footer Actions: Check Fit & Apply -->
+        <div style="margin-top: 1rem; padding-top: 0.85rem; border-top: 1px solid var(--border-subtle); display: flex; justify-content: space-between; align-items: center; gap: 0.65rem; flex-wrap: wrap;">
+            <!-- Drive Deadline or Status -->
+            <div style="font-size: 0.78rem; color: var(--text-dim); display: flex; align-items: center; gap: 0.35rem;">
+                <i data-lucide="clock" style="width: 14px; height: 14px; color: var(--accent-coral);"></i>
+                <span>Deadline: {{ job.deadline.strftime('%d %b %Y') if job.deadline else 'Applications Open' }}</span>
+            </div>
+
+            <!-- Interactive Action Buttons -->
+            <div style="display: flex; align-items: center; gap: 0.55rem;">
+                <button type="button" 
+                        class="btn btn-outline btn-sm btn-pill" 
+                        onclick="openJobFitModal({{ job.id }}, '{{ job.title|replace('\'', '\\\'') }}', '{{ job.company.name|replace('\'', '\\\'') }}')"
+                        style="border-color: var(--border-medium); font-weight: 700; font-size: 0.8rem; gap: 0.35rem;"
+                        title="Evaluate role readiness, matching skills, and missing competencies">
+                    <i data-lucide="sparkles" style="width: 14px; height: 14px; color: var(--accent-coral);"></i>
+                    Check Fit & Gaps
+                </button>
+
+                <div id="apply-container-{{ job.id }}">
+                    {% if is_applied %}
+                        <span class="btn-applied">
+                            <i data-lucide="check-check" style="width: 14px; height: 14px;"></i>
+                            Applied
+                        </span>
+                    {% else %}
+                        <button type="button" class="btn-quick-apply" id="apply-btn-{{ job.id }}" onclick="quickApply({{ job.id }}, '{{ job.title|replace('\'', '\\\'') }}', '{{ job.company.name|replace('\'', '\\\'') }}')">
+                            <i data-lucide="zap" style="width: 14px; height: 14px;"></i>
+                            Quick Apply
+                        </button>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+    </div>
+    {% endfor %}
+</div>
+
+<!-- Empty State Filter Notice -->
+<div id="drives-empty-filter" style="display: none; background: #FFFFFF; border: 1px dashed var(--border-medium); border-radius: var(--radius-lg); padding: 3.5rem 2rem; text-align: center; margin-top: 1.5rem;">
+    <div style="font-size: 2.2rem; margin-bottom: 0.65rem;">🔍</div>
+    <h3 style="font-size: 1.15rem; font-weight: 800; color: var(--text-main); margin-bottom: 0.35rem;">No campus drives match your current filter</h3>
+    <p style="font-size: 0.88rem; color: var(--text-muted); max-width: 440px; margin: 0 auto 1.25rem;">
+        Try adjusting your keywords, selecting "All Drives", or clearing active filters to see all ongoing campus recruitment opportunities.
+    </p>
+    <button type="button" class="btn btn-outline btn-sm btn-pill" onclick="resetDriveFilters()">
+        <i data-lucide="rotate-ccw" style="width: 14px; height: 14px;"></i> Reset All Filters
+    </button>
+</div>
+
+<!-- ==========================================================================
+     JOB FIT & COMPETENCY GAP REPORT MODAL (INTEGRATED)
+     Complete Detailed Report: Fit Match %, Matched Skills, Skill Gaps to Bridge,
+     Interview Focus & Strategy, and Academic Eligibility Verification.
+     ========================================================================== -->
+<div id="job-fit-modal" style="display: none; position: fixed; inset: 0; background: rgba(31, 28, 24, 0.55); backdrop-filter: blur(6px); z-index: 9999; align-items: center; justify-content: center; padding: 1.25rem;">
+    <div style="background: #FFFFFF; border-radius: var(--radius-lg); width: 100%; max-width: 740px; max-height: 90vh; display: flex; flex-direction: column; box-shadow: var(--shadow-lg); border: 1px solid var(--border-subtle); overflow: hidden; animation: popIn 0.22s cubic-bezier(0.2, 0.8, 0.2, 1);">
+        
+        <!-- Modal Header -->
+        <div style="padding: 1.25rem 1.5rem; border-bottom: 1px solid var(--border-subtle); display: flex; justify-content: space-between; align-items: flex-start; background: #FAF7F2;">
+            <div>
+                <div style="display: inline-flex; align-items: center; gap: 0.45rem; background: #FFF0EB; border: 1px solid #FCD9CE; padding: 0.2rem 0.75rem; border-radius: 9999px; font-size: 0.72rem; font-weight: 700; color: var(--accent-coral); margin-bottom: 0.35rem;">
+                    <i data-lucide="sparkles" style="width: 13px; height: 13px;"></i> Role Fit & Competency Gap Audit
+                </div>
+                <h2 id="modal-job-title" style="font-family: var(--font-display); font-size: 1.35rem; font-weight: 800; color: var(--text-main); margin-bottom: 2px;">
+                    Opportunity Title
+                </h2>
+                <div id="modal-job-meta" style="font-size: 0.86rem; color: var(--text-muted); display: flex; align-items: center; gap: 6px;">
+                    Company • Campus Drive
+                </div>
+            </div>
+            <button type="button" onclick="closeJobFitModal()" style="background: #FFFFFF; border: 1px solid var(--border-subtle); border-radius: 50%; width: 34px; height: 34px; display: flex; align-items: center; justify-content: center; cursor: pointer; color: var(--text-dim); transition: all 0.15s ease;" title="Close Report (Esc)">
+                <i data-lucide="x" style="width: 16px; height: 16px;"></i>
+            </button>
+        </div>
+
+        <!-- Modal Body (Scrollable) -->
+        <div id="modal-body-content" style="padding: 1.5rem; overflow-y: auto; flex: 1; display: flex; flex-direction: column; gap: 1.25rem;">
+            <!-- Loading Spinner State -->
+            <div id="modal-loading-state" style="text-align: center; padding: 3rem 1.5rem;">
+                <div style="width: 44px; height: 44px; border: 3px solid #EAE3D7; border-top-color: var(--accent-coral); border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 1rem;"></div>
+                <div style="font-weight: 700; color: var(--text-main); font-size: 1.05rem; margin-bottom: 0.35rem;">
+                    Analyzing Profile & Job Description...
+                </div>
+                <div style="font-size: 0.86rem; color: var(--text-muted); max-width: 420px; margin: 0 auto;">
+                    Evaluating technical skills, project experience, and academic cutoffs against recruiter requisitions.
+                </div>
+            </div>
+
+            <!-- Loaded Detailed Report Content -->
+            <div id="modal-report-details" style="display: none; flex-direction: column; gap: 1.25rem;">
+                
+                <!-- 1. Hero Compatibility Score Card -->
+                <div style="background: linear-gradient(135deg, #FFFDFC 0%, #FFF5F0 100%); border: 1px solid #FCD9CE; border-radius: var(--radius-md); padding: 1.25rem; display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap;">
+                    <div style="flex: 1; min-width: 240px;">
+                        <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.4rem; flex-wrap: wrap;">
+                            <span id="modal-verdict-badge" class="badge" style="font-size: 0.78rem; font-weight: 800; padding: 0.25rem 0.75rem;">
+                                Strong Fit
+                            </span>
+                            <span id="modal-eligibility-pill" class="badge badge-eligible" style="font-size: 0.74rem;">
+                                Academic Cutoff Passed
+                            </span>
+                        </div>
+                        <div id="modal-reasoning-summary" style="font-size: 0.92rem; color: var(--text-main); line-height: 1.5; font-weight: 600;">
+                            Evaluating candidate alignment...
+                        </div>
+                    </div>
+                    <div style="text-align: center; background: #FFFFFF; border: 1.5px solid #FCD9CE; border-radius: var(--radius-md); padding: 0.85rem 1.35rem; box-shadow: var(--shadow-sm); flex-shrink: 0;">
+                        <div style="font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; color: var(--accent-coral);">Match Fit</div>
+                        <div id="modal-score-val" style="font-family: var(--font-display); font-size: 2.2rem; font-weight: 800; color: var(--accent-coral); line-height: 1.1;">
+                            --%
+                        </div>
+                        <div style="font-size: 0.72rem; color: var(--text-dim); margin-top: 2px;">Multi-Factor Match</div>
+                    </div>
+                </div>
+
+                <!-- 2. Academic & Department Eligibility Grid -->
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 0.85rem;">
+                    <div style="background: #FAF7F2; border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); padding: 0.85rem 1rem;">
+                        <div style="font-size: 0.72rem; text-transform: uppercase; font-weight: 700; color: var(--text-dim); letter-spacing: 0.5px;">CGPA Cutoff Check</div>
+                        <div id="modal-cgpa-check" style="display: flex; align-items: center; gap: 6px; margin-top: 0.35rem; font-size: 0.92rem; font-weight: 700; color: var(--text-main);">
+                            Checking...
+                        </div>
+                    </div>
+                    <div style="background: #FAF7F2; border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); padding: 0.85rem 1rem;">
+                        <div style="font-size: 0.72rem; text-transform: uppercase; font-weight: 700; color: var(--text-dim); letter-spacing: 0.5px;">Department Eligibility</div>
+                        <div id="modal-dept-check" style="display: flex; align-items: center; gap: 6px; margin-top: 0.35rem; font-size: 0.92rem; font-weight: 700; color: var(--text-main);">
+                            Checking...
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 3. What You Have (Matched Competencies) -->
+                <div style="background: #FFFFFF; border: 1px solid var(--border-subtle); border-radius: var(--radius-md); padding: 1.15rem;">
+                    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.65rem;">
+                        <div style="font-size: 0.9rem; font-weight: 800; color: var(--accent-sage); display: flex; align-items: center; gap: 6px;">
+                            <i data-lucide="check-circle-2" style="width: 16px; height: 16px;"></i>
+                            What You Have (Matched Skills)
+                        </div>
+                        <span id="modal-matched-count" class="badge badge-eligible" style="font-size: 0.72rem;">0 Matched</span>
+                    </div>
+                    <div id="modal-matched-skills" style="display: flex; flex-wrap: wrap; gap: 0.5rem;">
+                    </div>
+                </div>
+
+                <!-- 4. What You Are Lacking (Skill Gaps & Deficits) -->
+                <div style="background: #FFFFFF; border: 1px solid var(--border-subtle); border-radius: var(--radius-md); padding: 1.15rem;">
+                    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.65rem;">
+                        <div style="font-size: 0.9rem; font-weight: 800; color: var(--status-warning); display: flex; align-items: center; gap: 6px;">
+                            <i data-lucide="alert-triangle" style="width: 16px; height: 16px;"></i>
+                            What You Are Lacking (Identified Skill Gaps)
+                        </div>
+                        <span id="modal-missing-count" class="badge" style="font-size: 0.72rem; background: #FFF8E7; color: var(--status-warning); border: 1px solid #FDE68A;">0 Missing</span>
+                    </div>
+                    <div id="modal-missing-skills" style="display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 0.75rem;">
+                    </div>
+                    <!-- Actionable Priority Advice -->
+                    <div id="modal-critical-gaps-container" style="background: #FFFDF9; border-left: 3px solid var(--status-warning); padding: 0.7rem 0.9rem; border-radius: 0 var(--radius-xs) var(--radius-xs) 0; font-size: 0.84rem; color: var(--text-muted); line-height: 1.45;">
+                    </div>
+                </div>
+
+                <!-- 5. What You Should Focus On (Interview Strategy & Talking Points) -->
+                <div style="background: #FAF7F2; border: 1px solid var(--border-subtle); border-radius: var(--radius-md); padding: 1.15rem;">
+                    <div style="font-size: 0.92rem; font-weight: 800; color: var(--text-main); display: flex; align-items: center; gap: 6px; margin-bottom: 0.75rem;">
+                        <i data-lucide="target" style="width: 16px; height: 16px; color: var(--accent-coral);"></i>
+                        What You Should Focus On (Interview Preparation)
+                    </div>
+                    
+                    <div style="margin-bottom: 0.85rem;">
+                        <div style="font-size: 0.74rem; font-weight: 700; text-transform: uppercase; color: var(--text-dim); margin-bottom: 0.35rem;">Standout Advantages to Highlight:</div>
+                        <ul id="modal-advantages-list" style="margin-left: 1.25rem; font-size: 0.86rem; color: var(--text-muted); line-height: 1.55; display: flex; flex-direction: column; gap: 0.3rem;">
+                        </ul>
+                    </div>
+
+                    <div>
+                        <div style="font-size: 0.74rem; font-weight: 700; text-transform: uppercase; color: var(--text-dim); margin-bottom: 0.35rem;">Tailored Interview Talking Points:</div>
+                        <ul id="modal-talking-points-list" style="margin-left: 1.25rem; font-size: 0.86rem; color: var(--text-muted); line-height: 1.55; display: flex; flex-direction: column; gap: 0.3rem;">
+                        </ul>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- Modal Footer Actions -->
+        <div style="padding: 1rem 1.5rem; border-top: 1px solid var(--border-subtle); background: #FAF7F2; display: flex; justify-content: space-between; align-items: center; gap: 0.75rem; flex-wrap: wrap;">
+            <a href="{{ url_for('student_ai.roadmap_page') }}" class="btn btn-outline btn-sm btn-pill">
+                <i data-lucide="map" style="width: 14px; height: 14px; color: var(--accent-iris);"></i>
+                Open Career Roadmap
+            </a>
+            <div style="display: flex; align-items: center; gap: 0.65rem;">
+                <button type="button" class="btn btn-outline btn-sm" onclick="closeJobFitModal()">
+                    Close
+                </button>
+                <div id="modal-apply-btn-slot">
+                    <!-- Dynamic apply button injected here -->
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let currentFilterType = 'all';
+
+/**
+ * Update active filter chip and re-run filter
+ */
+function setDriveFilter(filterType, btn) {
+    currentFilterType = filterType;
+    document.querySelectorAll('#filter-pills-container .filter-chip-btn').forEach(b => b.classList.remove('active'));
+    if (btn) btn.classList.add('active');
+    filterDrives();
+}
+
+/**
+ * Reset all filters to default
+ */
+function resetDriveFilters() {
+    document.getElementById('drive-search-input').value = '';
+    const firstPill = document.querySelector('#filter-pills-container .filter-chip-btn');
+    setDriveFilter('all', firstPill);
+    document.getElementById('drive-sort-select').value = 'newest';
+    sortDrives();
+}
+
+/**
+ * Filter ongoing campus drives in real-time
+ */
+function filterDrives() {
+    const query = (document.getElementById('drive-search-input')?.value || '').toLowerCase().trim();
+    const cards = document.querySelectorAll('.drive-card');
+    let visibleCount = 0;
+
+    cards.forEach(card => {
+        const isApplied = card.getAttribute('data-applied') === 'true';
+        const isEligible = card.getAttribute('data-eligible') === 'true';
+        const salary = parseFloat(card.getAttribute('data-salary')) || 0.0;
+        const category = card.getAttribute('data-category') || '';
+        const searchText = card.getAttribute('data-search') || '';
+
+        let matchesFilter = true;
+        if (currentFilterType === 'eligible') {
+            matchesFilter = isEligible;
+        } else if (currentFilterType === 'unapplied') {
+            matchesFilter = !isApplied;
+        } else if (currentFilterType === 'applied') {
+            matchesFilter = isApplied;
+        } else if (currentFilterType === 'high_ctc') {
+            matchesFilter = salary >= 10.0;
+        } else if (currentFilterType.startsWith('cat:')) {
+            const targetCat = currentFilterType.replace('cat:', '').toLowerCase();
+            matchesFilter = category.includes(targetCat);
+        }
+
+        const matchesQuery = !query || searchText.includes(query);
+
+        if (matchesFilter && matchesQuery) {
+            card.style.display = 'flex';
+            visibleCount++;
+        } else {
+            card.style.display = 'none';
+        }
+    });
+
+    // Update count indicator & empty state
+    const indicator = document.getElementById('drives-count-indicator');
+    if (indicator) {
+        indicator.textContent = `Showing ${visibleCount} campus drives`;
+    }
+
+    const emptyBox = document.getElementById('drives-empty-filter');
+    if (emptyBox) {
+        emptyBox.style.display = visibleCount === 0 ? 'block' : 'none';
+    }
+}
+
+/**
+ * Sort cards dynamically
+ */
+function sortDrives() {
+    const sortVal = document.getElementById('drive-sort-select')?.value || 'newest';
+    const grid = document.getElementById('drives-grid');
+    if (!grid) return;
+
+    const cards = Array.from(grid.querySelectorAll('.drive-card'));
+
+    cards.sort((a, b) => {
+        if (sortVal === 'salary-desc') {
+            const salA = parseFloat(a.getAttribute('data-salary')) || 0;
+            const salB = parseFloat(b.getAttribute('data-salary')) || 0;
+            return salB - salA;
+        } else if (sortVal === 'cgpa-asc') {
+            const cgpaA = parseFloat(a.getAttribute('data-cgpa')) || 0;
+            const cgpaB = parseFloat(b.getAttribute('data-cgpa')) || 0;
+            return cgpaA - cgpaB;
+        } else if (sortVal === 'company-asc') {
+            const compA = a.getAttribute('data-company') || '';
+            const compB = b.getAttribute('data-company') || '';
+            return compA.localeCompare(compB);
+        } else {
+            // Newest first (by job ID descending)
+            const idA = parseInt(a.getAttribute('data-job-id')) || 0;
+            const idB = parseInt(b.getAttribute('data-job-id')) || 0;
+            return idB - idA;
+        }
+    });
+
+    cards.forEach(card => grid.appendChild(card));
+}
+
+/**
+ * Quick Apply to ongoing campus drive
+ */
+async function quickApply(jobId, jobTitle, companyName) {
+    const btn = document.getElementById(`apply-btn-${jobId}`);
+    const container = document.getElementById(`apply-container-${jobId}`);
+    const card = document.getElementById(`job-card-${jobId}`);
+    if (!btn || btn.disabled) return;
+
+    btn.disabled = true;
+    btn.innerHTML = `<i data-lucide="loader-2" class="spin" style="width: 14px; height: 14px;"></i> Applying...`;
+    if (window.lucide) window.lucide.createIcons();
+
+    try {
+        const response = await fetch("/api/applications/apply", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ job_id: jobId })
+        });
+
+        const data = await response.json();
+
+        if (response.ok && data.success) {
+            if (card) {
+                card.setAttribute('data-applied', 'true');
+                card.classList.add('applied');
+            }
+            if (container) {
+                container.innerHTML = `
+                    <span class="btn-applied">
+                        <i data-lucide="check-check" style="width: 14px; height: 14px;"></i>
+                        Applied
+                    </span>
+                `;
+            }
+
+            // Increment KPI counter
+            const kpiCount = document.getElementById("kpi-applied-count");
+            if (kpiCount) {
+                const current = parseInt(kpiCount.innerText) || 0;
+                kpiCount.innerText = current + 1;
+            }
+
+            if (window.showGlobalToast) {
+                window.showGlobalToast(`🎉 Application submitted to ${jobTitle} at ${companyName}!`);
+            }
+            if (window.lucide) window.lucide.createIcons();
+
+        } else {
+            btn.disabled = false;
+            btn.innerHTML = `<i data-lucide="zap" style="width: 14px; height: 14px;"></i> Quick Apply`;
+            if (window.showGlobalToast) {
+                window.showGlobalToast(`⚠️ ${data.error || "Could not apply to this opportunity."}`);
+            }
+            if (window.lucide) window.lucide.createIcons();
+        }
+    } catch (err) {
+        console.error(err);
+        btn.disabled = false;
+        btn.innerHTML = `<i data-lucide="zap" style="width: 14px; height: 14px;"></i> Quick Apply`;
+        if (window.showGlobalToast) {
+            window.showGlobalToast("⚠️ Network issue while applying. Please try again.");
+        }
+        if (window.lucide) window.lucide.createIcons();
+    }
+}
+
+/**
+ * Open Job Fit & Gap Audit Modal with dynamic AI and deterministic evaluations
+ */
+async function openJobFitModal(jobId, jobTitle, companyName) {
+    const modal = document.getElementById('job-fit-modal');
+    const loadingState = document.getElementById('modal-loading-state');
+    const reportDetails = document.getElementById('modal-report-details');
+    
+    document.getElementById('modal-job-title').textContent = jobTitle;
+    document.getElementById('modal-job-meta').textContent = `${companyName} • Campus Drive`;
+    
+    loadingState.style.display = 'block';
+    reportDetails.style.display = 'none';
+    modal.style.display = 'flex';
+    
+    if (window.lucide) window.lucide.createIcons();
+
+    try {
+        const res = await fetch(`/student/ai/api/job-match/${jobId}`);
+        const data = await res.json();
+        
+        if (!res.ok || data.error) {
+            throw new Error(data.error || 'Failed to fetch match evaluation');
+        }
+
+        // 1. Title & Meta
+        document.getElementById('modal-job-title').textContent = data.job_title;
+        document.getElementById('modal-job-meta').textContent = `${data.company_name} • ${data.job_location || 'Campus'} • ${data.salary_formatted || ''}`;
+
+        // 2. Score & Verdict
+        document.getElementById('modal-score-val').textContent = `${Math.round(data.composite_score)}%`;
+        
+        const verdictBadge = document.getElementById('modal-verdict-badge');
+        verdictBadge.textContent = data.fit_verdict || 'Competitive Fit';
+        if (data.composite_score >= 75) {
+            verdictBadge.className = 'badge badge-eligible';
+        } else if (data.composite_score >= 50) {
+            verdictBadge.className = 'badge badge-shortlisted';
+        } else {
+            verdictBadge.className = 'badge badge-rejected';
+        }
+
+        // Eligibility Pill
+        const eligPill = document.getElementById('modal-eligibility-pill');
+        if (data.cgpa_eligible && data.dept_eligible) {
+            eligPill.textContent = 'Academic Cutoff Passed';
+            eligPill.className = 'badge badge-eligible';
+        } else if (!data.cgpa_eligible) {
+            eligPill.textContent = `CGPA Below Min (${data.min_cgpa})`;
+            eligPill.className = 'badge badge-rejected';
+        } else {
+            eligPill.textContent = 'Department Restriction';
+            eligPill.className = 'badge badge-rejected';
+        }
+
+        // Reasoning Summary
+        document.getElementById('modal-reasoning-summary').textContent = data.reasoning_summary || 'Multi-factor alignment based on coursework, technical skills, and academic metrics.';
+
+        // Academic details
+        document.getElementById('modal-cgpa-check').innerHTML = `
+            <span>Your CGPA: <strong>${data.student_cgpa.toFixed(2)}</strong></span>
+            <span style="color: var(--text-dim);">/</span>
+            <span>Cutoff: <strong>${data.min_cgpa.toFixed(1)}</strong></span>
+            ${data.cgpa_eligible ? '<span style="color:var(--accent-sage); font-weight:700;">✓ Meets Cutoff</span>' : '<span style="color:var(--status-danger); font-weight:700;">✗ Shortfall</span>'}
+        `;
+
+        document.getElementById('modal-dept-check').innerHTML = `
+            <span>Your Branch: <strong>${data.student_dept || 'CS'}</strong></span>
+            <span style="color: var(--text-dim); font-size: 0.78rem;">(Allowed: ${data.eligible_departments})</span>
+        `;
+
+        // 3. Matched Skills
+        const matchedContainer = document.getElementById('modal-matched-skills');
+        matchedContainer.innerHTML = '';
+        document.getElementById('modal-matched-count').textContent = `${data.matched_skills.length} Matched`;
+        if (data.matched_skills && data.matched_skills.length > 0) {
+            data.matched_skills.forEach(skill => {
+                const tag = document.createElement('span');
+                tag.className = 'sticker-tag';
+                tag.style.background = '#EAF4EE';
+                tag.style.borderColor = '#CDE7D8';
+                tag.style.color = 'var(--accent-sage)';
+                tag.style.fontWeight = '700';
+                tag.innerHTML = `<i data-lucide="check" style="width: 12px; height: 12px;"></i> ${skill}`;
+                matchedContainer.appendChild(tag);
+            });
+        } else {
+            matchedContainer.innerHTML = '<span style="color: var(--text-dim); font-size: 0.85rem;">No direct matching skills recorded yet. Review identified gaps below.</span>';
+        }
+
+        // 4. Missing Skills & Gaps
+        const missingContainer = document.getElementById('modal-missing-skills');
+        missingContainer.innerHTML = '';
+        document.getElementById('modal-missing-count').textContent = `${data.missing_skills.length} Missing`;
+        if (data.missing_skills && data.missing_skills.length > 0) {
+            data.missing_skills.forEach(skill => {
+                const tag = document.createElement('span');
+                tag.className = 'sticker-tag';
+                tag.style.background = '#FFF8E7';
+                tag.style.borderColor = '#FDE68A';
+                tag.style.color = 'var(--status-warning)';
+                tag.style.fontWeight = '700';
+                tag.innerHTML = `<i data-lucide="alert-circle" style="width: 12px; height: 12px;"></i> ${skill}`;
+                missingContainer.appendChild(tag);
+            });
+        } else {
+            missingContainer.innerHTML = '<span style="color: var(--accent-sage); font-size: 0.85rem; font-weight: 700;">🎉 Excellent! Your profile skills meet all required role skills.</span>';
+        }
+
+        // Critical Gaps Guidance
+        const critGaps = document.getElementById('modal-critical-gaps-container');
+        if (data.critical_gaps_to_address && data.critical_gaps_to_address.length > 0) {
+            critGaps.style.display = 'block';
+            critGaps.innerHTML = `<strong>Priority Action:</strong> ${data.critical_gaps_to_address.join(' ')}`;
+        } else {
+            critGaps.style.display = 'none';
+        }
+
+        // 5. Advantages & Interview Talking Points
+        const advList = document.getElementById('modal-advantages-list');
+        advList.innerHTML = '';
+        (data.standout_advantages || []).forEach(adv => {
+            const li = document.createElement('li');
+            li.textContent = adv;
+            advList.appendChild(li);
+        });
+
+        const tpList = document.getElementById('modal-talking-points-list');
+        tpList.innerHTML = '';
+        (data.interview_talking_points || []).forEach(tp => {
+            const li = document.createElement('li');
+            li.textContent = tp;
+            tpList.appendChild(li);
+        });
+
+        // 6. Apply button slot inside modal
+        const card = document.getElementById(`job-card-${jobId}`);
+        const isAlreadyApplied = card && card.getAttribute('data-applied') === 'true';
+        const modalApplySlot = document.getElementById('modal-apply-btn-slot');
+        
+        if (isAlreadyApplied) {
+            modalApplySlot.innerHTML = `<span class="btn-applied"><i data-lucide="check-check" style="width: 14px; height: 14px;"></i> Applied</span>`;
+        } else {
+            modalApplySlot.innerHTML = `
+                <button type="button" class="btn btn-primary btn-sm btn-pill" onclick="quickApply(${jobId}, '${data.job_title.replace(/'/g, "\\'")}', '${data.company_name.replace(/'/g, "\\'")}'); closeJobFitModal();">
+                    <i data-lucide="zap" style="width: 14px; height: 14px;"></i> Quick Apply to Drive
+                </button>
+            `;
+        }
+
+        // Reveal report
+        loadingState.style.display = 'none';
+        reportDetails.style.display = 'flex';
+        if (window.lucide) window.lucide.createIcons();
+
+    } catch (err) {
+        console.error(err);
+        loadingState.innerHTML = `
+            <div style="color: var(--status-danger); font-size: 1.8rem; margin-bottom: 0.5rem;">⚠️</div>
+            <div style="font-weight: 700; color: var(--text-main); margin-bottom: 0.25rem;">Could not evaluate match</div>
+            <div style="font-size: 0.85rem; color: var(--text-muted);">${err.message}</div>
+        `;
+    }
+}
+
+function closeJobFitModal() {
+    const modal = document.getElementById('job-fit-modal');
+    if (modal) modal.style.display = 'none';
+}
+window.openJobFitModal = openJobFitModal;
+window.closeJobFitModal = closeJobFitModal;
+
+// Close modal when pressing Escape or clicking backdrop
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') closeJobFitModal();
+});
+document.getElementById('job-fit-modal')?.addEventListener('click', (e) => {
+    if (e.target.id === 'job-fit-modal') closeJobFitModal();
+});
+</script>
+{% endblock %}

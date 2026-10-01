@@ -13,15 +13,12 @@ auth_bp = Blueprint("auth", __name__)
 
 @auth_bp.route("/login", methods=["GET", "POST"])
 def login():
-    """Login view supporting both form submission and redirecting authenticated users."""
-    if "user_id" in session:
-        role = session.get("user_role")
-        if role == "student":
-            return redirect(url_for("student.dashboard"))
-        elif role == "recruiter":
-            return redirect(url_for("recruiter.dashboard"))
-        elif role == "admin":
-            return redirect(url_for("admin.dashboard"))
+    """Login view. Automatically cleans up and destroys any previous session when loading the login screen."""
+    # When user visits the login screen, delete any previous session so old modules cannot be accessed
+    if request.method == "GET":
+        logout_user()
+        session.clear()
+        return render_template("login.html")
 
     if request.method == "POST":
         email = request.form.get("email", "").strip().lower()
@@ -38,20 +35,26 @@ def login():
             flash("This account has been deactivated. Please contact administrator.", "danger")
             return render_template("login.html", email=email)
 
+        # Ensure previous session is completely wiped before establishing new identity
+        logout_user()
+        session.clear()
+
         # Authenticate via Flask-Login
         login_user(user, remember=remember)
+
+        role_lower = (user.role or "").lower()
 
         # Set session details
         session["user_id"] = user.id
         session["user_email"] = user.email
-        session["user_role"] = user.role.lower()
+        session["user_role"] = role_lower
         session.permanent = remember
 
         # Attach display name to session for instant header render
-        if user.role == "student" and user.student_profile:
+        if role_lower == "student" and user.student_profile:
             session["display_name"] = user.student_profile.name
             session["profile_id"] = user.student_profile.id
-        elif user.role == "recruiter" and user.recruiter_profile:
+        elif role_lower == "recruiter" and user.recruiter_profile:
             session["display_name"] = user.recruiter_profile.name
             session["profile_id"] = user.recruiter_profile.id
             session["company_name"] = user.recruiter_profile.company.name if user.recruiter_profile.company else ""
@@ -61,24 +64,25 @@ def login():
         flash(f"Welcome back, {session['display_name']}!", "success")
 
         next_page = request.args.get("next")
-        if next_page and next_page.startswith("/"):
+        if next_page and next_page.startswith("/") and not next_page.startswith("/login"):
             return redirect(next_page)
 
-        if user.role == "student":
+        if role_lower == "student":
             return redirect(url_for("student.dashboard"))
-        elif user.role == "recruiter":
+        elif role_lower == "recruiter":
             return redirect(url_for("recruiter.dashboard"))
-        elif user.role == "admin":
+        elif role_lower == "admin":
             return redirect(url_for("admin.dashboard"))
-
-    return render_template("login.html")
+        else:
+            return redirect(url_for("student.dashboard"))
 
 
 @auth_bp.route("/register", methods=["GET", "POST"])
 def register():
     """Registration for new Students and Recruiters."""
-    if "user_id" in session:
-        return redirect(url_for("auth.login"))
+    if request.method == "GET":
+        logout_user()
+        session.clear()
 
     departments = Department.query.order_by(Department.code).all()
     companies = Company.query.order_by(Company.name).all()
@@ -190,8 +194,8 @@ def logout():
 def switch_role(target_role):
     """Intuitive 1-click role switcher for evaluating different portals."""
     role_map = {
-        "student": "rahul.sharma@campus.edu",
-        "recruiter": "priya.recruiter@nexustech.com",
+        "student": "student@demo.com",
+        "recruiter": "recruiter@demo.com",
         "admin": "admin@placementiq.ai",
     }
     email = role_map.get(target_role.lower())
@@ -209,13 +213,13 @@ def switch_role(target_role):
         if user.role.lower() == "student" and user.student_profile:
             session["display_name"] = user.student_profile.name
             session["profile_id"] = user.student_profile.id
-            flash("Switched to Student Workspace (Rahul)", "success")
+            flash("Switched to Student Demo Workspace", "success")
             return redirect(url_for("student.dashboard"))
         elif user.role.lower() == "recruiter" and user.recruiter_profile:
             session["display_name"] = user.recruiter_profile.name
             session["profile_id"] = user.recruiter_profile.id
             session["company_name"] = user.recruiter_profile.company.name if user.recruiter_profile.company else ""
-            flash("Switched to Recruiter Studio (Priya @ Nexus)", "success")
+            flash("Switched to Recruiter Demo Studio", "success")
             return redirect(url_for("recruiter.dashboard"))
         elif user.role.lower() == "admin":
             session["display_name"] = "College Administrator"

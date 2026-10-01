@@ -23,7 +23,9 @@
     </div>
 
     <div class="app-container">
-        {% if session_user_role %}
+        {% set is_auth_or_public = hide_navigation or not session_user_role or (request.endpoint and (request.endpoint in ['auth.login', 'auth.register', 'auth.forgot_password', 'index', 'main.index'])) or (request.path and (request.path.startswith('/login') or request.path.startswith('/register') or request.path == '/')) %}
+        {% set show_portal_chrome = session_user_role and not is_auth_or_public %}
+        {% if show_portal_chrome %}
         <!-- Shared Role-Aware Sidebar -->
         <aside class="app-sidebar">
             <div class="sidebar-header">
@@ -53,10 +55,6 @@
                     <a href="{{ url_for('student.jobs_view') }}" class="nav-item {% if active_page == 'jobs' %}active{% endif %}">
                         <i data-lucide="briefcase"></i>
                         <span>Opportunities</span>
-                    </a>
-                    <a href="{{ url_for('student.applications_view') }}" class="nav-item {% if active_page == 'applications' %}active{% endif %}">
-                        <i data-lucide="file-check"></i>
-                        <span>My Applications</span>
                     </a>
                     <a href="{{ url_for('student.interviews_view') }}" class="nav-item {% if active_page == 'interviews' %}active{% endif %}">
                         <i data-lucide="calendar"></i>
@@ -159,8 +157,8 @@
         {% endif %}
 
         <!-- Main Body -->
-        <main class="app-main" {% if not session_user_role %}style="margin-left: 0;"{% endif %}>
-            {% if session_user_role %}
+        <main class="app-main" {% if not show_portal_chrome %}style="margin-left: 0; width: 100%;"{% endif %}>
+            {% if show_portal_chrome %}
             <header class="app-header">
                 <div class="header-left">
                     <button type="button" class="sidebar-toggle-btn" id="sidebar-toggle" title="Toggle Sidebar (Ctrl+B)" aria-label="Toggle navigation">
@@ -183,10 +181,10 @@
                         <div class="role-dropdown-menu" id="role-dropdown-menu">
                             <div class="role-dropdown-title">Switch Portal View</div>
                             <a href="{{ url_for('auth.switch_role', target_role='student') }}" class="role-dropdown-item {% if session_user_role == 'student' %}active{% endif %}">
-                                🎓 Student Portal (Rahul)
+                                🎓 Student Demo
                             </a>
                             <a href="{{ url_for('auth.switch_role', target_role='recruiter') }}" class="role-dropdown-item {% if session_user_role == 'recruiter' %}active{% endif %}">
-                                🏢 Recruiter Studio (Priya)
+                                🏢 Recruiter Demo
                             </a>
                             <a href="{{ url_for('auth.switch_role', target_role='admin') }}" class="role-dropdown-item {% if session_user_role == 'admin' %}active{% endif %}">
                                 🏛️ College Leadership
@@ -233,9 +231,9 @@
         </main>
     </div>
 
-    {% if session_user_role == 'student' %}
+    {% if show_portal_chrome and session_user_role == 'student' %}
         {% include "components/ai_career_drawer.html" %}
-    {% elif session_user_role == 'recruiter' %}
+    {% elif show_portal_chrome and session_user_role == 'recruiter' %}
         {% include "components/ai_recruiter_drawer.html" %}
     {% endif %}
 

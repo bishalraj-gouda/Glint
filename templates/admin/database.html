@@ -334,7 +334,7 @@
                         {% for r in rows %}
                         <tr id="row_{{ active_table }}_{{ r.id }}">
                             {% for cell in r.cells %}
-                            <td class="table-searchable-cell">{{ cell }}</td>
+                            <td class="table-searchable-cell">{{ cell|safe }}</td>
                             {% endfor %}
 
                             {% if r.badge %}
