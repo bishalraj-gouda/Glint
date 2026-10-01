@@ -1,0 +1,1063 @@
+{% extends "base.html" %}
+
+{% block title %}Student Dashboard{% endblock %}
+
+{% block extra_css %}
+<style>
+/* Bento Grid Maximized Drives Mode */
+.dashboard-bento-layout {
+    display: grid;
+    grid-template-columns: 1.85fr 1.15fr;
+    gap: 1.85rem;
+    align-items: start;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.dashboard-bento-layout.drives-maximized {
+    grid-template-columns: 1fr !important;
+}
+
+.dashboard-bento-layout.drives-maximized .dashboard-secondary-col {
+    display: grid !important;
+    grid-template-columns: repeat(auto-fit, minmax(360px, 1fr)) !important;
+    gap: 1.85rem;
+    margin-top: 1rem;
+}
+
+.dashboard-bento-layout.drives-maximized #jobs-container {
+    display: grid !important;
+    grid-template-columns: repeat(auto-fill, minmax(420px, 1fr)) !important;
+    gap: 1.15rem !important;
+}
+
+.dashboard-bento-layout.drives-maximized #active-drives-section {
+    border-top-width: 5px;
+    border-color: var(--accent-coral);
+    box-shadow: 0 10px 30px rgba(231, 111, 81, 0.12);
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Pre-calculate applied job IDs for quick application status -->
+{% set applied_job_ids = [] %}
+{% for app in recent_apps %}
+    {% set _ = applied_job_ids.append(app.job_id) %}
+{% endfor %}
+
+<!-- Welcoming Playbook x Bamco Hero Header & Profile Card with Integrated Skills -->
+<div class="page-header" style="margin-bottom: 1.5rem; background: #FFFDFC; border: 1px solid var(--border-subtle); border-radius: var(--radius-lg); padding: 1.5rem; box-shadow: var(--shadow-sm);">
+    <div style="display: flex; justify-content: space-between; align-items: flex-start; width: 100%; flex-wrap: wrap; gap: 1rem;">
+        <div>
+            <div style="display: inline-flex; align-items: center; gap: 0.5rem; background: #FFF0EB; border: 1px solid #FCD9CE; padding: 0.25rem 0.85rem; border-radius: var(--radius-full); font-size: 0.78rem; font-weight: 700; color: var(--accent-coral); margin-bottom: 0.5rem;">
+                <span>👋</span> Welcome back, {{ student.name.split(' ')[0] }}!
+            </div>
+            <h1 class="page-title" style="margin-bottom: 0.25rem;">{{ student.name }}</h1>
+            <p class="page-description" style="margin-bottom: 0;">
+                Targeting <strong>{{ student.target_role }}</strong> • {{ student.department.name }} ({{ student.department.code }}) • Class of {{ student.graduation_year or 2026 }}
+            </p>
+        </div>
+        <div style="display: flex; gap: 0.65rem; align-items: center; flex-wrap: wrap;">
+            <span class="sticker-tag">
+                <i data-lucide="hash" style="width: 14px; height: 14px; color: var(--accent-coral);"></i>
+                Roll: {{ student.roll_number }}
+            </span>
+            <span class="sticker-tag" style="background: var(--accent-sage-light); border-color: #CDE7D8; color: var(--accent-sage);">
+                <i data-lucide="award" style="width: 14px; height: 14px;"></i>
+                CGPA: {{ "%.2f"|format(student.cgpa) }}
+            </span>
+            <a href="{{ url_for('student.profile_view') }}" class="btn btn-outline btn-sm" title="Edit Profile & Skills">
+                <i data-lucide="edit-3" style="width: 14px; height: 14px;"></i>
+                Edit Profile
+            </a>
+        </div>
+    </div>
+
+    <!-- Integrated Profile Skills Bar -->
+    <div style="margin-top: 1rem; padding-top: 0.85rem; border-top: 1px solid var(--border-subtle); display: flex; align-items: center; justify-content: space-between; gap: 0.85rem; flex-wrap: wrap;">
+        <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; flex: 1;">
+            <span style="font-size: 0.76rem; font-weight: 700; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.6px; display: inline-flex; align-items: center; gap: 4px;">
+                <i data-lucide="sparkles" style="width: 13px; height: 13px; color: var(--accent-coral);"></i> Technical Skills:
+            </span>
+            {% for ss in student.student_skills %}
+                <span class="sticker-tag" style="font-size: 0.78rem; padding: 0.22rem 0.65rem; background: #FAF7F2; border-color: var(--border-subtle);">
+                    <strong>{{ ss.skill.name }}</strong>
+                    <span style="font-size: 0.68rem; color: var(--accent-sage); font-weight: 700; text-transform: capitalize;">({{ ss.proficiency_level }})</span>
+                </span>
+            {% else %}
+                <span style="font-size: 0.82rem; color: var(--text-dim); font-style: italic;">No skills added yet.</span>
+            {% endfor %}
+        </div>
+        <a href="{{ url_for('student.profile_view') }}#skills-edit-section" class="btn btn-outline btn-sm btn-pill" style="font-size: 0.76rem; padding: 0.22rem 0.75rem; border-color: var(--accent-coral); color: var(--accent-coral);">
+            <i data-lucide="plus-circle" style="width: 13px; height: 13px;"></i> Add / Edit Skills
+        </a>
+    </div>
+</div>
+
+<!-- Placement Standing & Action Bar -->
+<div class="action-guide-card">
+    <div style="display: flex; align-items: center; gap: 1rem;">
+        <div style="width: 38px; height: 38px; border-radius: var(--radius-sm); background: #FAF7F2; border: 1px solid var(--border-subtle); color: var(--accent-coral); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+            <i data-lucide="compass" style="width: 20px; height: 20px;"></i>
+        </div>
+        <div>
+            <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.15rem;">
+                <span class="badge badge-eligible" style="font-size: 0.7rem; display: inline-flex; align-items: center; gap: 4px;">
+                    <span style="width: 6px; height: 6px; border-radius: 50%; background: var(--accent-sage);"></span> Campus Recruitment
+                </span>
+                <span style="font-size: 0.78rem; color: var(--text-dim);">Academic Standing: <strong style="color: var(--text-main);">CGPA {{ "%.2f"|format(student.cgpa) }}</strong></span>
+            </div>
+            <div style="font-size: 0.92rem; font-weight: 700; color: var(--text-main);">
+                {{ active_jobs|length }} campus opportunities currently accepting applications for {{ student.department.code }} students.
+            </div>
+        </div>
+    </div>
+    <div style="display: flex; gap: 0.55rem; flex-wrap: wrap;">
+        <a href="#active-drives-section" class="btn btn-outline btn-sm btn-pill" onclick="jumpToSection('active-drives-section', 'Active Campus Drives');">
+            <i data-lucide="briefcase" style="width: 13px; height: 13px;"></i> Open Drives
+        </a>
+        <a href="{{ url_for('student_ai.roadmap_page') }}" class="btn btn-outline btn-sm btn-pill">
+            <i data-lucide="map" style="width: 13px; height: 13px;"></i> Career Roadmap
+        </a>
+    </div>
+</div>
+
+<!-- Clickable Bento KPI Cards Row (Jump Directly to Related Sections) -->
+<div class="kpi-grid">
+    <!-- Box 1: Open Opportunities -> Clicks to Active Campus Drives (Maximizes view) -->
+    <div class="kpi-card" onclick="maximizeAndJumpToDrives()" style="border-top: 4px solid var(--accent-coral);" title="Click to maximize and view open campus opportunities">
+        <div class="kpi-header">
+            <div class="kpi-title">Open Drives</div>
+            <div class="kpi-icon-wrap" style="background: #FFF0EB; color: var(--accent-coral);"><i data-lucide="briefcase"></i></div>
+        </div>
+        <div class="kpi-value">{{ active_jobs|length }}</div>
+        <div class="kpi-subtext">Active campus job requisitions</div>
+        <div class="kpi-click-hint">
+            <span>Maximize & browse drives</span>
+            <i data-lucide="maximize-2" style="width: 14px; height: 14px;"></i>
+        </div>
+    </div>
+
+    <!-- Box 2: My Applications -> Clicks to WHERE I HAVE ALREADY APPLIED! -->
+    <div class="kpi-card" onclick="jumpToSection('applications-section', 'Where You Applied')" style="border-top: 4px solid var(--accent-honey);" title="Click to view all jobs where you have applied">
+        <div class="kpi-header">
+            <div class="kpi-title">My Applications</div>
+            <div class="kpi-icon-wrap" style="background: #FFF8E7; color: var(--status-warning);"><i data-lucide="send"></i></div>
+        </div>
+        <div class="kpi-value" id="kpi-apps-count">{{ recent_apps|length }}</div>
+        <div class="kpi-subtext">Jobs where you have submitted applications</div>
+        <div class="kpi-click-hint" style="color: var(--status-warning);">
+            <span>Open where I applied</span>
+            <i data-lucide="arrow-down-right" style="width: 14px; height: 14px;"></i>
+        </div>
+    </div>
+
+    <!-- Box 3: Upcoming Interviews -> Clicks to Interview Schedule -->
+    <div class="kpi-card" onclick="jumpToSection('interviews-section', 'Upcoming Interviews')" style="border-top: 4px solid var(--accent-iris);" title="Click to view upcoming interview rounds">
+        <div class="kpi-header">
+            <div class="kpi-title">Upcoming Interviews</div>
+            <div class="kpi-icon-wrap" style="background: #F3F0FF; color: var(--accent-iris);"><i data-lucide="calendar"></i></div>
+        </div>
+        <div class="kpi-value">{{ upcoming_interviews|length }}</div>
+        <div class="kpi-subtext">Active screening and technical rounds</div>
+        <div class="kpi-click-hint">
+            <span>View schedule</span>
+            <i data-lucide="arrow-down-right" style="width: 14px; height: 14px;"></i>
+        </div>
+    </div>
+
+    <!-- Box 4: Profile & Skills -> Clicks to Profile View -->
+    <a href="{{ url_for('student.profile_view') }}#skills-edit-section" class="kpi-card" style="border-top: 4px solid var(--accent-sage); text-decoration: none; color: inherit; display: block;" title="Click to view and edit profile skills">
+        <div class="kpi-header">
+            <div class="kpi-title">Profile & Skills</div>
+            <div class="kpi-icon-wrap" style="background: #EAF4EE; color: var(--accent-sage);"><i data-lucide="user-check"></i></div>
+        </div>
+        <div class="kpi-value">{{ student.student_skills|length }}</div>
+        <div class="kpi-subtext">Skills listed on profile</div>
+        <div class="kpi-click-hint">
+            <span>Edit profile & skills</span>
+            <i data-lucide="arrow-right" style="width: 14px; height: 14px;"></i>
+        </div>
+    </a>
+</div>
+
+<!-- ==========================================================================
+     OPTIMIZED TWO-COLUMN BENTO GRID (Supports Full-Width Maximized Drives)
+     Left Column (Primary): 1. Active Drives to Apply -> 2. Where I've Applied
+     Right Column (Intelligence): 1. Interviews -> 2. Career Accelerator
+     ========================================================================== -->
+<div class="dashboard-bento-layout" id="dashboard-main-grid">
+    
+    <!-- Left Column: Primary Marketplace & Submissions -->
+    <div class="dashboard-primary-col" id="dashboard-primary-col" style="display: flex; flex-direction: column; gap: 1.85rem;">
+        
+        <!-- SECTION 1: Active Drives & Campus Opportunities (Where to Apply) -->
+        <div class="glass-panel" id="active-drives-section" style="border-top: 4px solid var(--accent-coral); margin-bottom: 0;">
+            <div class="panel-header" style="flex-direction: column; align-items: flex-start; gap: 0.75rem;">
+                <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+                    <div class="panel-title">
+                        <i data-lucide="briefcase" style="color: var(--accent-coral); width: 22px; height: 22px;"></i>
+                        Active Campus Drives & Opportunities
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 0.65rem;">
+                        <span class="badge badge-ai_matched" id="jobs-visible-count">{{ recommended_jobs|length }} Open Requisitions</span>
+                        <button type="button" class="btn btn-outline btn-sm btn-pill" id="maximize-drives-btn" onclick="toggleMaximizeDrives()" title="Toggle full-width maximized view">
+                            <i data-lucide="maximize-2" id="maximize-drives-icon" style="width: 14px; height: 14px;"></i>
+                            <span id="maximize-drives-text">Maximize</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Intuitive Real-time Filter Bar -->
+                <div class="filter-bar" style="width: 100%; margin-bottom: 0;">
+                    <div class="filter-chips">
+                        <button type="button" class="filter-pill active" onclick="setJobCategoryFilter('all', this)">All Opportunities</button>
+                        <button type="button" class="filter-pill" onclick="setJobCategoryFilter('eligible', this)">Eligible CGPA</button>
+                        <button type="button" class="filter-pill" onclick="setJobCategoryFilter('unapplied', this)">Unapplied</button>
+                    </div>
+                    <input type="text" id="job-search-input" placeholder="Search by role, company, or stack..." class="filter-search-input" style="flex: 1; min-width: 200px;" onkeyup="filterJobsList()">
+                </div>
+            </div>
+            
+            <div style="display: flex; flex-direction: column; gap: 0.85rem;" id="jobs-container">
+                {% for job in recommended_jobs %}
+                {% set is_applied = job.id in applied_job_ids %}
+                {% set is_eligible = student.cgpa >= job.min_cgpa %}
+                <div class="job-bento-card" 
+                     id="job-card-{{ job.id }}" 
+                     data-applied="{{ 'true' if is_applied else 'false' }}"
+                     data-eligible="{{ 'true' if is_eligible else 'false' }}"
+                     data-search="{{ job.title|lower }} {{ job.company.name|lower }} {{ job.location|lower if job.location else '' }} {{ job.description|lower if job.description else '' }}">
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 0.75rem; margin-bottom: 0.4rem;">
+                        <div>
+                            <div style="font-weight: 800; font-size: 1.05rem; color: var(--text-main); margin-bottom: 2px;">
+                                {{ job.title }}
+                            </div>
+                            <div style="font-size: 0.86rem; color: var(--text-muted); display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
+                                <span style="font-weight: 700; color: var(--text-main);">{{ job.company.name }}</span>
+                                <span>•</span>
+                                <span>{{ job.location or 'Campus Drive' }}</span>
+                                <span>•</span>
+                                <span>Batch: 2026</span>
+                                {% if job.role_category %}
+                                <span>•</span>
+                                <span style="color: var(--accent-coral); font-weight: 600;">{{ job.role_category }}</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <span class="badge badge-shortlisted" style="font-size: 0.78rem; padding: 0.35rem 0.85rem; white-space: nowrap;">
+                            {{ job.salary_formatted }}
+                        </span>
+                    </div>
+
+                    <!-- Job Description Snippet -->
+                    {% if job.description %}
+                    <p style="font-size: 0.84rem; color: var(--text-muted); line-height: 1.5; margin: 0.4rem 0 0.6rem; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">
+                        {{ job.description }}
+                    </p>
+                    {% endif %}
+
+                    <!-- Required Skills Stack Tags -->
+                    <div style="display: flex; flex-wrap: wrap; gap: 0.4rem; margin-bottom: 0.75rem;">
+                        {% for sk in job.skills %}
+                            <span class="sticker-tag" style="font-size: 0.72rem; padding: 0.2rem 0.55rem; background: #FAF7F2; border-color: var(--border-subtle);">
+                                {{ sk.name }}
+                            </span>
+                        {% endfor %}
+                    </div>
+
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 0.65rem; padding-top: 0.75rem; border-top: 1px solid var(--border-subtle); flex-wrap: wrap; gap: 0.65rem;">
+                        <div style="font-size: 0.8rem; color: var(--text-dim); display: flex; align-items: center; gap: 5px;">
+                            <i data-lucide="check" style="width: 15px; height: 15px; color: {% if is_eligible %}var(--accent-sage){% else %}var(--status-warning){% endif %};"></i>
+                            Min CGPA: <strong>{{ job.min_cgpa }}</strong>
+                            {% if is_eligible %}
+                                <span style="color: var(--accent-sage); font-weight: 700; font-size: 0.74rem;">(Eligible)</span>
+                            {% else %}
+                                <span style="color: var(--status-warning); font-size: 0.74rem;">(Needs +{{ "%.1f"|format(job.min_cgpa - student.cgpa) }})</span>
+                            {% endif %}
+                        </div>
+
+                        <!-- Action Buttons: Check Fit & Gaps + Quick Apply -->
+                        <div style="display: flex; align-items: center; gap: 0.55rem; flex-wrap: wrap;">
+                            <button type="button" 
+                                    class="btn btn-outline btn-sm btn-pill" 
+                                    onclick="openJobFitModal({{ job.id }}, '{{ job.title|replace('\'', '\\\'') }}', '{{ job.company.name|replace('\'', '\\\'') }}')"
+                                    style="border-color: var(--border-medium); font-weight: 700; font-size: 0.8rem; gap: 0.35rem;"
+                                    title="Evaluate role compatibility, skill gaps, and interview prep">
+                                <i data-lucide="sparkles" style="width: 14px; height: 14px; color: var(--accent-coral);"></i>
+                                Check Fit & Gaps
+                            </button>
+
+                            <div id="apply-container-{{ job.id }}">
+                                {% if is_applied %}
+                                    <span class="btn-applied">
+                                        <i data-lucide="check-check" style="width: 14px; height: 14px;"></i>
+                                        Applied
+                                    </span>
+                                {% else %}
+                                    <button type="button" class="btn-quick-apply" id="apply-btn-{{ job.id }}" onclick="quickApply({{ job.id }}, '{{ job.title }}', '{{ job.company.name }}')">
+                                        <i data-lucide="zap" style="width: 14px; height: 14px;"></i>
+                                        Quick Apply
+                                    </button>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% else %}
+                <div style="text-align: center; padding: 2rem; color: var(--text-dim);">
+                    No active drives scheduled today.
+                </div>
+                {% endfor %}
+                <div id="jobs-empty-filter" style="display: none; text-align: center; padding: 2rem; color: var(--text-dim); font-size: 0.9rem;">
+                    No opportunities match your current filter. Try selecting "All Opportunities".
+                </div>
+            </div>
+        </div>
+
+        <!-- SECTION 2: Where I Have Already Applied (My Applications Table) -->
+        <div class="glass-panel" id="applications-section" style="border-top: 4px solid var(--accent-honey); margin-bottom: 0;">
+            <div class="panel-header" style="flex-wrap: wrap; gap: 0.75rem;">
+                <div>
+                    <div class="panel-title">
+                        <i data-lucide="file-check" style="color: var(--status-warning); width: 22px; height: 22px;"></i>
+                        Where I Have Applied (My Applications)
+                    </div>
+                    <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 2px;">
+                        Live status tracking for campus recruiters reviewing your candidacy
+                    </div>
+                </div>
+                <div style="display: flex; align-items: center; gap: 0.65rem;">
+                    <input type="text" id="app-search-input" placeholder="Search applied jobs..." class="filter-search-input" onkeyup="filterApplicationsTable()">
+                    <span class="badge badge-applied" id="apps-badge-count">{{ recent_apps|length }} Submissions</span>
+                </div>
+            </div>
+            
+            <div class="table-responsive">
+                <table class="data-table" id="applications-table">
+                    <thead>
+                        <tr>
+                            <th>Company & Opportunity</th>
+                            <th>Applied Date</th>
+                            <th>Current Stage</th>
+                            <th>Match Fit</th>
+                            <th>Status Detail</th>
+                        </tr>
+                    </thead>
+                    <tbody id="applications-table-body">
+                        {% for app in recent_apps %}
+                        <tr class="app-row" data-search="{{ app.job.title|lower }} {{ app.job.company.name|lower }} {{ app.status|lower }}">
+                            <td>
+                                <div style="font-weight: 700; color: var(--text-main); font-size: 0.94rem;">{{ app.job.title }}</div>
+                                <div style="font-size: 0.82rem; color: var(--text-muted); display: flex; align-items: center; gap: 4px; margin-top: 2px;">
+                                    <i data-lucide="building" style="width: 13px; height: 13px;"></i>
+                                    {{ app.job.company.name }}
+                                </div>
+                            </td>
+                            <td style="color: var(--text-muted); font-size: 0.85rem;">
+                                {{ app.applied_at.strftime('%d %b %Y') }}
+                            </td>
+                            <td>
+                                <span class="badge badge-{{ app.status }}">
+                                    {{ app.status | replace('_', ' ') | capitalize }}
+                                </span>
+                            </td>
+                            <td>
+                                <div style="display: flex; align-items: center; gap: 0.4rem;">
+                                    <span style="font-weight: 800; color: var(--accent-coral);">{{ "%.0f"|format(app.match_score) }}%</span>
+                                    <i data-lucide="sparkles" style="width: 14px; height: 14px; color: var(--accent-coral);"></i>
+                                </div>
+                            </td>
+                            <td>
+                                <span style="font-size: 0.8rem; color: var(--text-muted);">
+                                    {% if app.status == 'applied' %}
+                                        Under Recruiter Review
+                                    {% elif app.status == 'shortlisted' %}
+                                        Shortlisted for Interview
+                                    {% elif app.status == 'interview' %}
+                                        Interview Round Active
+                                    {% elif app.status in ['selected', 'placed'] %}
+                                        Offer Extended! 🎉
+                                    {% else %}
+                                        {{ app.status | replace('_', ' ') | capitalize }}
+                                    {% endif %}
+                                </span>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr id="no-apps-row">
+                            <td colspan="5" style="text-align: center; color: var(--text-dim); padding: 2.75rem;">
+                                <div style="font-size: 1.6rem; margin-bottom: 0.5rem;">🌱</div>
+                                <div style="font-weight: 700; font-size: 1rem; color: var(--text-main); margin-bottom: 0.25rem;">
+                                    No applications submitted yet.
+                                </div>
+                                <div style="font-size: 0.86rem; color: var(--text-muted); max-width: 400px; margin: 0 auto 1rem;">
+                                    Check out the active drives above and click "Quick Apply" to begin your placement journey!
+                                </div>
+                                <button type="button" class="btn btn-primary btn-sm" onclick="jumpToSection('active-drives-section', 'Active Campus Drives')">
+                                    Browse Open Drives ↑
+                                </button>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Right Column: Supporting Intelligence & Actions -->
+    <div style="display: flex; flex-direction: column; gap: 1.85rem;">
+
+        <!-- SECTION 3: Upcoming Interviews Schedule -->
+        <div class="glass-panel" id="interviews-section" style="border-top: 4px solid var(--accent-iris); margin-bottom: 0;">
+            <div class="panel-header">
+                <div class="panel-title">
+                    <i data-lucide="video" style="color: var(--accent-iris); width: 22px; height: 22px;"></i>
+                    Interview Schedule
+                </div>
+                <span class="badge badge-interview">{{ upcoming_interviews|length }} Rounds Scheduled</span>
+            </div>
+            {% for interview in upcoming_interviews %}
+            <div style="background: #FFFFFF; border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); padding: 1.15rem; margin-bottom: 0.85rem; box-shadow: var(--shadow-sm);">
+                <div style="font-weight: 700; font-size: 0.96rem; color: var(--text-main);">{{ interview.application.job.title }}</div>
+                <div style="font-size: 0.82rem; color: var(--text-muted); margin-bottom: 0.65rem;">
+                    {{ interview.application.job.company.name }} • Round {{ interview.round_number }} ({{ interview.interview_type | capitalize }})
+                </div>
+                <div style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.84rem; color: var(--accent-sage); font-weight: 600; margin-bottom: 0.85rem;">
+                    <i data-lucide="clock" style="width: 15px; height: 15px;"></i>
+                    {{ interview.scheduled_date.strftime('%d %B %Y') }} at {{ interview.scheduled_time }}
+                </div>
+                <a href="{{ interview.meeting_link_or_venue }}" target="_blank" class="btn btn-outline btn-sm" style="width: 100%;">
+                    <i data-lucide="external-link" style="width: 14px; height: 14px;"></i>
+                    Join Meeting Venue
+                </a>
+            </div>
+            {% else %}
+            <div style="text-align: center; padding: 1.85rem; color: var(--text-dim); font-size: 0.88rem;">
+                <div style="margin-bottom: 0.35rem; font-size: 1.3rem;">☕</div>
+                <div style="font-weight: 600; color: var(--text-main); margin-bottom: 0.2rem;">No interviews scheduled yet</div>
+                <div style="font-size: 0.82rem;">Once recruiters shortlist your application, interview rounds will appear here.</div>
+            </div>
+            {% endfor %}
+        </div>
+
+        <!-- SECTION 4: Career Accelerator Tools Quick Launcher -->
+        <div class="glass-panel" style="border-top: 4px solid var(--accent-coral); margin-bottom: 0;">
+            <div class="panel-header">
+                <div class="panel-title">
+                    <i data-lucide="zap" style="color: var(--accent-coral); width: 22px; height: 22px;"></i>
+                    Career Accelerator
+                </div>
+                <span class="badge badge-prep">Hub</span>
+            </div>
+            <p style="font-size: 0.86rem; color: var(--text-muted); line-height: 1.5; margin-bottom: 1.15rem;">
+                Prepare for campus drives with your dedicated resume studio, targeted skill gap analysis, and tailored milestone roadmap.
+            </p>
+            <div style="display: flex; flex-direction: column; gap: 0.65rem;">
+                <a href="{{ url_for('student_ai.resume_intelligence_page') }}" class="btn btn-outline btn-sm" style="justify-content: flex-start; padding: 0.65rem 0.95rem; font-weight: 600;">
+                    <i data-lucide="file-text" style="width: 16px; height: 16px; color: var(--accent-coral);"></i>
+                    <span>Resume Studio — ATS Scanner & Builder</span>
+                    <i data-lucide="chevron-right" style="width: 14px; height: 14px; margin-left: auto; color: var(--text-dim);"></i>
+                </a>
+                <a href="{{ url_for('student_ai.skill_gaps_page') }}" class="btn btn-outline btn-sm" style="justify-content: flex-start; padding: 0.65rem 0.95rem; font-weight: 600;">
+                    <i data-lucide="target" style="width: 16px; height: 16px; color: var(--accent-sage);"></i>
+                    <span>Skill Gap — Target Role Competency Audit</span>
+                    <i data-lucide="chevron-right" style="width: 14px; height: 14px; margin-left: auto; color: var(--text-dim);"></i>
+                </a>
+                <a href="{{ url_for('student_ai.roadmap_page') }}" class="btn btn-outline btn-sm" style="justify-content: flex-start; padding: 0.65rem 0.95rem; font-weight: 600;">
+                    <i data-lucide="map" style="width: 16px; height: 16px; color: var(--accent-iris);"></i>
+                    <span>Career Roadmap — Placement Sprint Plan</span>
+                    <i data-lucide="chevron-right" style="width: 14px; height: 14px; margin-left: auto; color: var(--text-dim);"></i>
+                </a>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<!-- ==========================================================================
+     JOB FIT & COMPETENCY GAP REPORT MODAL
+     Complete Detailed Report: Fit Match %, Matched Skills, Skill Gaps to Bridge,
+     Interview Focus & Strategy, and Academic Eligibility Verification.
+     ========================================================================== -->
+<div id="job-fit-modal" style="display: none; position: fixed; inset: 0; background: rgba(31, 28, 24, 0.55); backdrop-filter: blur(6px); z-index: 9999; align-items: center; justify-content: center; padding: 1.25rem;">
+    <div style="background: #FFFFFF; border-radius: var(--radius-lg); width: 100%; max-width: 740px; max-height: 90vh; display: flex; flex-direction: column; box-shadow: var(--shadow-lg); border: 1px solid var(--border-subtle); overflow: hidden; animation: popIn 0.22s cubic-bezier(0.2, 0.8, 0.2, 1);">
+        
+        <!-- Modal Header -->
+        <div style="padding: 1.25rem 1.5rem; border-bottom: 1px solid var(--border-subtle); display: flex; justify-content: space-between; align-items: flex-start; background: #FAF7F2;">
+            <div>
+                <div style="display: inline-flex; align-items: center; gap: 0.45rem; background: #FFF0EB; border: 1px solid #FCD9CE; padding: 0.2rem 0.75rem; border-radius: 9999px; font-size: 0.72rem; font-weight: 700; color: var(--accent-coral); margin-bottom: 0.35rem;">
+                    <i data-lucide="sparkles" style="width: 13px; height: 13px;"></i> Role Fit & Competency Gap Audit
+                </div>
+                <h2 id="modal-job-title" style="font-family: var(--font-display); font-size: 1.35rem; font-weight: 800; color: var(--text-main); margin-bottom: 2px;">
+                    Opportunity Title
+                </h2>
+                <div id="modal-job-meta" style="font-size: 0.86rem; color: var(--text-muted); display: flex; align-items: center; gap: 6px;">
+                    Company • Campus Drive
+                </div>
+            </div>
+            <button type="button" onclick="closeJobFitModal()" style="background: #FFFFFF; border: 1px solid var(--border-subtle); border-radius: 50%; width: 34px; height: 34px; display: flex; align-items: center; justify-content: center; cursor: pointer; color: var(--text-dim); transition: all 0.15s ease;" title="Close Report (Esc)">
+                <i data-lucide="x" style="width: 16px; height: 16px;"></i>
+            </button>
+        </div>
+
+        <!-- Modal Body (Scrollable) -->
+        <div id="modal-body-content" style="padding: 1.5rem; overflow-y: auto; flex: 1; display: flex; flex-direction: column; gap: 1.25rem;">
+            <!-- Loading Spinner State -->
+            <div id="modal-loading-state" style="text-align: center; padding: 3rem 1.5rem;">
+                <div style="width: 44px; height: 44px; border: 3px solid #EAE3D7; border-top-color: var(--accent-coral); border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 1rem;"></div>
+                <div style="font-weight: 700; color: var(--text-main); font-size: 1.05rem; margin-bottom: 0.35rem;">
+                    Analyzing Profile & Job Description...
+                </div>
+                <div style="font-size: 0.86rem; color: var(--text-muted); max-width: 420px; margin: 0 auto;">
+                    Evaluating technical skills, project experience, and academic cutoffs against recruiter requisitions.
+                </div>
+            </div>
+
+            <!-- Loaded Detailed Report Content -->
+            <div id="modal-report-details" style="display: none; flex-direction: column; gap: 1.25rem;">
+                
+                <!-- 1. Hero Compatibility Score Card -->
+                <div style="background: linear-gradient(135deg, #FFFDFC 0%, #FFF5F0 100%); border: 1px solid #FCD9CE; border-radius: var(--radius-md); padding: 1.25rem; display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap;">
+                    <div style="flex: 1; min-width: 240px;">
+                        <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.4rem; flex-wrap: wrap;">
+                            <span id="modal-verdict-badge" class="badge" style="font-size: 0.78rem; font-weight: 800; padding: 0.25rem 0.75rem;">
+                                Strong Fit
+                            </span>
+                            <span id="modal-eligibility-pill" class="badge badge-eligible" style="font-size: 0.74rem;">
+                                Academic Cutoff Passed
+                            </span>
+                        </div>
+                        <div id="modal-reasoning-summary" style="font-size: 0.92rem; color: var(--text-main); line-height: 1.5; font-weight: 600;">
+                            Evaluating candidate alignment...
+                        </div>
+                    </div>
+                    <div style="text-align: center; background: #FFFFFF; border: 1.5px solid #FCD9CE; border-radius: var(--radius-md); padding: 0.85rem 1.35rem; box-shadow: var(--shadow-sm); flex-shrink: 0;">
+                        <div style="font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; color: var(--accent-coral);">Match Fit</div>
+                        <div id="modal-score-val" style="font-family: var(--font-display); font-size: 2.2rem; font-weight: 800; color: var(--accent-coral); line-height: 1.1;">
+                            --%
+                        </div>
+                        <div style="font-size: 0.72rem; color: var(--text-dim); margin-top: 2px;">Multi-Factor Match</div>
+                    </div>
+                </div>
+
+                <!-- 2. Academic & Department Eligibility Grid -->
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 0.85rem;">
+                    <div style="background: #FAF7F2; border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); padding: 0.85rem 1rem;">
+                        <div style="font-size: 0.72rem; text-transform: uppercase; font-weight: 700; color: var(--text-dim); letter-spacing: 0.5px;">CGPA Cutoff Check</div>
+                        <div id="modal-cgpa-check" style="display: flex; align-items: center; gap: 6px; margin-top: 0.35rem; font-size: 0.92rem; font-weight: 700; color: var(--text-main);">
+                            Checking...
+                        </div>
+                    </div>
+                    <div style="background: #FAF7F2; border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); padding: 0.85rem 1rem;">
+                        <div style="font-size: 0.72rem; text-transform: uppercase; font-weight: 700; color: var(--text-dim); letter-spacing: 0.5px;">Department Eligibility</div>
+                        <div id="modal-dept-check" style="display: flex; align-items: center; gap: 6px; margin-top: 0.35rem; font-size: 0.92rem; font-weight: 700; color: var(--text-main);">
+                            Checking...
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 3. What You Have (Matched Competencies) -->
+                <div style="background: #FFFFFF; border: 1px solid var(--border-subtle); border-radius: var(--radius-md); padding: 1.15rem;">
+                    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.65rem;">
+                        <div style="font-size: 0.9rem; font-weight: 800; color: var(--accent-sage); display: flex; align-items: center; gap: 6px;">
+                            <i data-lucide="check-circle-2" style="width: 16px; height: 16px;"></i>
+                            What You Have (Matched Skills)
+                        </div>
+                        <span id="modal-matched-count" class="badge badge-eligible" style="font-size: 0.72rem;">0 Matched</span>
+                    </div>
+                    <div id="modal-matched-skills" style="display: flex; flex-wrap: wrap; gap: 0.5rem;">
+                    </div>
+                </div>
+
+                <!-- 4. What You Are Lacking (Skill Gaps & Deficits) -->
+                <div style="background: #FFFFFF; border: 1px solid var(--border-subtle); border-radius: var(--radius-md); padding: 1.15rem;">
+                    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.65rem;">
+                        <div style="font-size: 0.9rem; font-weight: 800; color: var(--status-warning); display: flex; align-items: center; gap: 6px;">
+                            <i data-lucide="alert-triangle" style="width: 16px; height: 16px;"></i>
+                            What You Are Lacking (Identified Skill Gaps)
+                        </div>
+                        <span id="modal-missing-count" class="badge" style="font-size: 0.72rem; background: #FFF8E7; color: var(--status-warning); border: 1px solid #FDE68A;">0 Missing</span>
+                    </div>
+                    <div id="modal-missing-skills" style="display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 0.75rem;">
+                    </div>
+                    <!-- Actionable Priority Advice -->
+                    <div id="modal-critical-gaps-container" style="background: #FFFDF9; border-left: 3px solid var(--status-warning); padding: 0.7rem 0.9rem; border-radius: 0 var(--radius-xs) var(--radius-xs) 0; font-size: 0.84rem; color: var(--text-muted); line-height: 1.45;">
+                    </div>
+                </div>
+
+                <!-- 5. What You Should Focus On (Interview Strategy & Talking Points) -->
+                <div style="background: #FAF7F2; border: 1px solid var(--border-subtle); border-radius: var(--radius-md); padding: 1.15rem;">
+                    <div style="font-size: 0.92rem; font-weight: 800; color: var(--text-main); display: flex; align-items: center; gap: 6px; margin-bottom: 0.75rem;">
+                        <i data-lucide="target" style="width: 16px; height: 16px; color: var(--accent-coral);"></i>
+                        What You Should Focus On (Interview Preparation)
+                    </div>
+                    
+                    <div style="margin-bottom: 0.85rem;">
+                        <div style="font-size: 0.74rem; font-weight: 700; text-transform: uppercase; color: var(--text-dim); margin-bottom: 0.35rem;">Standout Advantages to Highlight:</div>
+                        <ul id="modal-advantages-list" style="margin-left: 1.25rem; font-size: 0.86rem; color: var(--text-muted); line-height: 1.55; display: flex; flex-direction: column; gap: 0.3rem;">
+                        </ul>
+                    </div>
+
+                    <div>
+                        <div style="font-size: 0.74rem; font-weight: 700; text-transform: uppercase; color: var(--text-dim); margin-bottom: 0.35rem;">Tailored Interview Talking Points:</div>
+                        <ul id="modal-talking-points-list" style="margin-left: 1.25rem; font-size: 0.86rem; color: var(--text-muted); line-height: 1.55; display: flex; flex-direction: column; gap: 0.3rem;">
+                        </ul>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- Modal Footer Actions -->
+        <div style="padding: 1rem 1.5rem; border-top: 1px solid var(--border-subtle); background: #FAF7F2; display: flex; justify-content: space-between; align-items: center; gap: 0.75rem; flex-wrap: wrap;">
+            <a href="{{ url_for('student_ai.roadmap_page') }}" class="btn btn-outline btn-sm btn-pill">
+                <i data-lucide="map" style="width: 14px; height: 14px; color: var(--accent-iris);"></i>
+                Open Career Roadmap
+            </a>
+            <div style="display: flex; align-items: center; gap: 0.65rem;">
+                <button type="button" class="btn btn-outline btn-sm" onclick="closeJobFitModal()">
+                    Close
+                </button>
+                <div id="modal-apply-btn-slot">
+                    <!-- Dynamic apply button injected here -->
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let currentJobCategory = 'all';
+
+/**
+ * Smoothly scrolls to section and gives a prominent glowing highlight pulse
+ */
+function jumpToSection(sectionId, sectionName) {
+    const el = document.getElementById(sectionId);
+    if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        el.classList.remove('section-highlight');
+        // Force reflow
+        void el.offsetWidth;
+        el.classList.add('section-highlight');
+        if (sectionName && window.showGlobalToast) {
+            window.showGlobalToast(`Jumped to ${sectionName}`);
+        }
+        setTimeout(() => {
+            el.classList.remove('section-highlight');
+        }, 2400);
+    }
+}
+window.jumpToSection = jumpToSection;
+
+/**
+ * Filter jobs by category pill
+ */
+function setJobCategoryFilter(category, btn) {
+    currentJobCategory = category;
+    document.querySelectorAll('.filter-chips .filter-pill').forEach(p => p.classList.remove('active'));
+    if (btn) btn.classList.add('active');
+    filterJobsList();
+}
+
+/**
+ * Real-time client-side filter for active drives
+ */
+function filterJobsList() {
+    const query = (document.getElementById('job-search-input')?.value || '').toLowerCase().trim();
+    const cards = document.querySelectorAll('.job-bento-card');
+    let visibleCount = 0;
+
+    cards.forEach(card => {
+        const isApplied = card.getAttribute('data-applied') === 'true';
+        const isEligible = card.getAttribute('data-eligible') === 'true';
+        const searchText = card.getAttribute('data-search') || '';
+
+        let matchesCat = true;
+        if (currentJobCategory === 'unapplied') {
+            matchesCat = !isApplied;
+        } else if (currentJobCategory === 'eligible') {
+            matchesCat = isEligible;
+        }
+
+        const matchesQuery = !query || searchText.includes(query);
+
+        if (matchesCat && matchesQuery) {
+            card.style.display = 'block';
+            visibleCount++;
+        } else {
+            card.style.display = 'none';
+        }
+    });
+
+    const emptyNotice = document.getElementById('jobs-empty-filter');
+    if (emptyNotice) {
+        emptyNotice.style.display = visibleCount === 0 ? 'block' : 'none';
+    }
+
+    const badgeCount = document.getElementById('jobs-visible-count');
+    if (badgeCount) {
+        badgeCount.innerText = `${visibleCount} Open Requisitions`;
+    }
+}
+
+/**
+ * Real-time filter for applications history table
+ */
+function filterApplicationsTable() {
+    const query = (document.getElementById('app-search-input')?.value || '').toLowerCase().trim();
+    const rows = document.querySelectorAll('#applications-table-body .app-row');
+    let visibleCount = 0;
+
+    rows.forEach(row => {
+        const searchText = row.getAttribute('data-search') || '';
+        if (!query || searchText.includes(query)) {
+            row.style.display = '';
+            visibleCount++;
+        } else {
+            row.style.display = 'none';
+        }
+    });
+
+    const badge = document.getElementById('apps-badge-count');
+    if (badge) {
+        badge.innerText = `${visibleCount} Submissions`;
+    }
+}
+
+/**
+ * Focus and highlight the first unapplied job
+ */
+function focusFirstUnappliedJob() {
+    const unappliedCards = Array.from(document.querySelectorAll('.job-bento-card')).filter(c => c.getAttribute('data-applied') !== 'true');
+    if (unappliedCards.length > 0) {
+        unappliedCards[0].scrollIntoView({ behavior: 'smooth', block: 'center' });
+        unappliedCards[0].style.transition = 'all 0.3s ease';
+        unappliedCards[0].style.borderColor = 'var(--accent-coral)';
+        unappliedCards[0].style.boxShadow = '0 0 18px rgba(231, 111, 81, 0.45)';
+        setTimeout(() => {
+            unappliedCards[0].style.borderColor = '';
+            unappliedCards[0].style.boxShadow = '';
+        }, 2200);
+    }
+}
+
+/**
+ * Asynchronous Quick Apply functionality with Playbook toast feedback
+ */
+async function quickApply(jobId, jobTitle, companyName) {
+    const btn = document.getElementById(`apply-btn-${jobId}`);
+    const container = document.getElementById(`apply-container-${jobId}`);
+    const card = document.getElementById(`job-card-${jobId}`);
+    if (!btn || btn.disabled) return;
+
+    btn.disabled = true;
+    btn.innerHTML = `<i data-lucide="loader-2" class="spin" style="width: 14px; height: 14px;"></i> Applying...`;
+    if (window.lucide) window.lucide.createIcons();
+
+    try {
+        const response = await fetch("/api/applications/apply", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ job_id: jobId })
+        });
+
+        const data = await response.json();
+
+        if (response.ok && data.success) {
+            if (card) card.setAttribute('data-applied', 'true');
+            container.innerHTML = `
+                <span class="btn-applied">
+                    <i data-lucide="check-check" style="width: 14px; height: 14px;"></i>
+                    Applied
+                </span>
+            `;
+
+            const countEl = document.getElementById("kpi-apps-count");
+            if (countEl) {
+                const current = parseInt(countEl.innerText) || 0;
+                countEl.innerText = current + 1;
+            }
+
+            const noRow = document.getElementById("no-apps-row");
+            if (noRow) noRow.remove();
+
+            const tbody = document.getElementById("applications-table-body");
+            if (tbody) {
+                const today = new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+                const newRow = document.createElement("tr");
+                newRow.className = "app-row";
+                newRow.setAttribute('data-search', `${jobTitle.toLowerCase()} ${companyName.toLowerCase()} applied`);
+                newRow.innerHTML = `
+                    <td>
+                        <div style="font-weight: 700; color: var(--text-main); font-size: 0.94rem;">${jobTitle}</div>
+                        <div style="font-size: 0.82rem; color: var(--text-muted); display: flex; align-items: center; gap: 4px; margin-top: 2px;">
+                            <i data-lucide="building" style="width: 13px; height: 13px;"></i>
+                            ${companyName}
+                        </div>
+                    </td>
+                    <td style="color: var(--text-muted); font-size: 0.85rem;">${today}</td>
+                    <td>
+                        <span class="badge badge-applied">Applied</span>
+                    </td>
+                    <td>
+                        <div style="display: flex; align-items: center; gap: 0.4rem;">
+                            <span style="font-weight: 800; color: var(--accent-coral);">${data.application ? Math.round(data.application.match_score) : 85}%</span>
+                            <i data-lucide="sparkles" style="width: 14px; height: 14px; color: var(--accent-coral);"></i>
+                        </div>
+                    </td>
+                    <td>
+                        <span style="font-size: 0.8rem; color: var(--text-muted);">Under Recruiter Review</span>
+                    </td>
+                `;
+                tbody.prepend(newRow);
+            }
+
+            if (window.showGlobalToast) {
+                window.showGlobalToast(`🎉 Applied to ${jobTitle} at ${companyName}! Recruiter notified.`);
+            }
+            if (window.lucide) window.lucide.createIcons();
+
+        } else {
+            btn.disabled = false;
+            btn.innerHTML = `<i data-lucide="zap" style="width: 14px; height: 14px;"></i> Quick Apply`;
+            if (window.showGlobalToast) {
+                window.showGlobalToast(`⚠️ ${data.error || "Could not apply to this opportunity."}`);
+            }
+            if (window.lucide) window.lucide.createIcons();
+        }
+    } catch (err) {
+        console.error(err);
+        btn.disabled = false;
+        btn.innerHTML = `<i data-lucide="zap" style="width: 14px; height: 14px;"></i> Quick Apply`;
+        if (window.showGlobalToast) {
+            window.showGlobalToast("⚠️ Network issue while applying. Please try again.");
+        }
+        if (window.lucide) window.lucide.createIcons();
+    }
+}
+
+/**
+ * Open Job Fit & Gap Audit Modal with dynamic AI and deterministic evaluations
+ */
+async function openJobFitModal(jobId, jobTitle, companyName) {
+    const modal = document.getElementById('job-fit-modal');
+    const loadingState = document.getElementById('modal-loading-state');
+    const reportDetails = document.getElementById('modal-report-details');
+    
+    document.getElementById('modal-job-title').textContent = jobTitle;
+    document.getElementById('modal-job-meta').textContent = `${companyName} • Campus Drive`;
+    
+    loadingState.style.display = 'block';
+    reportDetails.style.display = 'none';
+    modal.style.display = 'flex';
+    
+    if (window.lucide) window.lucide.createIcons();
+
+    try {
+        const res = await fetch(`/student/ai/api/job-match/${jobId}`);
+        const data = await res.json();
+        
+        if (!res.ok || data.error) {
+            throw new Error(data.error || 'Failed to fetch match evaluation');
+        }
+
+        // 1. Title & Meta
+        document.getElementById('modal-job-title').textContent = data.job_title;
+        document.getElementById('modal-job-meta').textContent = `${data.company_name} • ${data.job_location || 'Campus'} • ${data.salary_formatted || ''}`;
+
+        // 2. Score & Verdict
+        document.getElementById('modal-score-val').textContent = `${Math.round(data.composite_score)}%`;
+        
+        const verdictBadge = document.getElementById('modal-verdict-badge');
+        verdictBadge.textContent = data.fit_verdict || 'Competitive Fit';
+        if (data.composite_score >= 75) {
+            verdictBadge.className = 'badge badge-eligible';
+        } else if (data.composite_score >= 50) {
+            verdictBadge.className = 'badge badge-shortlisted';
+        } else {
+            verdictBadge.className = 'badge badge-rejected';
+        }
+
+        // Eligibility Pill
+        const eligPill = document.getElementById('modal-eligibility-pill');
+        if (data.cgpa_eligible && data.dept_eligible) {
+            eligPill.textContent = 'Academic Cutoff Passed';
+            eligPill.className = 'badge badge-eligible';
+        } else if (!data.cgpa_eligible) {
+            eligPill.textContent = `CGPA Below Min (${data.min_cgpa})`;
+            eligPill.className = 'badge badge-rejected';
+        } else {
+            eligPill.textContent = 'Department Restriction';
+            eligPill.className = 'badge badge-rejected';
+        }
+
+        // Reasoning Summary
+        document.getElementById('modal-reasoning-summary').textContent = data.reasoning_summary || 'Multi-factor alignment based on coursework, technical skills, and academic metrics.';
+
+        // Academic details
+        document.getElementById('modal-cgpa-check').innerHTML = `
+            <span>Your CGPA: <strong>${data.student_cgpa.toFixed(2)}</strong></span>
+            <span style="color: var(--text-dim);">/</span>
+            <span>Cutoff: <strong>${data.min_cgpa.toFixed(1)}</strong></span>
+            ${data.cgpa_eligible ? '<span style="color:var(--accent-sage); font-weight:700;">✓ Meets Cutoff</span>' : '<span style="color:var(--status-danger); font-weight:700;">✗ Shortfall</span>'}
+        `;
+
+        document.getElementById('modal-dept-check').innerHTML = `
+            <span>Your Branch: <strong>${data.student_dept || 'CS'}</strong></span>
+            <span style="color: var(--text-dim); font-size: 0.78rem;">(Allowed: ${data.eligible_departments})</span>
+        `;
+
+        // 3. Matched Skills
+        const matchedContainer = document.getElementById('modal-matched-skills');
+        matchedContainer.innerHTML = '';
+        document.getElementById('modal-matched-count').textContent = `${data.matched_skills.length} Matched`;
+        if (data.matched_skills && data.matched_skills.length > 0) {
+            data.matched_skills.forEach(skill => {
+                const tag = document.createElement('span');
+                tag.className = 'sticker-tag';
+                tag.style.background = '#EAF4EE';
+                tag.style.borderColor = '#CDE7D8';
+                tag.style.color = 'var(--accent-sage)';
+                tag.style.fontWeight = '700';
+                tag.innerHTML = `<i data-lucide="check" style="width: 12px; height: 12px;"></i> ${skill}`;
+                matchedContainer.appendChild(tag);
+            });
+        } else {
+            matchedContainer.innerHTML = '<span style="color: var(--text-dim); font-size: 0.85rem;">No direct matching skills recorded yet. Review identified gaps below.</span>';
+        }
+
+        // 4. Missing Skills & Gaps
+        const missingContainer = document.getElementById('modal-missing-skills');
+        missingContainer.innerHTML = '';
+        document.getElementById('modal-missing-count').textContent = `${data.missing_skills.length} Missing`;
+        if (data.missing_skills && data.missing_skills.length > 0) {
+            data.missing_skills.forEach(skill => {
+                const tag = document.createElement('span');
+                tag.className = 'sticker-tag';
+                tag.style.background = '#FFF8E7';
+                tag.style.borderColor = '#FDE68A';
+                tag.style.color = 'var(--status-warning)';
+                tag.style.fontWeight = '700';
+                tag.innerHTML = `<i data-lucide="alert-circle" style="width: 12px; height: 12px;"></i> ${skill}`;
+                missingContainer.appendChild(tag);
+            });
+        } else {
+            missingContainer.innerHTML = '<span style="color: var(--accent-sage); font-size: 0.85rem; font-weight: 700;">🎉 Excellent! Your profile skills meet all required role skills.</span>';
+        }
+
+        // Critical Gaps Guidance
+        const critGaps = document.getElementById('modal-critical-gaps-container');
+        if (data.critical_gaps_to_address && data.critical_gaps_to_address.length > 0) {
+            critGaps.style.display = 'block';
+            critGaps.innerHTML = `<strong>Priority Action:</strong> ${data.critical_gaps_to_address.join(' ')}`;
+        } else {
+            critGaps.style.display = 'none';
+        }
+
+        // 5. Advantages & Interview Talking Points
+        const advList = document.getElementById('modal-advantages-list');
+        advList.innerHTML = '';
+        (data.standout_advantages || []).forEach(adv => {
+            const li = document.createElement('li');
+            li.textContent = adv;
+            advList.appendChild(li);
+        });
+
+        const tpList = document.getElementById('modal-talking-points-list');
+        tpList.innerHTML = '';
+        (data.interview_talking_points || []).forEach(tp => {
+            const li = document.createElement('li');
+            li.textContent = tp;
+            tpList.appendChild(li);
+        });
+
+        // 6. Apply button slot
+        const card = document.getElementById(`job-card-${jobId}`);
+        const isAlreadyApplied = card && card.getAttribute('data-applied') === 'true';
+        const modalApplySlot = document.getElementById('modal-apply-btn-slot');
+        
+        if (isAlreadyApplied) {
+            modalApplySlot.innerHTML = `<span class="btn-applied"><i data-lucide="check-check" style="width: 14px; height: 14px;"></i> Applied</span>`;
+        } else {
+            modalApplySlot.innerHTML = `
+                <button type="button" class="btn btn-primary btn-sm btn-pill" onclick="quickApply(${jobId}, '${data.job_title}', '${data.company_name}'); closeJobFitModal();">
+                    <i data-lucide="zap" style="width: 14px; height: 14px;"></i> Quick Apply to Drive
+                </button>
+            `;
+        }
+
+        // Reveal report
+        loadingState.style.display = 'none';
+        reportDetails.style.display = 'flex';
+        if (window.lucide) window.lucide.createIcons();
+
+    } catch (err) {
+        console.error(err);
+        loadingState.innerHTML = `
+            <div style="color: var(--status-danger); font-size: 1.8rem; margin-bottom: 0.5rem;">⚠️</div>
+            <div style="font-weight: 700; color: var(--text-main); margin-bottom: 0.25rem;">Could not evaluate match</div>
+            <div style="font-size: 0.85rem; color: var(--text-muted);">${err.message}</div>
+        `;
+    }
+}
+
+function closeJobFitModal() {
+    const modal = document.getElementById('job-fit-modal');
+    if (modal) modal.style.display = 'none';
+}
+window.openJobFitModal = openJobFitModal;
+window.closeJobFitModal = closeJobFitModal;
+
+// Close modal when pressing Escape or clicking backdrop
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') closeJobFitModal();
+});
+document.getElementById('job-fit-modal')?.addEventListener('click', (e) => {
+    if (e.target.id === 'job-fit-modal') closeJobFitModal();
+});
+
+/**
+ * Toggle full-width maximized view of active campus drives
+ */
+function toggleMaximizeDrives(forceMaximize = false) {
+    const grid = document.getElementById('dashboard-main-grid');
+    const btn = document.getElementById('maximize-drives-btn');
+    const icon = document.getElementById('maximize-drives-icon');
+    const text = document.getElementById('maximize-drives-text');
+    if (!grid) return;
+
+    const shouldMaximize = forceMaximize ? true : !grid.classList.contains('drives-maximized');
+
+    if (shouldMaximize) {
+        grid.classList.add('drives-maximized');
+        if (text) text.textContent = 'Restore Split View';
+        if (icon) icon.setAttribute('data-lucide', 'minimize-2');
+        if (window.showGlobalToast) window.showGlobalToast('Maximized Active Campus Drives full-width view');
+    } else {
+        grid.classList.remove('drives-maximized');
+        if (text) text.textContent = 'Maximize';
+        if (icon) icon.setAttribute('data-lucide', 'maximize-2');
+    }
+    if (window.lucide) window.lucide.createIcons();
+}
+window.toggleMaximizeDrives = toggleMaximizeDrives;
+
+/**
+ * Maximize drives section and smoothly scroll right to it
+ */
+function maximizeAndJumpToDrives() {
+    toggleMaximizeDrives(true);
+    jumpToSection('active-drives-section', 'Active Campus Drives');
+}
+window.maximizeAndJumpToDrives = maximizeAndJumpToDrives;
+</script>
+{% endblock %}

@@ -1,0 +1,60 @@
+services:
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: placementiq_web
+    restart: unless-stopped
+    ports:
+      - "5000:5000"
+    environment:
+      - FLASK_ENV=production
+      - SECRET_KEY=placementiq_production_super_secret_key_2026
+      - DATABASE_URL=postgresql://placementiq_user:placementiq_secure_pass@db:5432/placementiq_db
+      - REDIS_URL=redis://redis:6379/0
+      - GEMINI_API_KEY=${GEMINI_API_KEY:-}
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    command: >
+      sh -c "flask db upgrade && python seed.py && gunicorn --bind 0.0.0.0:5000 --workers 4 --threads 2 --timeout 120 'app:create_app()'"
+
+  db:
+    image: postgres:16-alpine
+    container_name: placementiq_postgres
+    restart: unless-stopped
+    environment:
+      - POSTGRES_USER=placementiq_user
+      - POSTGRES_PASSWORD=placementiq_secure_pass
+      - POSTGRES_DB=placementiq_db
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U placementiq_user -d placementiq_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: placementiq_redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local

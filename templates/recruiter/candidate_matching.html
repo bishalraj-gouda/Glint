@@ -1,0 +1,573 @@
+{% extends "base.html" %}
+
+{% block title %}AI Candidate Matching & Scoring — PlacementIQ AI{% endblock %}
+
+{% block extra_css %}
+<style>
+    .match-header-card {
+        background: linear-gradient(135deg, rgba(8, 145, 178, 0.2) 0%, rgba(79, 70, 229, 0.25) 100%);
+        border: 1px solid rgba(6, 182, 212, 0.4);
+        border-radius: var(--radius-md);
+        padding: 1.5rem 1.75rem;
+        margin-bottom: 1.5rem;
+    }
+    .match-card {
+        background: rgba(255, 255, 255, 0.02);
+        border: 1px solid var(--border-subtle);
+        border-radius: var(--radius-md);
+        padding: 1.25rem 1.5rem;
+        margin-bottom: 1rem;
+        transition: all 0.25s ease;
+        display: grid;
+        grid-template-columns: 60px 2.2fr 1.6fr 1.5fr;
+        gap: 1.25rem;
+        align-items: center;
+    }
+    .match-card:hover {
+        background: rgba(255, 255, 255, 0.04);
+        border-color: rgba(6, 182, 212, 0.4);
+        transform: translateY(-2px);
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+    }
+    .rank-badge {
+        width: 44px;
+        height: 44px;
+        border-radius: 12px;
+        background: rgba(6, 182, 212, 0.15);
+        color: #22d3ee;
+        font-family: 'Outfit', sans-serif;
+        font-weight: 800;
+        font-size: 1.2rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: 1px solid rgba(6, 182, 212, 0.3);
+    }
+    .rank-1 {
+        background: linear-gradient(135deg, rgba(234, 179, 8, 0.3), rgba(202, 138, 4, 0.15));
+        color: #facc15;
+        border-color: rgba(234, 179, 8, 0.5);
+    }
+    .rank-2 {
+        background: linear-gradient(135deg, rgba(148, 163, 184, 0.3), rgba(100, 116, 139, 0.15));
+        color: #cbd5e1;
+        border-color: rgba(148, 163, 184, 0.5);
+    }
+    .rank-3 {
+        background: linear-gradient(135deg, rgba(180, 83, 9, 0.3), rgba(120, 53, 15, 0.15));
+        color: #fb923c;
+        border-color: rgba(180, 83, 9, 0.5);
+    }
+    .skill-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        padding: 2px 8px;
+        border-radius: 12px;
+        font-size: 0.72rem;
+        font-weight: 500;
+        margin: 2px;
+    }
+    .skill-matched {
+        background: rgba(16, 185, 129, 0.15);
+        color: #34d399;
+        border: 1px solid rgba(16, 185, 129, 0.3);
+    }
+    .skill-missing {
+        background: rgba(245, 158, 11, 0.12);
+        color: #fbbf24;
+        border: 1px solid rgba(245, 158, 11, 0.25);
+    }
+    .score-circle {
+        font-family: 'Outfit', sans-serif;
+        font-weight: 800;
+        font-size: 1.5rem;
+    }
+    @media (max-width: 992px) {
+        .match-card {
+            grid-template-columns: 1fr;
+            gap: 1rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
+            <span class="badge" style="background: rgba(6, 182, 212, 0.2); color: #22d3ee; font-size: 0.75rem;">
+                <i data-lucide="sparkles" style="width: 12px; height: 12px; display: inline;"></i> AI TALENT INTELLIGENCE
+            </span>
+        </div>
+        <h1 class="page-title">AI Candidate Matching & Scoring</h1>
+        <p class="page-description">
+            Algorithmic ranking of university student profiles against open requisitions using semantic skills matching, CGPA gates, and verified readiness telemetry.
+        </p>
+    </div>
+    <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
+        <a href="{{ url_for('recruiter.candidates_view') }}" class="btn btn-outline btn-sm">
+            <i data-lucide="users" style="width: 15px; height: 15px;"></i> Pipeline View
+        </a>
+        <button type="button" class="btn btn-primary btn-sm" onclick="toggleRecruiterCopilot()">
+            <i data-lucide="bot" style="width: 15px; height: 15px;"></i> Recruiter Copilot
+        </button>
+    </div>
+</div>
+
+<!-- Requisition Selector & Filter Bar -->
+<div class="glass-panel" style="padding: 1.25rem; margin-bottom: 1.5rem;">
+    <!-- Natural Language Vector Search Bar -->
+    <form method="GET" action="{{ url_for('recruiter_ai.candidate_matching_page') }}" style="margin-bottom: 1.25rem;">
+        <label class="form-label" style="font-size: 0.8rem; font-weight: 700; color: #38bdf8; display: flex; align-items: center; gap: 6px;">
+            <i data-lucide="sparkles" style="width: 14px; height: 14px;"></i> Natural Language Semantic Candidate Vector Search
+        </label>
+        <div style="display: flex; gap: 10px; margin-top: 6px;">
+            <div style="position: relative; flex: 1;">
+                <input type="text" name="semantic_query" class="form-control" value="{{ semantic_query or '' }}" placeholder="e.g. Find candidates experienced in FastAPI, async queues, and Docker with active GitHub projects..." style="padding-left: 38px; font-size: 0.95rem; background: rgba(15, 23, 42, 0.8); border: 1px solid rgba(56, 189, 248, 0.35); border-radius: 10px; color: #fff; width: 100%; box-sizing: border-box;">
+                <i data-lucide="search" style="position: absolute; left: 12px; top: 11px; width: 16px; height: 16px; color: #38bdf8;"></i>
+            </div>
+            <button type="submit" class="btn btn-primary" style="display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; padding: 0.6rem 1.25rem;">
+                <i data-lucide="cpu" style="width: 15px; height: 15px;"></i> Semantic Match
+            </button>
+            {% if semantic_query %}
+            <a href="{{ url_for('recruiter_ai.candidate_matching_page', job_id=selected_job_id) }}" class="btn btn-outline" style="white-space: nowrap;">
+                Clear
+            </a>
+            {% endif %}
+        </div>
+        <div style="font-size: 0.72rem; color: #94a3b8; margin-top: 4px;">
+            Vector embeddings match candidate bios, technical skills, project repositories, and GitHub telemetry against your query.
+        </div>
+    </form>
+
+    <div style="border-top: 1px solid rgba(255, 255, 255, 0.08); padding-top: 1rem;">
+        <form method="GET" action="{{ url_for('recruiter_ai.candidate_matching_page') }}" id="filterForm" style="display: flex; gap: 1rem; align-items: flex-end; flex-wrap: wrap;">
+            <!-- Job Select -->
+            <div style="flex: 2; min-width: 250px;">
+                <label class="form-label" style="font-size: 0.75rem; text-transform: uppercase;">Or Benchmark Open Requisition</label>
+                <select name="job_id" class="form-control" onchange="this.form.submit()" style="font-size: 0.9rem; padding: 0.55rem 0.85rem;">
+                    {% for j in jobs %}
+                    <option value="{{ j.id }}" {% if selected_job_id == j.id and not semantic_query %}selected{% endif %}>
+                        {{ j.title }} • {{ j.role_category }} (Min CGPA: {{ j.min_cgpa }})
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <!-- Min CGPA Filter -->
+            <div style="flex: 1; min-width: 140px;">
+                <label class="form-label" style="font-size: 0.75rem; text-transform: uppercase;">Min CGPA</label>
+                <select name="min_cgpa" class="form-control" onchange="this.form.submit()" style="font-size: 0.9rem; padding: 0.55rem 0.85rem;">
+                    <option value="0.0" {% if request.args.get('min_cgpa') == '0.0' %}selected{% endif %}>All Eligible</option>
+                    <option value="7.0" {% if request.args.get('min_cgpa') == '7.0' %}selected{% endif %}>7.0+ CGPA</option>
+                    <option value="7.5" {% if request.args.get('min_cgpa') == '7.5' %}selected{% endif %}>7.5+ CGPA</option>
+                    <option value="8.0" {% if request.args.get('min_cgpa') == '8.0' %}selected{% endif %}>8.0+ CGPA</option>
+                    <option value="8.5" {% if request.args.get('min_cgpa') == '8.5' %}selected{% endif %}>8.5+ Honors</option>
+                </select>
+            </div>
+
+            <!-- Department Filter -->
+            <div style="flex: 1; min-width: 140px;">
+                <label class="form-label" style="font-size: 0.75rem; text-transform: uppercase;">Branch</label>
+                <select name="department" class="form-control" onchange="this.form.submit()" style="font-size: 0.9rem; padding: 0.55rem 0.85rem;">
+                    <option value="ALL">All Branches</option>
+                    <option value="CSE" {% if request.args.get('department') == 'CSE' %}selected{% endif %}>CSE</option>
+                    <option value="IT" {% if request.args.get('department') == 'IT' %}selected{% endif %}>IT</option>
+                    <option value="DS" {% if request.args.get('department') == 'DS' %}selected{% endif %}>Data Science</option>
+                    <option value="ECE" {% if request.args.get('department') == 'ECE' %}selected{% endif %}>ECE</option>
+                </select>
+            </div>
+
+            <div>
+                <a href="{{ url_for('recruiter_ai.candidate_matching_page', job_id=selected_job_id) }}" class="btn btn-outline btn-sm" style="padding: 0.6rem 0.9rem;">
+                    Reset
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+{% if semantic_data and semantic_data.candidates %}
+<!-- Semantic Vector Matching Results Card -->
+<div class="match-header-card" style="background: linear-gradient(135deg, rgba(16, 185, 129, 0.15) 0%, rgba(6, 182, 212, 0.2) 100%); border-color: rgba(16, 185, 129, 0.4);">
+    <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 1rem;">
+        <div>
+            <div style="font-size: 0.82rem; color: #6ee7b7; text-transform: uppercase; letter-spacing: 0.5px;">Vector Semantic Natural Language Results</div>
+            <h2 style="font-family: 'Outfit', sans-serif; font-size: 1.3rem; font-weight: 700; color: #ffffff; margin: 4px 0 6px 0;">
+                Query: "{{ semantic_data.query }}"
+            </h2>
+            <div style="font-size: 0.84rem; color: var(--text-muted);">
+                <i data-lucide="check-circle" style="width: 14px; height: 14px; display: inline; color: #10b981;"></i> {{ semantic_data.total_matches }} Candidates Ranked by Cosine Similarity & Domain Alignment
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Semantic Candidate Cards -->
+<div style="margin-bottom: 2rem;">
+    {% for cand in semantic_data.candidates %}
+    <div class="match-card">
+        <div>
+            <div class="rank-badge {% if cand.rank == 1 %}rank-1{% elif cand.rank == 2 %}rank-2{% elif cand.rank == 3 %}rank-3{% endif %}">
+                #{{ cand.rank }}
+            </div>
+        </div>
+
+        <div>
+            <div style="display: flex; align-items: center; gap: 0.75rem;">
+                <div style="width: 40px; height: 40px; border-radius: 50%; background: url('{{ cand.avatar_url }}') center/cover; border: 2px solid rgba(255,255,255,0.1); flex-shrink: 0;"></div>
+                <div>
+                    <div style="font-weight: 700; font-size: 1.05rem; color: #ffffff;">
+                        {{ cand.name }}
+                    </div>
+                    <div style="font-size: 0.8rem; color: #38bdf8; font-weight: 600;">
+                        {{ cand.headline }}
+                    </div>
+                    <div style="font-size: 0.78rem; color: var(--text-muted);">
+                        {{ cand.roll_number }} • {{ cand.department }} • Year {{ cand.year }} • CGPA: {{ "%.2f"|format(cand.cgpa) }}
+                    </div>
+                </div>
+            </div>
+
+            {% if cand.github_url %}
+            <div style="margin-top: 0.5rem; display: flex; align-items: center; gap: 8px;">
+                <a href="{{ cand.github_url }}" target="_blank" style="font-size: 0.75rem; color: #94a3b8; text-decoration: none; display: inline-flex; align-items: center; gap: 4px;">
+                    <i data-lucide="github" style="width: 12px; height: 12px;"></i> {{ cand.github_repos_count }} repos ({{ cand.github_stars }}★)
+                </a>
+            </div>
+            {% endif %}
+        </div>
+
+        <div>
+            <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 4px;">
+                <span style="font-size: 0.78rem; text-transform: uppercase; color: var(--text-muted);">Semantic Match</span>
+                <span class="score-circle" style="color: #34d399;">
+                    {{ cand.semantic_score }}%
+                </span>
+            </div>
+            <div class="score-bar-bg" style="margin-bottom: 0.65rem;">
+                <div class="score-bar-fill" style="width: {{ cand.semantic_score }}%; background: linear-gradient(90deg, #10b981, #38bdf8);"></div>
+            </div>
+            <div style="display: flex; flex-wrap: wrap; gap: 4px;">
+                <span class="badge" style="font-size: 0.7rem; background: rgba(16, 185, 129, 0.15); color: #6ee7b7;">{{ cand.fit_verdict }}</span>
+                {% for kw in cand.matched_skills %}
+                <span class="skill-pill skill-matched">✓ {{ kw }}</span>
+                {% endfor %}
+            </div>
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 0.5rem; align-items: flex-end;">
+            <a href="{{ url_for('recruiter.candidate_detail', student_id=cand.student_id) }}" class="btn btn-outline btn-sm">
+                View Dossier
+            </a>
+            <a href="{{ url_for('recruiter.schedule_view', student_id=cand.student_id) }}" class="btn btn-primary btn-sm">
+                Schedule Interview
+            </a>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+
+{% if not semantic_data and ranked_data and ranked_data.candidates %}
+<!-- Target Job Context Card -->
+<div class="match-header-card">
+    <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 1rem;">
+        <div>
+            <div style="font-size: 0.82rem; color: #a5f3fc; text-transform: uppercase; letter-spacing: 0.5px;">Active Matching Requisition</div>
+            <h2 style="font-family: 'Outfit', sans-serif; font-size: 1.4rem; font-weight: 700; color: #ffffff; margin: 4px 0 6px 0;">
+                {{ ranked_data.job_title }}
+            </h2>
+            <div style="display: flex; gap: 0.85rem; align-items: center; flex-wrap: wrap; font-size: 0.84rem; color: var(--text-muted);">
+                <span><i data-lucide="tag" style="width: 13px; height: 13px; display: inline;"></i> {{ ranked_data.job_category }}</span>
+                <span>•</span>
+                <span><i data-lucide="award" style="width: 13px; height: 13px; display: inline;"></i> Min CGPA: {{ ranked_data.min_cgpa }}</span>
+                <span>•</span>
+                <span><i data-lucide="users" style="width: 13px; height: 13px; display: inline;"></i> {{ ranked_data.total_ranked }} Candidates Scored</span>
+            </div>
+        </div>
+        <div style="text-align: right;">
+            <div style="font-size: 1.7rem; font-weight: 800; color: #34d399; font-family: 'Outfit', sans-serif;">
+                {{ ranked_data.strong_matches_count }}
+            </div>
+            <div style="font-size: 0.78rem; color: #94a3b8; text-transform: uppercase;">High Fit Matches (&ge; 75%)</div>
+        </div>
+    </div>
+
+    <!-- Required Skills Tag Cloud -->
+    <div style="margin-top: 1rem; padding-top: 0.85rem; border-top: 1px solid rgba(255, 255, 255, 0.1);">
+        <div style="font-size: 0.76rem; color: #cbd5e1; text-transform: uppercase; margin-bottom: 0.4rem;">Target Job Skills Baseline:</div>
+        <div style="display: flex; flex-wrap: wrap; gap: 6px;">
+            {% for sk in ranked_data.required_skills %}
+            <span class="badge" style="background: rgba(255, 255, 255, 0.08); color: #f1f5f9; border: 1px solid rgba(255, 255, 255, 0.15); font-size: 0.75rem;">
+                {{ sk }}
+            </span>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<!-- Candidate Ranking Cards -->
+<div style="margin-bottom: 2rem;">
+    {% for cand in ranked_data.candidates %}
+    <div class="match-card">
+        <!-- Rank Badge -->
+        <div>
+            <div class="rank-badge {% if cand.rank == 1 %}rank-1{% elif cand.rank == 2 %}rank-2{% elif cand.rank == 3 %}rank-3{% endif %}">
+                #{{ cand.rank }}
+            </div>
+        </div>
+
+        <!-- Candidate Identity & Academic Standing -->
+        <div>
+            <div style="display: flex; align-items: center; gap: 0.75rem;">
+                <div style="width: 40px; height: 40px; border-radius: 50%; background: url('https://api.dicebear.com/7.x/avataaars/svg?seed={{ cand.roll_number }}') center/cover; border: 2px solid rgba(255,255,255,0.1); flex-shrink: 0;"></div>
+                <div>
+                    <div style="font-weight: 700; font-size: 1.05rem; color: #ffffff;">
+                        {{ cand.name }}
+                    </div>
+                    <div style="font-size: 0.8rem; color: var(--text-muted);">
+                        {{ cand.roll_number }} • {{ cand.department }} • Year {{ cand.year }}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Academic & Twin Metrics -->
+            <div style="display: flex; gap: 0.75rem; margin-top: 0.65rem; font-size: 0.78rem;">
+                <span style="font-weight: 600; {% if cand.cgpa >= ranked_data.min_cgpa %}color: #34d399;{% else %}color: #f87171;{% endif %}">
+                    CGPA: {{ "%.2f"|format(cand.cgpa) }}
+                </span>
+                <span style="color: var(--text-dim);">•</span>
+                <span style="color: #a78bfa;">
+                    AI Twin Readiness: {{ cand.twin_score }}%
+                </span>
+                <span style="color: var(--text-dim);">•</span>
+                <span style="color: var(--text-muted);">
+                    {{ cand.projects_count }} Projects
+                </span>
+            </div>
+        </div>
+
+        <!-- AI Match Breakdown & Skill Alignment -->
+        <div>
+            <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 4px;">
+                <span style="font-size: 0.78rem; text-transform: uppercase; color: var(--text-muted);">Match Score</span>
+                <span class="score-circle" style="{% if cand.composite_score >= 80 %}color: #34d399;{% elif cand.composite_score >= 65 %}color: #38bdf8;{% else %}color: #fbbf24;{% endif %}">
+                    {{ cand.composite_score }}%
+                </span>
+            </div>
+            <div class="score-bar-bg" style="margin-bottom: 0.65rem;">
+                <div class="score-bar-fill" style="width: {{ cand.composite_score }}%; {% if cand.composite_score >= 80 %}background: linear-gradient(90deg, #10b981, #34d399);{% elif cand.composite_score >= 65 %}background: linear-gradient(90deg, #0284c7, #38bdf8);{% else %}background: linear-gradient(90deg, #d97706, #fbbf24);{% endif %}"></div>
+            </div>
+
+            <!-- Skills Pills -->
+            <div style="font-size: 0.7rem; color: var(--text-dim); margin-bottom: 2px;">Verified Skills:</div>
+            <div style="display: flex; flex-wrap: wrap;">
+                {% for ms in cand.matched_skills[:3] %}
+                <span class="skill-pill skill-matched">✓ {{ ms }}</span>
+                {% endfor %}
+                {% if cand.missing_skills %}
+                <span class="skill-pill skill-missing">! Missing {{ cand.missing_skills[0] }}</span>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Action Center -->
+        <div style="display: flex; flex-direction: column; gap: 0.5rem; align-items: flex-end;">
+            <!-- Status Badge if already applied -->
+            {% if cand.application_status != 'unapplied' %}
+                <span class="badge badge-{{ cand.application_status }}" style="font-size: 0.72rem;">
+                    Pipeline: {{ cand.application_status | replace('_', ' ') | capitalize }}
+                </span>
+            {% else %}
+                <span class="badge" style="background: rgba(255, 255, 255, 0.05); color: var(--text-dim); font-size: 0.72rem;">
+                    Not Yet Applied
+                </span>
+            {% endif %}
+
+            <div style="display: flex; gap: 0.4rem;">
+                <button type="button" class="btn btn-primary btn-sm" style="background: linear-gradient(135deg, #0891b2, #4f46e5); border: none; font-size: 0.78rem; padding: 0.4rem 0.75rem;"
+                    onclick="loadScreeningDossier({{ cand.student_id }}, {{ ranked_data.job_id }}, '{{ cand.name|e }}', '{{ ranked_data.job_title|e }}')">
+                    <i data-lucide="sparkles" style="width: 13px; height: 13px;"></i> AI Dossier
+                </button>
+
+                {% if cand.application_id %}
+                <a href="{{ url_for('recruiter.schedule_view', candidate_id=cand.application_id) }}" class="btn btn-outline btn-sm" style="font-size: 0.78rem; padding: 0.4rem 0.65rem;" title="Schedule Round">
+                    <i data-lucide="calendar" style="width: 13px; height: 13px;"></i>
+                </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div class="glass-panel" style="text-align: center; padding: 3.5rem 1.5rem;">
+    <i data-lucide="alert-circle" style="width: 44px; height: 44px; color: var(--text-dim); margin-bottom: 1rem;"></i>
+    <h3 style="font-size: 1.15rem; color: #ffffff; margin-bottom: 0.5rem;">No Candidate Matches Found</h3>
+    <p style="color: var(--text-muted); font-size: 0.88rem; max-width: 420px; margin: 0 auto 1.5rem;">
+        No students matched the current filters for this requisition. Try relaxing the CGPA threshold or switching branches.
+    </p>
+    <a href="{{ url_for('recruiter_ai.candidate_matching_page', job_id=selected_job_id) }}" class="btn btn-primary btn-sm">
+        Reset Filter Criteria
+    </a>
+</div>
+{% endif %}
+
+<!-- AI Candidate Screening Dossier Modal -->
+<div class="modal-backdrop" id="dossierModal">
+    <div class="modal-dialog" style="max-width: 720px; max-height: 90vh; overflow-y: auto;">
+        <div class="modal-header">
+            <div style="display: flex; align-items: center; gap: 8px;">
+                <div style="width: 32px; height: 32px; border-radius: 8px; background: rgba(6, 182, 212, 0.2); color: #22d3ee; display: flex; align-items: center; justify-content: center;">
+                    <i data-lucide="sparkles" style="width: 17px; height: 17px;"></i>
+                </div>
+                <div>
+                    <div class="modal-title" id="dossierCandidateName">Candidate Screening Dossier</div>
+                    <div style="font-size: 0.78rem; color: var(--text-muted);" id="dossierJobTitle">Role Appraisal</div>
+                </div>
+            </div>
+            <button type="button" class="modal-close" onclick="closeDossierModal()">&times;</button>
+        </div>
+
+        <div class="modal-body" id="dossierContent" style="padding: 1.5rem;">
+            <!-- Loading Spinner -->
+            <div id="dossierLoading" style="text-align: center; padding: 3rem 1rem;">
+                <i data-lucide="loader-2" class="spin" style="width: 36px; height: 36px; color: #06b6d4; margin-bottom: 0.75rem;"></i>
+                <div style="color: #cbd5e1; font-weight: 600;">Generating AI Screening Dossier...</div>
+                <div style="color: var(--text-dim); font-size: 0.82rem; margin-top: 4px;">Evaluating skills, project depth, and custom interview questions via Gemini</div>
+            </div>
+
+            <!-- Dynamic Result Container -->
+            <div id="dossierResult" style="display: none;"></div>
+        </div>
+
+        <div class="modal-footer">
+            <button type="button" class="btn btn-outline btn-sm" onclick="closeDossierModal()">Close</button>
+        </div>
+    </div>
+</div>
+
+<script>
+async function loadScreeningDossier(studentId, jobId, candidateName, jobTitle) {
+    document.getElementById('dossierCandidateName').textContent = candidateName;
+    document.getElementById('dossierJobTitle').textContent = `Evaluating for: ${jobTitle}`;
+    document.getElementById('dossierLoading').style.display = 'block';
+    document.getElementById('dossierResult').style.display = 'none';
+
+    const modal = document.getElementById('dossierModal');
+    if (modal) modal.classList.add('show');
+    if (window.lucide) window.lucide.createIcons();
+
+    try {
+        const res = await fetch(`/recruiter/ai/api/screen/${studentId}/job/${jobId}`);
+        const data = await res.json();
+        document.getElementById('dossierLoading').style.display = 'none';
+
+        const screening = data.screening || {};
+        const recBadgeClass = screening.hiring_recommendation === 'Strong Shortlist' ? 'badge-selected' : 'badge-eligible';
+
+        let questionsHtml = '';
+        if (screening.tailored_interview_guide && screening.tailored_interview_guide.length > 0) {
+            questionsHtml = screening.tailored_interview_guide.map((q, idx) => `
+                <div style="background: rgba(0, 0, 0, 0.25); border-left: 3px solid #06b6d4; padding: 12px 14px; border-radius: 0 8px 8px 0; margin-bottom: 10px;">
+                    <div style="font-size: 0.78rem; font-weight: 700; color: #38bdf8; text-transform: uppercase;">
+                        Question ${idx + 1}: ${escapeHtml(q.focus_area || 'Technical Assessment')}
+                    </div>
+                    <div style="font-weight: 600; color: #f8fafc; font-size: 0.9rem; margin: 4px 0 6px 0;">
+                        "${escapeHtml(q.question)}"
+                    </div>
+                    <div style="font-size: 0.78rem; color: #94a3b8;">
+                        <strong style="color: #cbd5e1;">Look For:</strong> ${escapeHtml(q.what_to_look_for)}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        const reasonsHtml = (screening.top_reasons_to_hire || []).map(r => `
+            <li style="margin-bottom: 4px; color: #cbd5e1;">${escapeHtml(r)}</li>
+        `).join('');
+
+        const flagsHtml = (screening.concerns_or_flags || []).map(f => `
+            <li style="margin-bottom: 4px; color: #fbbf24;">${escapeHtml(f)}</li>
+        `).join('');
+
+        document.getElementById('dossierResult').innerHTML = `
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; padding-bottom: 0.75rem; border-bottom: 1px solid var(--border-subtle);">
+                <div>
+                    <span class="badge ${recBadgeClass}" style="font-size: 0.85rem; padding: 4px 10px;">
+                        Recommendation: ${escapeHtml(screening.hiring_recommendation || 'Consider')}
+                    </span>
+                </div>
+                <div style="font-size: 0.85rem; color: #38bdf8; font-weight: 700;">
+                    Overall Fit Score: ${data.composite_score || 0}%
+                </div>
+            </div>
+
+            <div style="margin-bottom: 1.25rem;">
+                <h4 style="font-size: 0.85rem; text-transform: uppercase; color: #94a3b8; margin-bottom: 0.4rem;">Executive Appraisal</h4>
+                <p style="color: #e2e8f0; font-size: 0.92rem; line-height: 1.6; background: rgba(255,255,255,0.02); padding: 12px 14px; border-radius: 8px; border: 1px solid var(--border-subtle);">
+                    ${escapeHtml(screening.executive_dossier || 'Candidate displays solid potential.')}
+                </p>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.25rem;">
+                <div style="background: rgba(16, 185, 129, 0.05); border: 1px solid rgba(16, 185, 129, 0.2); border-radius: 8px; padding: 12px;">
+                    <div style="font-size: 0.8rem; font-weight: 700; color: #34d399; margin-bottom: 6px; display: flex; align-items: center; gap: 4px;">
+                        <i data-lucide="check-circle" style="width: 14px; height: 14px;"></i> Top Reasons to Hire
+                    </div>
+                    <ul style="padding-left: 1.1rem; margin: 0; font-size: 0.82rem;">
+                        ${reasonsHtml || '<li>Verified academic baseline</li>'}
+                    </ul>
+                </div>
+
+                <div style="background: rgba(245, 158, 11, 0.05); border: 1px solid rgba(245, 158, 11, 0.2); border-radius: 8px; padding: 12px;">
+                    <div style="font-size: 0.8rem; font-weight: 700; color: #fbbf24; margin-bottom: 6px; display: flex; align-items: center; gap: 4px;">
+                        <i data-lucide="alert-triangle" style="width: 14px; height: 14px;"></i> Risk Flags / Scrutiny Areas
+                    </div>
+                    <ul style="padding-left: 1.1rem; margin: 0; font-size: 0.82rem;">
+                        ${flagsHtml || '<li>No critical flags identified</li>'}
+                    </ul>
+                </div>
+            </div>
+
+            <div>
+                <h4 style="font-size: 0.85rem; text-transform: uppercase; color: #94a3b8; margin-bottom: 0.6rem; display: flex; align-items: center; gap: 6px;">
+                    <i data-lucide="help-circle" style="width: 15px; height: 15px; color: #38bdf8;"></i> Tailored Interview Questions
+                </h4>
+                ${questionsHtml}
+            </div>
+        `;
+
+        document.getElementById('dossierResult').style.display = 'block';
+        if (window.lucide) window.lucide.createIcons();
+    } catch (e) {
+        document.getElementById('dossierLoading').style.display = 'none';
+        document.getElementById('dossierResult').innerHTML = `
+            <div style="text-align: center; color: #f87171; padding: 2rem;">
+                Failed to generate dossier. Please try again.
+            </div>
+        `;
+        document.getElementById('dossierResult').style.display = 'block';
+    }
+}
+
+function closeDossierModal() {
+    const modal = document.getElementById('dossierModal');
+    if (modal) modal.classList.remove('show');
+}
+
+window.addEventListener('click', (e) => {
+    const modal = document.getElementById('dossierModal');
+    if (e.target === modal) closeDossierModal();
+});
+
+function escapeHtml(text) {
+    if (!text) return '';
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+</script>
+{% endblock %}

@@ -1,0 +1,1100 @@
+{% extends "base.html" %}
+
+{% block title %}Skill Gaps & Adaptive Roadmap — Glint{% endblock %}
+
+{% block extra_css %}
+<style>
+    .timeline-container {
+        position: relative;
+        padding-left: 32px;
+        margin-top: 24px;
+    }
+    .timeline-container::before {
+        content: '';
+        position: absolute;
+        left: 11px;
+        top: 8px;
+        bottom: 8px;
+        width: 2px;
+        background: linear-gradient(180deg, var(--accent-coral, #E76F51) 0%, var(--accent-terracotta, #D45D3E) 50%, var(--border-subtle, #EAE3D7) 100%);
+    }
+    .timeline-phase {
+        position: relative;
+        margin-bottom: 28px;
+    }
+    .timeline-node {
+        position: absolute;
+        left: -32px;
+        top: 4px;
+        width: 24px;
+        height: 24px;
+        border-radius: 50%;
+        background: #FFFDFC;
+        border: 2px solid var(--accent-coral, #E76F51);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--accent-coral, #E76F51);
+        font-size: 11px;
+        font-weight: 700;
+        box-shadow: 0 2px 8px rgba(231, 111, 81, 0.2);
+    }
+    .timeline-phase.completed .timeline-node {
+        background: var(--accent-sage, #2D6A4F);
+        border-color: var(--accent-sage, #2D6A4F);
+        color: #ffffff;
+        box-shadow: 0 2px 8px rgba(45, 106, 79, 0.25);
+    }
+    .roadmap-card {
+        background: var(--bg-card, #FFFDFC);
+        border: 1px solid var(--border-subtle, #EAE3D7);
+        border-radius: 16px;
+        padding: 22px;
+        box-shadow: var(--shadow-sm, 0 1px 3px rgba(35, 25, 15, 0.05));
+        transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .roadmap-card:hover {
+        border-color: var(--accent-coral, #E76F51);
+        box-shadow: 0 4px 12px rgba(231, 111, 81, 0.08);
+    }
+    .task-item {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 10px 14px;
+        background: var(--bg-surface, #FAF7F2);
+        border-radius: 8px;
+        margin-bottom: 8px;
+        cursor: pointer;
+        transition: background 0.15s, border-color 0.15s;
+        border: 1px solid var(--border-subtle, #EAE3D7);
+    }
+    .task-item:hover {
+        background: #FFF8F5;
+        border-color: var(--accent-coral, #E76F51);
+    }
+    .task-checkbox {
+        width: 18px;
+        height: 18px;
+        accent-color: var(--accent-coral, #E76F51);
+        cursor: pointer;
+        flex-shrink: 0;
+    }
+    .task-text {
+        color: var(--text-primary, #23190F);
+    }
+    .task-text.completed {
+        text-decoration: line-through;
+        color: var(--text-muted, #8C8278);
+    }
+    .proof-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        font-size: 11px;
+        padding: 3px 8px;
+        border-radius: 6px;
+        background: #EDF7F2;
+        color: #2D6A4F;
+        border: 1px solid rgba(45, 106, 79, 0.25);
+        text-decoration: none;
+        font-weight: 600;
+        transition: background 0.15s;
+    }
+    .proof-badge:hover {
+        background: #DEEFE7;
+    }
+    .btn-proof {
+        padding: 4px 9px;
+        font-size: 11px;
+        border-radius: 6px;
+        border: 1px solid var(--border-subtle, #EAE3D7);
+        background: #FFFFFF;
+        color: var(--text-secondary, #5C5248);
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        font-weight: 500;
+        transition: all 0.15s;
+    }
+    .btn-proof:hover {
+        background: #FFF0EB;
+        border-color: var(--accent-coral, #E76F51);
+        color: var(--accent-coral, #E76F51);
+    }
+    /* Kanban Styles */
+    .kanban-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 16px;
+        margin-top: 20px;
+    }
+    .kanban-column {
+        background: var(--bg-surface, #FAF7F2);
+        border: 1px solid var(--border-subtle, #EAE3D7);
+        border-radius: 14px;
+        padding: 16px;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    }
+    .kanban-col-header {
+        border-bottom: 1px solid var(--border-subtle, #EAE3D7);
+        padding-bottom: 10px;
+    }
+    .kanban-task-card {
+        background: var(--bg-card, #FFFDFC);
+        border: 1px solid var(--border-subtle, #EAE3D7);
+        border-radius: 10px;
+        padding: 12px;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        box-shadow: 0 1px 3px rgba(35, 25, 15, 0.04);
+        transition: border-color 0.15s, transform 0.15s, box-shadow 0.15s;
+    }
+    .kanban-task-card:hover {
+        border-color: var(--accent-coral, #E76F51);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 10px rgba(231, 111, 81, 0.08);
+    }
+    .view-toggle-btn {
+        padding: 6px 14px;
+        font-size: 13px;
+        border-radius: 8px;
+        border: 1px solid var(--border-subtle, #EAE3D7);
+        background: #FFFFFF;
+        color: var(--text-secondary, #5C5248);
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        font-weight: 500;
+        transition: all 0.2s;
+    }
+    .view-toggle-btn.active {
+        background: var(--accent-coral, #E76F51);
+        color: #ffffff;
+        border-color: var(--accent-coral, #E76F51);
+        box-shadow: 0 2px 8px rgba(231, 111, 81, 0.25);
+    }
+    /* Skeleton Shimmer Loading Animations */
+    .skeleton-box {
+        display: inline-block;
+        position: relative;
+        overflow: hidden;
+        background-color: var(--border-subtle, #EAE3D7);
+        border-radius: 8px;
+    }
+    .skeleton-box::after {
+        position: absolute;
+        top: 0; right: 0; bottom: 0; left: 0;
+        transform: translateX(-100%);
+        background-image: linear-gradient(
+            90deg,
+            rgba(255, 255, 255, 0) 0,
+            rgba(255, 255, 255, 0.5) 20%,
+            rgba(255, 255, 255, 0.7) 60%,
+            rgba(255, 255, 255, 0)
+        );
+        animation: shimmer 1.5s infinite;
+        content: '';
+    }
+    @keyframes shimmer {
+        100% {
+            transform: translateX(100%);
+        }
+    }
+    /* Modal Overlay */
+    .modal-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(35, 25, 15, 0.45);
+        backdrop-filter: blur(4px);
+        z-index: 9999;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="skill-gaps-wrapper">
+    <!-- Header -->
+    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 24px; flex-wrap: wrap; gap: 16px;">
+        <div>
+            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 6px;">
+                <span class="badge" style="background: #FFF0EB; color: var(--accent-coral, #E76F51); border: 1px solid rgba(231, 111, 81, 0.3); font-weight: 600;">
+                    <i data-lucide="cpu" style="width: 13px; height: 13px; vertical-align: middle;"></i> Set-Theoretic Skill Gap Engine
+                </span>
+                <span id="gap-severity-badge" class="badge badge-{% if gaps.gap_severity == 'Low' %}shortlisted{% elif gaps.gap_severity == 'Moderate' %}pending{% else %}danger{% endif %}">
+                    Gap Severity: <span id="gap-severity-text">{{ gaps.gap_severity }}</span>
+                </span>
+            </div>
+            <h1 id="target-benchmark-title" style="font-family: 'Outfit', sans-serif; font-size: 28px; font-weight: 800; color: var(--text-primary, #23190F); margin: 0;">
+                Target Benchmark: <span id="benchmark-title">{{ gaps.benchmark_role }}</span>
+            </h1>
+            <p style="color: var(--text-secondary, #5C5248); font-size: 14px; margin-top: 6px;">
+                Mathematical set comparison: Student Skills (<em>S</em>) vs Industry Requisition Standards (<em>R</em>)
+            </p>
+        </div>
+
+        <!-- Target Role Benchmark Selector -->
+        <div style="display: flex; gap: 10px; align-items: center;">
+            <select id="role-selector" class="form-control" style="background: #FFFFFF; color: var(--text-primary, #23190F); border: 1px solid var(--border-subtle, #EAE3D7); border-radius: 10px; padding: 10px 14px; font-size: 13px; font-weight: 500;">
+                <option value="Full Stack Developer" {% if gaps.benchmark_role == 'Full Stack Developer' %}selected{% endif %}>Full Stack Developer</option>
+                <option value="Data Science & AI Engineer" {% if gaps.benchmark_role == 'Data Science & AI Engineer' %}selected{% endif %}>Data Science & AI Engineer</option>
+                <option value="Cloud & Backend Engineer" {% if gaps.benchmark_role == 'Cloud & Backend Engineer' %}selected{% endif %}>Cloud & Backend Engineer</option>
+                <option value="Frontend Engineer" {% if gaps.benchmark_role == 'Frontend Engineer' %}selected{% endif %}>Frontend Engineer</option>
+                <option value="Cybersecurity Analyst" {% if gaps.benchmark_role == 'Cybersecurity Analyst' %}selected{% endif %}>Cybersecurity Analyst</option>
+            </select>
+            <button class="btn btn-primary" id="btn-update-role" style="display: flex; align-items: center; gap: 6px;">
+                <i data-lucide="refresh-cw" id="role-refresh-icon" style="width: 15px; height: 15px;"></i>
+                <span id="analyze-btn-text">Analyze</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- 1. Coverage Score & Market Urgency Banner -->
+    <div style="display: grid; grid-template-columns: 240px 1fr; gap: 20px; margin-bottom: 28px;" class="responsive-banner-grid">
+        <div class="card" id="benchmark-ratio-card" style="background: var(--bg-card, #FFFDFC); border: 1px solid var(--border-subtle, #EAE3D7); border-radius: 16px; padding: 22px; text-align: center; box-shadow: var(--shadow-sm, 0 1px 3px rgba(35, 25, 15, 0.05));">
+            <div style="font-size: 11px; text-transform: uppercase; color: var(--text-muted, #8C8278); font-weight: 600; letter-spacing: 0.05em;">
+                Benchmark Match Ratio
+            </div>
+            <div style="font-size: 42px; font-weight: 800; font-family: 'Outfit'; color: var(--accent-coral, #E76F51); margin: 8px 0;" id="benchmark-match-ratio" data-testid="match-percent-display">
+                {{ gaps.match_percentage }}%
+            </div>
+            <div style="font-size: 12.5px; color: var(--text-secondary, #5C5248);" id="benchmark-subtext">
+                <span id="matched-count" style="font-weight: 700; color: var(--text-primary, #23190F);">{{ gaps.matched_skills|length }}</span> of <span id="total-count" style="font-weight: 700; color: var(--text-primary, #23190F);">{{ gaps.total_required }}</span> competencies verified
+            </div>
+        </div>
+
+        <div class="card" id="recruiter-urgency-card" style="background: var(--bg-card, #FFFDFC); border: 1px solid var(--border-subtle, #EAE3D7); border-radius: 16px; padding: 22px; display: flex; flex-direction: column; justify-content: center; box-shadow: var(--shadow-sm, 0 1px 3px rgba(35, 25, 15, 0.05));">
+            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+                <i data-lucide="trending-up" style="width: 16px; height: 16px; color: var(--accent-coral, #E76F51);"></i>
+                <span style="font-size: 12px; text-transform: uppercase; color: var(--accent-coral, #E76F51); font-weight: 700; letter-spacing: 0.04em;">Recruiter Urgency Diagnostic</span>
+            </div>
+            <div style="font-size: 14px; color: var(--text-secondary, #5C5248); line-height: 1.6;" id="urgency-summary-text">
+                {{ gaps.market_urgency_summary }}
+            </div>
+            <div style="margin-top: 12px; font-size: 13px; color: #9A3412; background: #FFF7ED; border: 1px solid rgba(234, 88, 12, 0.2); border-radius: 8px; padding: 8px 12px; display: inline-flex; align-items: center; gap: 8px;" id="quick-win-container">
+                <i data-lucide="zap" style="width: 15px; height: 15px; color: #EA580C; flex-shrink: 0;"></i>
+                <span id="quick-win-text"><strong>7-Day Milestone:</strong> {{ gaps.quick_win_milestone }}</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- 2 & 3. Skill Split: Matched vs Missing -->
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 32px;" class="responsive-split-grid">
+        <!-- Matched Skills -->
+        <div class="card" id="verified-skills-card" style="background: var(--bg-card, #FFFDFC); border: 1px solid var(--border-subtle, #EAE3D7); border-radius: 16px; padding: 22px; box-shadow: var(--shadow-sm, 0 1px 3px rgba(35, 25, 15, 0.05));">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                <h3 style="font-size: 16px; font-weight: 700; color: var(--text-primary, #23190F); margin: 0; display: flex; align-items: center; gap: 8px;">
+                    <i data-lucide="check-circle" style="width: 18px; height: 18px; color: var(--accent-sage, #2D6A4F);"></i> Verified Matched Skills
+                </h3>
+                <span id="verified-skills-count" class="badge" style="background: #EDF7F2; color: #2D6A4F; font-weight: 600;">{{ gaps.matched_skills|length }} Verified</span>
+            </div>
+            <div id="verified-skills-container" data-testid="matched-skills-container" style="display: flex; flex-wrap: wrap; gap: 8px;">
+                {% for s in gaps.matched_skills %}
+                <span class="skill-chip matched-chip" style="display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 30px; font-size: 12px; background: #EDF7F2; border: 1px solid rgba(45, 106, 79, 0.25); color: #2D6A4F; font-weight: 500;">
+                    <i data-lucide="check" style="width: 12px; height: 12px;"></i> {{ s.name }}{% if s.proficiency %} ({{ s.proficiency }}){% endif %}
+                </span>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Missing Skills & Deficits -->
+        <div class="card" id="missing-competencies-card" style="background: var(--bg-card, #FFFDFC); border: 1px solid var(--border-subtle, #EAE3D7); border-radius: 16px; padding: 22px; box-shadow: var(--shadow-sm, 0 1px 3px rgba(35, 25, 15, 0.05));">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                <h3 style="font-size: 16px; font-weight: 700; color: var(--text-primary, #23190F); margin: 0; display: flex; align-items: center; gap: 8px;">
+                    <i data-lucide="alert-octagon" style="width: 18px; height: 18px; color: #C92A2A;"></i> Critical Missing Competencies
+                </h3>
+                <span id="missing-competencies-count" class="badge" style="background: #FFF0F0; color: #C92A2A; font-weight: 600;">{{ gaps.missing_skills|length }} Gaps</span>
+            </div>
+            <div id="missing-competencies-container" data-testid="missing-skills-container" style="display: flex; flex-wrap: wrap; gap: 8px;">
+                {% for s in gaps.missing_skills %}
+                <span class="skill-chip missing-chip" style="display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 30px; font-size: 12px; background: #FFF0F0; border: 1px solid rgba(201, 42, 42, 0.25); color: #C92A2A; font-weight: 500;">
+                    <i data-lucide="plus" style="width: 12px; height: 12px;"></i> {{ s }}
+                </span>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- 5. Targeted Practice Interview Questions for Gaps -->
+    <div id="probing-questions-section" style="margin-bottom: 36px; {% if not gaps.practice_interview_questions %}display: none;{% endif %}">
+        <h3 style="font-family: 'Outfit', sans-serif; font-size: 20px; font-weight: 700; color: var(--text-primary, #23190F); margin-bottom: 16px; display: flex; align-items: center; gap: 8px;">
+            <i data-lucide="help-circle" style="width: 20px; height: 20px; color: var(--accent-coral, #E76F51);"></i> Placement Interview Probing Questions for Your Gaps
+        </h3>
+        <div id="probing-questions-container" data-testid="probing-questions-container" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 16px;">
+            {% for q in gaps.practice_interview_questions %}
+            <div class="card probing-question-card" style="background: var(--bg-card, #FFFDFC); border: 1px solid var(--border-subtle, #EAE3D7); border-radius: 14px; padding: 18px; box-shadow: var(--shadow-sm, 0 1px 3px rgba(35, 25, 15, 0.05));">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                    <span class="badge" style="background: #FFF0EB; color: var(--accent-coral, #E76F51); font-size: 11px; font-weight: 600;">{{ q.skill }}</span>
+                    <span style="font-size: 11px; color: var(--text-muted, #8C8278); font-weight: 500;">Concept: {{ q.concept_tested }}</span>
+                </div>
+                <div style="font-size: 14px; color: var(--text-primary, #23190F); line-height: 1.5; font-weight: 500;">
+                    "{{ q.question }}"
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- 6. 4-Phase Adaptive Learning Roadmap & Kanban Board Section -->
+    <div id="roadmap-section" style="background: var(--bg-card, #FFFDFC); border: 1px solid var(--border-subtle, #EAE3D7); border-radius: 20px; padding: 28px; margin-bottom: 32px; scroll-margin-top: 90px; box-shadow: var(--shadow-sm, 0 1px 3px rgba(35, 25, 15, 0.05));">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 16px;">
+            <div>
+                <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
+                    <span class="badge" style="background: #FFF0EB; color: var(--accent-coral, #E76F51); border: 1px solid rgba(231, 111, 81, 0.3); font-weight: 600;">
+                        <i data-lucide="map" style="width: 12px; height: 12px; vertical-align: middle;"></i> 90-Day Adaptive Placement Curriculum
+                    </span>
+                    <span style="font-size: 13px; color: var(--text-secondary, #5C5248);">Completion: <strong style="color: var(--accent-coral, #E76F51);" id="roadmap-progress-num">{{ roadmap.progress_percentage }}%</strong></span>
+                </div>
+                <h2 style="font-family: 'Outfit', sans-serif; font-size: 24px; font-weight: 800; color: var(--text-primary, #23190F); margin: 0;">
+                    Placement Acceleration Roadmap
+                </h2>
+            </div>
+
+            <!-- View Switcher & Progress Bar -->
+            <div style="display: flex; align-items: center; gap: 16px; flex-wrap: wrap;">
+                <div style="display: flex; gap: 6px; background: var(--bg-surface, #FAF7F2); padding: 4px; border-radius: 10px; border: 1px solid var(--border-subtle, #EAE3D7);">
+                    <button type="button" id="btn-view-timeline" class="view-toggle-btn active" onclick="switchRoadmapView('timeline')">
+                        <i data-lucide="git-commit" style="width: 14px; height: 14px;"></i> Timeline
+                    </button>
+                    <button type="button" id="btn-view-kanban" class="view-toggle-btn" onclick="switchRoadmapView('kanban')">
+                        <i data-lucide="kanban" style="width: 14px; height: 14px;"></i> Kanban Board
+                    </button>
+                </div>
+
+                <div style="min-width: 180px;">
+                    <div class="pillar-progress-track" style="height: 10px; background: var(--border-subtle, #EAE3D7); border-radius: 10px; overflow: hidden;">
+                        <div id="roadmap-progress-bar" class="pillar-progress-bar" style="width: {{ roadmap.progress_percentage }}%; height: 100%; background: linear-gradient(90deg, var(--accent-coral, #E76F51), #F4A261); transition: width 0.3s ease;"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- View 1: Timeline Phases -->
+        <div class="timeline-container" id="timeline-phases-container">
+            {% for phase in roadmap.milestones %}
+            <div class="timeline-phase">
+                <div class="timeline-node">{{ phase.phase }}</div>
+                <div class="roadmap-card">
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; flex-wrap: wrap; gap: 8px;">
+                        <div>
+                            <span class="badge" style="background: #FFF0EB; color: var(--accent-coral, #E76F51); font-size: 11px; font-weight: 600;">{{ phase.timeframe }}</span>
+                            <h4 style="font-size: 17px; font-weight: 700; color: var(--text-primary, #23190F); margin: 4px 0 0 0;">{{ phase.title }}</h4>
+                        </div>
+                        <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+                            {% for fs in phase.focus_skills %}
+                            <span class="tag-bubble" style="font-size: 11px; padding: 4px 8px; background: var(--bg-surface, #FAF7F2); border: 1px solid var(--border-subtle, #EAE3D7); border-radius: 6px; color: var(--text-secondary, #5C5248); font-weight: 500;">{{ fs }}</span>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    <!-- Tasks List -->
+                    <div style="margin-top: 14px;">
+                        <div style="font-size: 11px; text-transform: uppercase; color: var(--text-muted, #8C8278); font-weight: 600; margin-bottom: 8px; letter-spacing: 0.04em;">Action Checklist</div>
+                        {% for task in phase.action_tasks %}
+                        <div class="task-item" id="task_item_{{ task.id }}" onclick="toggleTask('{{ roadmap.id }}', '{{ task.id }}')">
+                            <input type="checkbox" class="task-checkbox" id="check_{{ task.id }}" {% if task.completed %}checked{% endif %} onclick="event.stopPropagation(); toggleTask('{{ roadmap.id }}', '{{ task.id }}');">
+                            <span class="task-text {% if task.completed %}completed{% endif %}" id="text_{{ task.id }}" style="font-size: 13.5px; flex: 1;">
+                                {{ task.description }}
+                            </span>
+                            <div style="display: flex; align-items: center; gap: 8px;" onclick="event.stopPropagation();">
+                                {% if task.proof_url %}
+                                <a href="{{ task.proof_url }}" target="_blank" class="proof-badge" title="{{ task.proof_notes or 'Verified Proof of Work' }}">
+                                    <i data-lucide="external-link" style="width: 11px; height: 11px;"></i> Proof
+                                </a>
+                                {% endif %}
+                                <button type="button" class="btn-proof" onclick="openProofModal('{{ roadmap.id }}', '{{ task.id }}', '{{ task.description|e }}', '{{ task.proof_url or '' }}', '{{ task.proof_notes or '' }}')">
+                                    <i data-lucide="link" style="width: 11px; height: 11px;"></i> {% if task.proof_url %}Edit Proof{% else %}Proof{% endif %}
+                                </button>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+
+                    <!-- Checkpoint deliverable -->
+                    <div style="margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--border-subtle, #EAE3D7); font-size: 12.5px; color: var(--text-secondary, #5C5248); display: flex; align-items: center; gap: 6px;">
+                        <i data-lucide="flag" style="width: 14px; height: 14px; color: var(--accent-coral, #E76F51);"></i>
+                        <span><strong>Milestone Deliverable:</strong> {{ phase.checkpoint_deliverable }}</span>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        <!-- View 2: Interactive Kanban Board (Default Hidden) -->
+        <div id="kanban-phases-container" class="kanban-grid" style="display: none;">
+            {% for phase in roadmap.milestones %}
+            <div class="kanban-column">
+                <div class="kanban-col-header">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                        <span class="badge" style="background: #FFF0EB; color: var(--accent-coral, #E76F51); font-size: 10px; font-weight: 600;">Phase {{ phase.phase }}</span>
+                        <span style="font-size: 11px; color: var(--text-muted, #8C8278);">{{ phase.timeframe }}</span>
+                    </div>
+                    <div style="font-size: 14px; font-weight: 700; color: var(--text-primary, #23190F); line-height: 1.3;">{{ phase.title }}</div>
+                </div>
+
+                <div style="display: flex; flex-direction: column; gap: 8px; flex: 1;">
+                    {% for task in phase.action_tasks %}
+                    <div class="kanban-task-card" id="kanban_card_{{ task.id }}">
+                        <div style="display: flex; align-items: flex-start; gap: 8px;">
+                            <input type="checkbox" class="task-checkbox" id="kanban_check_{{ task.id }}" {% if task.completed %}checked{% endif %} onclick="event.stopPropagation(); toggleTask('{{ roadmap.id }}', '{{ task.id }}');" style="margin-top: 2px;">
+                            <span class="task-text {% if task.completed %}completed{% endif %}" id="kanban_text_{{ task.id }}" style="font-size: 12.5px; line-height: 1.4;">
+                                {{ task.description }}
+                            </span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 4px; padding-top: 6px; border-top: 1px solid var(--border-subtle, #EAE3D7);">
+                            {% if task.proof_url %}
+                            <a href="{{ task.proof_url }}" target="_blank" class="proof-badge" style="font-size: 10px; padding: 2px 6px;">
+                                <i data-lucide="external-link" style="width: 10px; height: 10px;"></i> Proof
+                            </a>
+                            {% else %}
+                            <span style="font-size: 10px; color: var(--text-muted, #8C8278);">No proof linked</span>
+                            {% endif %}
+                            <button type="button" class="btn-proof" style="padding: 2px 6px; font-size: 10px;" onclick="openProofModal('{{ roadmap.id }}', '{{ task.id }}', '{{ task.description|e }}', '{{ task.proof_url or '' }}', '{{ task.proof_notes or '' }}')">
+                                <i data-lucide="upload" style="width: 10px; height: 10px;"></i> Proof
+                            </button>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+
+                <div style="margin-top: auto; padding-top: 10px; border-top: 1px solid var(--border-subtle, #EAE3D7); font-size: 11.5px; color: var(--text-secondary, #5C5248);">
+                    <i data-lucide="flag" style="width: 12px; height: 12px; color: var(--accent-coral, #E76F51); vertical-align: middle;"></i>
+                    {{ phase.checkpoint_deliverable }}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<!-- Proof of Work Submission Modal -->
+<div id="proof-modal" class="modal-overlay" style="display: none;">
+    <div style="background: var(--bg-card, #FFFDFC); border: 1px solid var(--border-subtle, #EAE3D7); border-radius: 16px; padding: 24px; width: 100%; max-width: 480px; box-shadow: 0 20px 40px rgba(35, 25, 15, 0.15);">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+            <div style="display: flex; align-items: center; gap: 8px;">
+                <div style="width: 32px; height: 32px; border-radius: 8px; background: #FFF0EB; display: flex; align-items: center; justify-content: center; color: var(--accent-coral, #E76F51);">
+                    <i data-lucide="github" style="width: 18px; height: 18px;"></i>
+                </div>
+                <h3 style="font-family: 'Outfit', sans-serif; font-size: 18px; font-weight: 700; color: var(--text-primary, #23190F); margin: 0;">Submit Proof of Work</h3>
+            </div>
+            <button type="button" onclick="closeProofModal()" style="background: none; border: none; color: var(--text-muted, #8C8278); cursor: pointer; padding: 4px;">
+                <i data-lucide="x" style="width: 18px; height: 18px;"></i>
+            </button>
+        </div>
+
+        <p id="modal-task-title" style="font-size: 13px; color: var(--text-primary, #23190F); margin-bottom: 16px; background: var(--bg-surface, #FAF7F2); padding: 10px 12px; border-radius: 8px; border-left: 3px solid var(--accent-coral, #E76F51);"></p>
+
+        <form id="proof-form" onsubmit="handleProofSubmit(event)">
+            <input type="hidden" id="modal-roadmap-id">
+            <input type="hidden" id="modal-task-id">
+
+            <div style="margin-bottom: 14px;">
+                <label style="display: block; font-size: 12px; color: var(--text-secondary, #5C5248); font-weight: 600; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.04em;">
+                    Proof URL (GitHub Repo / Commit / PR / Live URL) *
+                </label>
+                <input type="url" id="modal-proof-url" required placeholder="https://github.com/username/project/commit/..." class="form-control" style="background: #FFFFFF; color: var(--text-primary, #23190F); border: 1px solid var(--border-subtle, #EAE3D7); border-radius: 8px; padding: 10px 12px; font-size: 13px; width: 100%;">
+            </div>
+
+            <div style="margin-bottom: 18px;">
+                <label style="display: block; font-size: 12px; color: var(--text-secondary, #5C5248); font-weight: 600; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.04em;">
+                    Notes / Verification Summary (Optional)
+                </label>
+                <textarea id="modal-proof-notes" rows="3" placeholder="Brief summary of code implemented, tests passing, or deployment status..." class="form-control" style="background: #FFFFFF; color: var(--text-primary, #23190F); border: 1px solid var(--border-subtle, #EAE3D7); border-radius: 8px; padding: 10px 12px; font-size: 13px; width: 100%; resize: vertical;"></textarea>
+            </div>
+
+            <div style="display: flex; justify-content: flex-end; gap: 10px;">
+                <button type="button" onclick="closeProofModal()" class="btn btn-secondary" style="padding: 8px 16px; font-size: 13px; border-radius: 8px;">Cancel</button>
+                <button type="submit" id="modal-save-btn" class="btn btn-primary" style="padding: 8px 16px; font-size: 13px; border-radius: 8px; display: inline-flex; align-items: center; gap: 6px;">
+                    <i data-lucide="check" style="width: 14px; height: 14px;"></i> Verify & Complete
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    let currentRoadmapId = "{{ roadmap.id }}";
+    let activeRoadmapData = {{ roadmap|tojson|safe }};
+
+    function switchRoadmapView(view) {
+        const timeline = document.getElementById('timeline-phases-container');
+        const kanban = document.getElementById('kanban-phases-container');
+        const btnTimeline = document.getElementById('btn-view-timeline');
+        const btnKanban = document.getElementById('btn-view-kanban');
+
+        if (view === 'kanban') {
+            if (timeline) timeline.style.display = 'none';
+            if (kanban) kanban.style.display = 'grid';
+            if (btnTimeline) btnTimeline.classList.remove('active');
+            if (btnKanban) btnKanban.classList.add('active');
+        } else {
+            if (kanban) kanban.style.display = 'none';
+            if (timeline) timeline.style.display = 'block';
+            if (btnKanban) btnKanban.classList.remove('active');
+            if (btnTimeline) btnTimeline.classList.add('active');
+        }
+        if (window.lucide && typeof window.lucide.createIcons === 'function') {
+            window.lucide.createIcons();
+        }
+    }
+
+    function openProofModal(roadmapId, taskId, taskDescription, proofUrl, proofNotes) {
+        const modal = document.getElementById('proof-modal');
+        document.getElementById('modal-roadmap-id').value = roadmapId || currentRoadmapId;
+        document.getElementById('modal-task-id').value = taskId;
+        document.getElementById('modal-task-title').textContent = taskDescription || 'Roadmap Milestone Task';
+        document.getElementById('modal-proof-url').value = proofUrl || '';
+        document.getElementById('modal-proof-notes').value = proofNotes || '';
+
+        modal.style.display = 'flex';
+        if (window.lucide && typeof window.lucide.createIcons === 'function') {
+            window.lucide.createIcons();
+        }
+    }
+
+    function closeProofModal() {
+        const modal = document.getElementById('proof-modal');
+        if (modal) modal.style.display = 'none';
+    }
+
+    async function handleProofSubmit(e) {
+        e.preventDefault();
+        const roadmapId = document.getElementById('modal-roadmap-id').value;
+        const taskId = document.getElementById('modal-task-id').value;
+        const proofUrl = document.getElementById('modal-proof-url').value;
+        const proofNotes = document.getElementById('modal-proof-notes').value;
+        const saveBtn = document.getElementById('modal-save-btn');
+
+        if (saveBtn) {
+            saveBtn.disabled = true;
+            saveBtn.textContent = 'Saving...';
+        }
+
+        try {
+            const res = await fetch("{{ url_for('student_ai.api_submit_task_proof') }}", {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    roadmap_id: parseInt(roadmapId, 10),
+                    task_id: taskId,
+                    proof_url: proofUrl,
+                    proof_notes: proofNotes,
+                    completed: true
+                })
+            });
+
+            if (!res.ok) throw new Error('Failed to record proof of work');
+            const data = await res.json();
+
+            // Synchronize UI elements
+            syncTaskInUI(taskId, true, proofUrl, proofNotes);
+
+            const numEl = document.getElementById('roadmap-progress-num');
+            const barEl = document.getElementById('roadmap-progress-bar');
+            if (numEl) numEl.textContent = data.progress_percentage + '%';
+            if (barEl) barEl.style.width = data.progress_percentage + '%';
+
+            closeProofModal();
+        } catch (err) {
+            console.error('Proof submission error:', err);
+            alert('Failed to save proof of work. Please check the URL.');
+        } finally {
+            if (saveBtn) {
+                saveBtn.disabled = false;
+                saveBtn.innerHTML = '<i data-lucide="check" style="width: 14px; height: 14px;"></i> Verify & Complete';
+                if (window.lucide && typeof window.lucide.createIcons === 'function') window.lucide.createIcons();
+            }
+        }
+    }
+
+    function syncTaskInUI(taskId, completed, proofUrl, proofNotes) {
+        // 1. Timeline elements
+        const cb = document.getElementById('check_' + taskId);
+        const txt = document.getElementById('text_' + taskId);
+        if (cb) cb.checked = completed;
+        if (txt) {
+            if (completed) txt.classList.add('completed');
+            else txt.classList.remove('completed');
+        }
+
+        // 2. Kanban elements
+        const kcb = document.getElementById('kanban_check_' + taskId);
+        const ktxt = document.getElementById('kanban_text_' + taskId);
+        if (kcb) kcb.checked = completed;
+        if (ktxt) {
+            if (completed) ktxt.classList.add('completed');
+            else ktxt.classList.remove('completed');
+        }
+
+        if (window.lucide && typeof window.lucide.createIcons === 'function') {
+            window.lucide.createIcons();
+        }
+    }
+
+    async function toggleTask(roadmapId, taskId) {
+        try {
+            const response = await fetch("{{ url_for('student_ai.api_toggle_roadmap_task') }}", {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ roadmap_id: roadmapId, task_id: taskId })
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                const checkbox = document.getElementById('check_' + taskId);
+                const isNowChecked = checkbox ? !checkbox.checked : true;
+                syncTaskInUI(taskId, isNowChecked);
+
+                const numEl = document.getElementById('roadmap-progress-num');
+                const barEl = document.getElementById('roadmap-progress-bar');
+                if (numEl) numEl.textContent = data.progress_percentage + '%';
+                if (barEl) barEl.style.width = data.progress_percentage + '%';
+            }
+        } catch (e) {
+            console.error(e);
+        }
+    }
+
+    function escapeHtml(str) {
+        if (str === null || str === undefined) return '';
+        return String(str)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#039;');
+    }
+
+    function renderSkeletonLoaders() {
+        // 1. Benchmark ratio & urgency card
+        const ratioEl = document.getElementById('benchmark-match-ratio');
+        if (ratioEl) ratioEl.innerHTML = '<span class="skeleton-box" style="width: 90px; height: 42px;"></span>';
+        const urgencyEl = document.getElementById('urgency-summary-text');
+        if (urgencyEl) {
+            urgencyEl.innerHTML = `
+                <div class="skeleton-box" style="width: 100%; height: 16px; margin-bottom: 6px;"></div>
+                <div class="skeleton-box" style="width: 85%; height: 16px; margin-bottom: 6px;"></div>
+                <div class="skeleton-box" style="width: 60%; height: 16px;"></div>
+            `;
+        }
+        const quickWinEl = document.getElementById('quick-win-text');
+        if (quickWinEl) quickWinEl.innerHTML = '<span class="skeleton-box" style="width: 220px; height: 14px;"></span>';
+
+        // 2. Matched & Missing Chips
+        const verifiedContainer = document.getElementById('verified-skills-container') || document.getElementById('matched-skills-container');
+        if (verifiedContainer) {
+            verifiedContainer.innerHTML = Array(4).fill(0).map(() => '<span class="skeleton-box" style="width: 100px; height: 28px; border-radius: 30px;"></span>').join('');
+        }
+        const missingContainer = document.getElementById('missing-competencies-container') || document.getElementById('missing-skills-container');
+        if (missingContainer) {
+            missingContainer.innerHTML = Array(4).fill(0).map(() => '<span class="skeleton-box" style="width: 110px; height: 28px; border-radius: 30px;"></span>').join('');
+        }
+
+        // 3. Probing questions
+        const probingContainer = document.getElementById('probing-questions-container');
+        if (probingContainer) {
+            probingContainer.innerHTML = Array(3).fill(0).map(() => `
+                <div class="card probing-question-card" style="background: var(--bg-card, #FFFDFC); border: 1px solid var(--border-subtle, #EAE3D7); border-radius: 14px; padding: 18px;">
+                    <div class="skeleton-box" style="width: 80px; height: 18px; margin-bottom: 10px;"></div>
+                    <div class="skeleton-box" style="width: 100%; height: 16px; margin-bottom: 6px;"></div>
+                    <div class="skeleton-box" style="width: 75%; height: 16px;"></div>
+                </div>
+            `).join('');
+        }
+
+        // 4. Timeline
+        const timelineContainer = document.getElementById('timeline-phases-container');
+        if (timelineContainer) {
+            timelineContainer.innerHTML = Array(3).fill(0).map((_, i) => `
+                <div class="timeline-phase">
+                    <div class="timeline-node">${i + 1}</div>
+                    <div class="roadmap-card">
+                        <div class="skeleton-box" style="width: 240px; height: 22px; margin-bottom: 12px;"></div>
+                        <div class="skeleton-box" style="width: 100%; height: 38px; margin-bottom: 8px;"></div>
+                        <div class="skeleton-box" style="width: 100%; height: 38px;"></div>
+                    </div>
+                </div>
+            `).join('');
+        }
+    }
+
+    function updateSkillGapsDOM(data) {
+        const roleName = data.target_role || data.benchmark_role || 'Target Role';
+        const matchRatio = data.benchmark_match_ratio !== undefined ? data.benchmark_match_ratio : (data.match_percentage || 0);
+        const matchedSkills = data.verified_matched_skills || data.matched_skills || [];
+        const missingSkills = data.critical_missing_competencies || data.missing_skills || [];
+        const totalRequired = data.total_required !== undefined ? data.total_required : (matchedSkills.length + missingSkills.length);
+        const probingQuestions = data.probing_questions || data.practice_interview_questions || [];
+        const severity = data.gap_severity || 'Moderate';
+        const urgencySummary = data.market_urgency_summary || '';
+        const quickWin = data.quick_win_milestone || '';
+        const curriculum = data.curriculum || data.roadmap || {};
+        if (curriculum.id) currentRoadmapId = curriculum.id;
+
+        // 1. Target Benchmark Header & Title
+        const headerTitle = document.getElementById('target-benchmark-title');
+        if (headerTitle) {
+            headerTitle.innerHTML = `Target Benchmark: <span id="benchmark-title">${escapeHtml(roleName)}</span>`;
+        }
+        const benchmarkTitleSpan = document.getElementById('benchmark-title');
+        if (benchmarkTitleSpan) {
+            benchmarkTitleSpan.textContent = roleName;
+        }
+
+        // Gap Severity Badge
+        const severityBadge = document.getElementById('gap-severity-badge');
+        const severityText = document.getElementById('gap-severity-text');
+        if (severityBadge) {
+            severityBadge.className = 'badge badge-' + (severity === 'Low' ? 'shortlisted' : (severity === 'Moderate' ? 'pending' : 'danger'));
+        }
+        if (severityText) {
+            severityText.textContent = severity;
+        }
+
+        // 2. Benchmark Match Ratio percentage & count
+        const ratioEl = document.getElementById('benchmark-match-ratio') || document.getElementById('match-percent-display');
+        if (ratioEl) {
+            ratioEl.textContent = matchRatio + '%';
+        }
+        const matchedCountEl = document.getElementById('matched-count');
+        if (matchedCountEl) {
+            matchedCountEl.textContent = matchedSkills.length;
+        }
+        const totalCountEl = document.getElementById('total-count');
+        if (totalCountEl) {
+            totalCountEl.textContent = totalRequired;
+        }
+
+        // 3. Recruiter Urgency Diagnostic & Quick Win
+        const urgencyEl = document.getElementById('urgency-summary-text');
+        if (urgencyEl) {
+            urgencyEl.textContent = urgencySummary;
+        }
+        const quickWinEl = document.getElementById('quick-win-text');
+        if (quickWinEl) {
+            quickWinEl.innerHTML = `<strong>7-Day Milestone:</strong> ${escapeHtml(quickWin)}`;
+        }
+
+        // 4. Verified Matched Skills chips & count
+        const verifiedCountEl = document.getElementById('verified-skills-count');
+        if (verifiedCountEl) {
+            verifiedCountEl.textContent = `${matchedSkills.length} Verified`;
+        }
+        const verifiedContainer = document.getElementById('verified-skills-container') || document.getElementById('matched-skills-container');
+        if (verifiedContainer) {
+            if (matchedSkills.length === 0) {
+                verifiedContainer.innerHTML = '<span style="color: var(--text-muted, #8C8278); font-size: 13px;">No verified matching skills found for this role benchmark yet.</span>';
+            } else {
+                verifiedContainer.innerHTML = matchedSkills.map(s => {
+                    const name = typeof s === 'object' ? s.name : s;
+                    const prof = typeof s === 'object' && s.proficiency ? ` (${escapeHtml(s.proficiency)})` : '';
+                    return `<span class="skill-chip matched-chip" style="display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 30px; font-size: 12px; background: #EDF7F2; border: 1px solid rgba(45, 106, 79, 0.25); color: #2D6A4F; font-weight: 500;">
+                        <i data-lucide="check" style="width: 12px; height: 12px;"></i> ${escapeHtml(name)}${prof}
+                    </span>`;
+                }).join('');
+            }
+        }
+
+        // 5. Critical Missing Competencies chips & count
+        const missingCountEl = document.getElementById('missing-competencies-count');
+        if (missingCountEl) {
+            missingCountEl.textContent = `${missingSkills.length} Gaps`;
+        }
+        const missingContainer = document.getElementById('missing-competencies-container') || document.getElementById('missing-skills-container');
+        if (missingContainer) {
+            if (missingSkills.length === 0) {
+                missingContainer.innerHTML = '<span style="color: var(--accent-sage, #2D6A4F); font-size: 13px; font-weight: 500;">All role benchmark competencies are verified! Excellent placement readiness.</span>';
+            } else {
+                missingContainer.innerHTML = missingSkills.map(s => {
+                    const name = typeof s === 'object' ? s.name : s;
+                    return `<span class="skill-chip missing-chip" style="display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 30px; font-size: 12px; background: #FFF0F0; border: 1px solid rgba(201, 42, 42, 0.25); color: #C92A2A; font-weight: 500;">
+                        <i data-lucide="plus" style="width: 12px; height: 12px;"></i> ${escapeHtml(name)}
+                    </span>`;
+                }).join('');
+            }
+        }
+
+        // 6. Placement Interview Probing Questions cards
+        const probingSection = document.getElementById('probing-questions-section');
+        const probingContainer = document.getElementById('probing-questions-container');
+        if (probingContainer) {
+            if (probingQuestions.length === 0) {
+                if (probingSection) probingSection.style.display = 'none';
+                probingContainer.innerHTML = '';
+            } else {
+                if (probingSection) probingSection.style.display = 'block';
+                probingContainer.innerHTML = probingQuestions.map(q => `
+                    <div class="card probing-question-card" style="background: var(--bg-card, #FFFDFC); border: 1px solid var(--border-subtle, #EAE3D7); border-radius: 14px; padding: 18px; box-shadow: var(--shadow-sm, 0 1px 3px rgba(35, 25, 15, 0.05));">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                            <span class="badge" style="background: #FFF0EB; color: var(--accent-coral, #E76F51); font-size: 11px; font-weight: 600;">${escapeHtml(q.skill || 'Competency')}</span>
+                            <span style="font-size: 11px; color: var(--text-muted, #8C8278); font-weight: 500;">Concept: ${escapeHtml(q.concept_tested || 'Fundamental Principles')}</span>
+                        </div>
+                        <div style="font-size: 14px; color: var(--text-primary, #23190F); line-height: 1.5; font-weight: 500;">
+                            "${escapeHtml(q.question)}"
+                        </div>
+                    </div>
+                `).join('');
+            }
+        }
+
+        // 7. Adaptive Learning Curriculum / Roadmap Timeline & Kanban
+        if (curriculum && Array.isArray(curriculum.milestones)) {
+            const roadmapProgressNum = document.getElementById('roadmap-progress-num');
+            if (roadmapProgressNum) {
+                roadmapProgressNum.textContent = (curriculum.progress_percentage || 0) + '%';
+            }
+            const roadmapProgressBar = document.getElementById('roadmap-progress-bar');
+            if (roadmapProgressBar) {
+                roadmapProgressBar.style.width = (curriculum.progress_percentage || 0) + '%';
+            }
+
+            const roadmapId = curriculum.id || currentRoadmapId;
+
+            // Render Timeline
+            const timelineContainer = document.getElementById('timeline-phases-container');
+            if (timelineContainer) {
+                timelineContainer.innerHTML = curriculum.milestones.map(phase => {
+                    const focusChips = (phase.focus_skills || []).map(fs => `<span class="tag-bubble" style="font-size: 11px; padding: 4px 8px; background: var(--bg-surface, #FAF7F2); border: 1px solid var(--border-subtle, #EAE3D7); border-radius: 6px; color: var(--text-secondary, #5C5248); font-weight: 500;">${escapeHtml(fs)}</span>`).join(' ');
+                    const tasksHtml = (phase.action_tasks || []).map(task => {
+                        const proofBadgeHtml = task.proof_url ? `
+                            <a href="${escapeHtml(task.proof_url)}" target="_blank" class="proof-badge" title="${escapeHtml(task.proof_notes || 'Verified Proof of Work')}">
+                                <i data-lucide="external-link" style="width: 11px; height: 11px;"></i> Proof
+                            </a>` : '';
+
+                        return `
+                        <div class="task-item" id="task_item_${task.id}" onclick="toggleTask('${roadmapId}', '${task.id}')">
+                            <input type="checkbox" class="task-checkbox" id="check_${task.id}" ${task.completed ? 'checked' : ''} onclick="event.stopPropagation(); toggleTask('${roadmapId}', '${task.id}');">
+                            <span class="task-text ${task.completed ? 'completed' : ''}" id="text_${task.id}" style="font-size: 13.5px; flex: 1;">
+                                ${escapeHtml(task.description)}
+                            </span>
+                            <div style="display: flex; align-items: center; gap: 8px;" onclick="event.stopPropagation();">
+                                ${proofBadgeHtml}
+                                <button type="button" class="btn-proof" onclick="openProofModal('${roadmapId}', '${task.id}', '${escapeHtml(task.description)}', '${escapeHtml(task.proof_url || '')}', '${escapeHtml(task.proof_notes || '')}')">
+                                    <i data-lucide="link" style="width: 11px; height: 11px;"></i> ${task.proof_url ? 'Edit Proof' : 'Proof'}
+                                </button>
+                            </div>
+                        </div>`;
+                    }).join('');
+
+                    return `
+                    <div class="timeline-phase">
+                        <div class="timeline-node">${escapeHtml(phase.phase || '')}</div>
+                        <div class="roadmap-card">
+                            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; flex-wrap: wrap; gap: 8px;">
+                                <div>
+                                    <span class="badge" style="background: #FFF0EB; color: var(--accent-coral, #E76F51); font-size: 11px; font-weight: 600;">${escapeHtml(phase.timeframe || '')}</span>
+                                    <h4 style="font-size: 17px; font-weight: 700; color: var(--text-primary, #23190F); margin: 4px 0 0 0;">${escapeHtml(phase.title || '')}</h4>
+                                </div>
+                                <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+                                    ${focusChips}
+                                </div>
+                            </div>
+
+                            <div style="margin-top: 14px;">
+                                <div style="font-size: 11px; text-transform: uppercase; color: var(--text-muted, #8C8278); font-weight: 600; margin-bottom: 8px; letter-spacing: 0.04em;">Action Checklist</div>
+                                ${tasksHtml}
+                            </div>
+
+                            <div style="margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--border-subtle, #EAE3D7); font-size: 12.5px; color: var(--text-secondary, #5C5248); display: flex; align-items: center; gap: 6px;">
+                                <i data-lucide="flag" style="width: 14px; height: 14px; color: var(--accent-coral, #E76F51);"></i>
+                                <span><strong>Milestone Deliverable:</strong> ${escapeHtml(phase.checkpoint_deliverable || '')}</span>
+                            </div>
+                        </div>
+                    </div>`;
+                }).join('');
+            }
+
+            // Render Kanban
+            const kanbanContainer = document.getElementById('kanban-phases-container');
+            if (kanbanContainer) {
+                kanbanContainer.innerHTML = curriculum.milestones.map(phase => {
+                    const tasksHtml = (phase.action_tasks || []).map(task => {
+                        const proofBadge = task.proof_url ? `
+                            <a href="${escapeHtml(task.proof_url)}" target="_blank" class="proof-badge" style="font-size: 10px; padding: 2px 6px;">
+                                <i data-lucide="external-link" style="width: 10px; height: 10px;"></i> Proof
+                            </a>` : '<span style="font-size: 10px; color: var(--text-muted, #8C8278);">No proof linked</span>';
+
+                        return `
+                        <div class="kanban-task-card" id="kanban_card_${task.id}">
+                            <div style="display: flex; align-items: flex-start; gap: 8px;">
+                                <input type="checkbox" class="task-checkbox" id="kanban_check_${task.id}" ${task.completed ? 'checked' : ''} onclick="event.stopPropagation(); toggleTask('${roadmapId}', '${task.id}');" style="margin-top: 2px;">
+                                <span class="task-text ${task.completed ? 'completed' : ''}" id="kanban_text_${task.id}" style="font-size: 12.5px; line-height: 1.4;">
+                                    ${escapeHtml(task.description)}
+                                </span>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 4px; padding-top: 6px; border-top: 1px solid var(--border-subtle, #EAE3D7);">
+                                ${proofBadge}
+                                <button type="button" class="btn-proof" style="padding: 2px 6px; font-size: 10px;" onclick="openProofModal('${roadmapId}', '${task.id}', '${escapeHtml(task.description)}', '${escapeHtml(task.proof_url || '')}', '${escapeHtml(task.proof_notes || '')}')">
+                                    <i data-lucide="upload" style="width: 10px; height: 10px;"></i> Proof
+                                </button>
+                            </div>
+                        </div>`;
+                    }).join('');
+
+                    return `
+                    <div class="kanban-column">
+                        <div class="kanban-col-header">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                                <span class="badge" style="background: #FFF0EB; color: var(--accent-coral, #E76F51); font-size: 10px; font-weight: 600;">Phase ${escapeHtml(phase.phase || '')}</span>
+                                <span style="font-size: 11px; color: var(--text-muted, #8C8278);">${escapeHtml(phase.timeframe || '')}</span>
+                            </div>
+                            <div style="font-size: 14px; font-weight: 700; color: var(--text-primary, #23190F); line-height: 1.3;">${escapeHtml(phase.title || '')}</div>
+                        </div>
+
+                        <div style="display: flex; flex-direction: column; gap: 8px; flex: 1;">
+                            ${tasksHtml}
+                        </div>
+
+                        <div style="margin-top: auto; padding-top: 10px; border-top: 1px solid var(--border-subtle, #EAE3D7); font-size: 11.5px; color: var(--text-secondary, #5C5248);">
+                            <i data-lucide="flag" style="width: 12px; height: 12px; color: var(--accent-coral, #E76F51); vertical-align: middle;"></i>
+                            ${escapeHtml(phase.checkpoint_deliverable || '')}
+                        </div>
+                    </div>`;
+                }).join('');
+            }
+        }
+
+        // Re-render Lucide icons
+        if (window.lucide && typeof window.lucide.createIcons === 'function') {
+            window.lucide.createIcons();
+        }
+    }
+
+    async function handleAnalyzeRole() {
+        const updateBtn = document.getElementById('btn-update-role');
+        const roleSelector = document.getElementById('role-selector');
+        const icon = document.getElementById('role-refresh-icon');
+        const btnText = document.getElementById('analyze-btn-text');
+
+        if (!roleSelector) return;
+        const targetRole = roleSelector.value;
+        if (!targetRole) return;
+
+        // Visual loading state & skeletons
+        if (updateBtn) {
+            updateBtn.disabled = true;
+            updateBtn.style.opacity = '0.75';
+        }
+        if (roleSelector) {
+            roleSelector.disabled = true;
+        }
+        if (icon) {
+            icon.style.animation = 'spin 0.8s linear infinite';
+        }
+        if (btnText) {
+            btnText.textContent = 'Analyzing...';
+        }
+
+        renderSkeletonLoaders();
+
+        try {
+            // Call skill-gap analyze API
+            const res = await fetch("{{ url_for('student_ai.api_analyze_skill_gap') }}", {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify({
+                    target_role: targetRole,
+                    role: targetRole
+                })
+            });
+
+            if (!res.ok) {
+                throw new Error(`Server returned status ${res.status}`);
+            }
+
+            const data = await res.json();
+            if (data.error) {
+                throw new Error(data.error);
+            }
+
+            // Immediately synchronize all DOM blocks
+            updateSkillGapsDOM(data);
+
+            // Update browser URL query parameter without page reload
+            try {
+                const currentUrl = new URL(window.location);
+                currentUrl.searchParams.set('role', targetRole);
+                window.history.pushState({ role: targetRole }, '', currentUrl);
+            } catch (histErr) {
+                // Ignore history errors if any
+            }
+
+        } catch (err) {
+            console.error('Skill gap synchronization error:', err);
+            alert('Failed to analyze skill gap for ' + targetRole + '. Please try again.');
+        } finally {
+            if (updateBtn) {
+                updateBtn.disabled = false;
+                updateBtn.style.opacity = '1';
+            }
+            if (roleSelector) {
+                roleSelector.disabled = false;
+            }
+            if (icon) {
+                icon.style.animation = 'none';
+            }
+            if (btnText) {
+                btnText.textContent = 'Analyze';
+            }
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        const updateBtn = document.getElementById('btn-update-role');
+        if (updateBtn) {
+            updateBtn.addEventListener('click', handleAnalyzeRole);
+        }
+
+        const roleSelector = document.getElementById('role-selector');
+        if (roleSelector) {
+            roleSelector.addEventListener('change', handleAnalyzeRole);
+            roleSelector.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    handleAnalyzeRole();
+                }
+            });
+        }
+
+        // Auto-scroll to Roadmap if requested
+        if (window.location.hash === '#roadmap-section' || {{ 'true' if is_roadmap else 'false' }}) {
+            const roadmapEl = document.getElementById('roadmap-section');
+            if (roadmapEl) {
+                setTimeout(function() {
+                    roadmapEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }, 180);
+            }
+        }
+    });
+</script>
+<style>
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+@media (max-width: 1024px) {
+    .kanban-grid {
+        grid-template-columns: repeat(2, 1fr) !important;
+    }
+}
+@media (max-width: 800px) {
+    .responsive-banner-grid, .responsive-split-grid, .kanban-grid {
+        grid-template-columns: 1fr !important;
+    }
+}
+</style>
+{% endblock %}

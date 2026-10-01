@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+
+{% block title %}Sign In — Glint{% endblock %}
+
+{% block content %}
+<div class="auth-wrapper">
+    <div class="auth-card">
+        <div class="auth-header">
+            <div class="brand-badge" style="margin: 0 auto 1.25rem; width: 50px; height: 50px; font-size: 1.45rem;">GL</div>
+            <h2 style="font-family: var(--font-display); font-size: 1.75rem; font-weight: 800; color: var(--text-main); margin-bottom: 0.35rem; letter-spacing: -0.5px;">
+                Welcome to Glint
+            </h2>
+            <p style="color: var(--text-muted); font-size: 0.94rem;">Your modern, intelligent campus placement workspace</p>
+
+            <!-- Quick Demo Credential Pills (Playbook style stickers) -->
+            <div style="margin-top: 1.5rem; text-align: left; background: var(--bg-primary); padding: 1.15rem; border-radius: var(--radius-md); border: 1px solid var(--border-subtle);">
+                <div style="font-size: 0.76rem; text-transform: uppercase; letter-spacing: 0.8px; color: var(--accent-coral); font-weight: 800; margin-bottom: 0.65rem; display: flex; align-items: center; gap: 0.4rem;">
+                    <i data-lucide="zap" style="width: 14px; height: 14px;"></i>
+                    1-Click Instant Demo Profiles:
+                </div>
+                <div class="demo-account-pills" style="margin-bottom: 0.65rem;">
+                    <button type="button" class="pill-btn" onclick="fillDemoAccount('rahul.sharma@campus.edu', 'Student@123')">
+                        🎓 Student (Rahul)
+                    </button>
+                    <button type="button" class="pill-btn" onclick="fillDemoAccount('priya.recruiter@nexustech.com', 'Recruiter@123')">
+                        🏢 Recruiter (Priya)
+                    </button>
+                    <button type="button" class="pill-btn" onclick="fillDemoAccount('admin@placementiq.ai', 'Admin@123')">
+                        🏛️ Placement Admin
+                    </button>
+                </div>
+                <div style="font-size: 0.78rem; color: var(--text-dim);">
+                    Tap any badge above to auto-fill verified credentials.
+                </div>
+            </div>
+        </div>
+
+        <form action="{{ url_for('auth.login', next=request.args.get('next')) }}" method="POST">
+            <div class="form-group">
+                <label for="email" class="form-label">Email Address</label>
+                <input type="email" id="email" name="email" class="form-control" placeholder="name@campus.edu" value="{{ email or '' }}" required autofocus>
+            </div>
+
+            <div class="form-group">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.45rem;">
+                    <label for="password" class="form-label" style="margin-bottom: 0;">Password</label>
+                </div>
+                <input type="password" id="password" name="password" class="form-control" placeholder="••••••••" required>
+            </div>
+
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.75rem; font-size: 0.88rem;">
+                <label style="display: flex; align-items: center; gap: 0.5rem; color: var(--text-muted); cursor: pointer; font-weight: 500;">
+                    <input type="checkbox" name="remember" style="accent-color: var(--accent-coral);">
+                    Keep me signed in
+                </label>
+            </div>
+
+            <button type="submit" class="btn btn-primary" style="width: 100%; padding: 0.85rem; font-size: 1rem;">
+                <i data-lucide="log-in" style="width: 18px; height: 18px;"></i>
+                Sign In & Enter Workspace
+            </button>
+        </form>
+
+        <div style="margin-top: 1.75rem; text-align: center; font-size: 0.9rem; color: var(--text-muted);">
+            Don't have an account yet? 
+            <a href="{{ url_for('auth.register') }}" style="color: var(--accent-coral); text-decoration: none; font-weight: 700;">Create one here</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

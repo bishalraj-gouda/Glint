@@ -1,0 +1,359 @@
+{% extends "base.html" %}
+
+{% block title %}Resume Studio — Glint{% endblock %}
+
+{% block extra_css %}
+<style>
+    .resume-grid {
+        display: grid;
+        grid-template-columns: 390px 1fr;
+        gap: 24px;
+        align-items: start;
+    }
+    .upload-zone {
+        border: 2px dashed rgba(231, 111, 81, 0.35);
+        border-radius: var(--radius-md);
+        padding: 30px 20px;
+        text-align: center;
+        background: #FFFBF9;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+    .upload-zone:hover {
+        border-color: var(--accent-coral);
+        background: #FFF5F0;
+        transform: translateY(-2px);
+    }
+    .score-banner {
+        background: #FFFDFC;
+        border: 1px solid var(--border-subtle);
+        border-radius: var(--radius-md);
+        padding: 22px 24px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 22px;
+        box-shadow: 0 1px 3px rgba(35, 25, 15, 0.04);
+    }
+    .rewrite-card {
+        background: #FAF7F2;
+        border: 1px solid var(--border-subtle);
+        border-radius: var(--radius-sm);
+        padding: 14px 16px;
+        margin-bottom: 10px;
+        transition: all 0.2s ease;
+    }
+    .rewrite-card:hover {
+        border-color: rgba(231, 111, 81, 0.3);
+        background: #FFFDFC;
+    }
+    .pill-status {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 11.5px;
+        font-weight: 600;
+    }
+    .pill-active {
+        background: #EDF7F2;
+        color: var(--accent-sage);
+        border: 1px solid rgba(45, 106, 79, 0.25);
+    }
+    .pill-missing {
+        background: #FFF0F0;
+        color: #C92A2A;
+        border: 1px solid rgba(201, 42, 42, 0.2);
+    }
+    @media (max-width: 900px) {
+        .resume-grid {
+            grid-template-columns: 1fr !important;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="resume-page-wrapper">
+    <!-- Header -->
+    <div style="margin-bottom: 24px;">
+        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
+            <span class="badge" style="background: #FFF0EB; color: var(--accent-coral); border: 1px solid rgba(231, 111, 81, 0.3);">
+                <i data-lucide="file-search" style="width: 13px; height: 13px; vertical-align: middle;"></i> ATS Algorithm Scanner
+            </span>
+            <span class="badge badge-shortlisted">Google XYZ Bullet Formula</span>
+        </div>
+        <h1 style="font-family: var(--font-display); font-size: 1.85rem; font-weight: 800; color: var(--text-main); margin: 0;">
+            Resume Studio — Resume Intelligence & ATS Audit
+        </h1>
+        <p style="color: var(--text-muted); font-size: 0.94rem; margin-top: 4px;">
+            Audit your resume against ATS parsing algorithms and target company requisitions in real time.
+        </p>
+    </div>
+
+    <!-- Main Grid -->
+    <div class="resume-grid">
+        <!-- Input & Upload Panel -->
+        <div class="card" style="background: #FFFDFC; border: 1px solid var(--border-subtle); border-radius: var(--radius-md); padding: 22px; height: fit-content; box-shadow: 0 1px 3px rgba(35, 25, 15, 0.04);">
+            <h3 style="font-family: var(--font-display); font-size: 1.1rem; font-weight: 700; color: var(--text-main); margin-bottom: 14px;">
+                Upload or Paste Resume
+            </h3>
+
+            <!-- Optional Target Job Filter -->
+            <div style="margin-bottom: 16px;">
+                <label style="font-size: 11px; text-transform: uppercase; color: var(--text-dim); font-weight: 700; display: block; margin-bottom: 6px; letter-spacing: 0.5px;">
+                    Benchmark Target Requisition (Optional)
+                </label>
+                <select id="target-job-select" class="form-control" style="background: #FFFFFF; color: var(--text-main); border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); padding: 9px 12px; width: 100%; box-sizing: border-box; font-size: 13px;">
+                    <option value="">General Campus Placement Benchmark</option>
+                    {% for job in target_jobs %}
+                    <option value="{{ job.id }}">{{ job.title }} — {{ job.company.name if job.company else 'Partner' }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <!-- Upload Zone -->
+            <div class="upload-zone" id="drop-zone" onclick="document.getElementById('file-input').click();">
+                <i data-lucide="upload-cloud" style="width: 34px; height: 34px; color: var(--accent-coral); margin-bottom: 8px;"></i>
+                <div style="font-size: 13.5px; font-weight: 700; color: var(--text-main);" id="upload-label">
+                    Upload PDF Resume
+                </div>
+                <div style="font-size: 12px; color: var(--text-muted); margin-top: 3px;">
+                    Click to browse or drag & drop (.pdf, .txt)
+                </div>
+                <input type="file" id="file-input" accept=".pdf,.txt" style="display: none;">
+            </div>
+
+            <div style="text-align: center; color: var(--text-dim); font-size: 11.5px; margin: 14px 0; font-weight: 600;">
+                — OR PASTE TEXT DIRECTLY —
+            </div>
+
+            <div>
+                <textarea id="resume-text-input" placeholder="Paste full resume text here..." style="width: 100%; height: 150px; background: #FFFFFF; border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); color: var(--text-main); padding: 12px; font-size: 13px; resize: vertical; box-sizing: border-box; line-height: 1.5; font-family: inherit;"></textarea>
+            </div>
+
+            <button class="btn btn-primary" id="btn-run-audit" style="width: 100%; margin-top: 16px; padding: 11px; display: flex; align-items: center; justify-content: center; gap: 8px;">
+                <i data-lucide="zap" id="audit-icon" style="width: 16px; height: 16px;"></i>
+                <span>Run ATS Audit</span>
+            </button>
+        </div>
+
+        <!-- Audit Results Panel -->
+        <div id="results-panel">
+            <!-- Score Banner -->
+            <div class="score-banner">
+                <div>
+                    <span class="badge" id="ats-verdict-badge" style="background: #EDF7F2; color: var(--accent-sage); border: 1px solid rgba(45, 106, 79, 0.25); margin-bottom: 6px;">
+                        {% if latest_analysis %}{{ latest_analysis.ats_score }}/100 ATS Score{% else %}Ready for Scan{% endif %}
+                    </span>
+                    <h2 style="font-family: var(--font-display); font-size: 1.35rem; font-weight: 800; color: var(--text-main); margin: 2px 0 0 0;">
+                        ATS Readability & Match Index
+                    </h2>
+                    <p style="color: var(--text-muted); font-size: 0.88rem; margin: 4px 0 0 0;" id="critique-summary">
+                        Upload or paste your resume to evaluate parser compatibility and keyword density.
+                    </p>
+                </div>
+                <div style="text-align: center; background: #FAF7F2; border-radius: var(--radius-md); padding: 14px 22px; border: 1px solid var(--border-subtle);">
+                    <div style="font-size: 34px; font-weight: 800; font-family: var(--font-display); color: var(--accent-coral);" id="ats-score-num">
+                        {% if latest_analysis %}{{ latest_analysis.ats_score }}{% else %}--{% endif %}
+                    </div>
+                    <div style="font-size: 10.5px; text-transform: uppercase; color: var(--text-dim); font-weight: 700; letter-spacing: 0.5px;">ATS Score</div>
+                </div>
+            </div>
+
+            <!-- Sections Verified Status -->
+            <div class="card" style="background: #FFFDFC; border: 1px solid var(--border-subtle); border-radius: var(--radius-md); padding: 18px 20px; margin-bottom: 20px; box-shadow: 0 1px 3px rgba(35, 25, 15, 0.04);">
+                <h4 style="font-size: 14px; font-weight: 700; color: var(--text-main); margin-bottom: 12px;">
+                    Essential Section Completeness
+                </h4>
+                <div style="display: flex; flex-wrap: wrap; gap: 8px;" id="section-pills">
+                    <span class="pill-status pill-active" id="sec-contact"><i data-lucide="check" style="width: 12px; height: 12px;"></i> Contact Info</span>
+                    <span class="pill-status pill-active" id="sec-education"><i data-lucide="check" style="width: 12px; height: 12px;"></i> Education</span>
+                    <span class="pill-status pill-active" id="sec-skills"><i data-lucide="check" style="width: 12px; height: 12px;"></i> Skills</span>
+                    <span class="pill-status pill-active" id="sec-projects"><i data-lucide="check" style="width: 12px; height: 12px;"></i> Projects</span>
+                    <span class="pill-status pill-active" id="sec-experience"><i data-lucide="check" style="width: 12px; height: 12px;"></i> Experience</span>
+                </div>
+            </div>
+
+            <!-- Keyword Breakdown (Found vs Missing) -->
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px;">
+                <div class="card" style="background: #FFFDFC; border: 1px solid var(--border-subtle); border-radius: var(--radius-md); padding: 16px; box-shadow: 0 1px 3px rgba(35, 25, 15, 0.04);">
+                    <div style="font-size: 13px; font-weight: 700; color: var(--accent-sage); margin-bottom: 10px; display: flex; align-items: center; gap: 6px;">
+                        <i data-lucide="check-circle" style="width: 16px; height: 16px;"></i> Keywords Found
+                    </div>
+                    <div style="display: flex; flex-wrap: wrap; gap: 6px;" id="found-keywords-container">
+                        {% if latest_analysis and latest_analysis.extracted_skills %}
+                            {% for kw in latest_analysis.extracted_skills %}
+                            <span class="badge" style="background: #EDF7F2; color: var(--accent-sage); border: 1px solid rgba(45, 106, 79, 0.2); font-size: 11px;">{{ kw }}</span>
+                            {% endfor %}
+                        {% else %}
+                            <span style="font-size: 12px; color: var(--text-dim);">Scan to detect keywords</span>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="card" style="background: #FFFDFC; border: 1px solid var(--border-subtle); border-radius: var(--radius-md); padding: 16px; box-shadow: 0 1px 3px rgba(35, 25, 15, 0.04);">
+                    <div style="font-size: 13px; font-weight: 700; color: #C92A2A; margin-bottom: 10px; display: flex; align-items: center; gap: 6px;">
+                        <i data-lucide="alert-circle" style="width: 16px; height: 16px;"></i> Critical Missing Keywords
+                    </div>
+                    <div style="display: flex; flex-wrap: wrap; gap: 6px;" id="missing-keywords-container">
+                        {% if latest_analysis and latest_analysis.missing_keywords %}
+                            {% for kw in latest_analysis.missing_keywords %}
+                            <span class="badge" style="background: #FFF0F0; color: #C92A2A; border: 1px solid rgba(201, 42, 42, 0.2); font-size: 11px;">{{ kw }}</span>
+                            {% endfor %}
+                        {% else %}
+                            <span style="font-size: 12px; color: var(--text-dim);">Scan to detect missing keywords</span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Bullet Point Rewrites (XYZ Formula) -->
+            <div class="card" style="background: #FFFDFC; border: 1px solid var(--border-subtle); border-radius: var(--radius-md); padding: 20px; box-shadow: 0 1px 3px rgba(35, 25, 15, 0.04);">
+                <h4 style="font-family: var(--font-display); font-size: 15px; font-weight: 700; color: var(--text-main); margin-bottom: 4px; display: flex; align-items: center; gap: 8px;">
+                    <i data-lucide="sparkles" style="width: 16px; height: 16px; color: var(--accent-coral);"></i> Google XYZ Bullet Point Rewrites
+                </h4>
+                <p style="color: var(--text-dim); font-size: 12px; margin-bottom: 14px;">
+                    Formula: "Accomplished [X], as measured by [Y], by doing [Z]"
+                </p>
+
+                <div id="bullet-rewrites-container">
+                    {% if latest_analysis and latest_analysis.suggestions %}
+                        {% for sug in latest_analysis.suggestions %}
+                        <div class="rewrite-card">
+                            <div style="font-size: 12px; color: var(--text-dim); margin-bottom: 4px; text-decoration: line-through;">
+                                {{ sug.original_pattern }}
+                            </div>
+                            <div style="font-size: 13.5px; color: var(--accent-sage); line-height: 1.5; font-weight: 600;">
+                                ✨ {{ sug.improved_xyz_bullet }}
+                            </div>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <div style="color: var(--text-dim); font-size: 13px; text-align: center; padding: 20px 0;">
+                            Audit your resume to generate tailored, high-converting bullet points.
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const fileInput = document.getElementById('file-input');
+        const textInput = document.getElementById('resume-text-input');
+        const auditBtn = document.getElementById('btn-run-audit');
+        const uploadLabel = document.getElementById('upload-label');
+        const jobSelect = document.getElementById('target-job-select');
+
+        let selectedFile = null;
+
+        if (fileInput) {
+            fileInput.addEventListener('change', function(e) {
+                if (e.target.files.length > 0) {
+                    selectedFile = e.target.files[0];
+                    uploadLabel.textContent = 'Selected: ' + selectedFile.name;
+                }
+            });
+        }
+
+        if (auditBtn) {
+            auditBtn.addEventListener('click', async function() {
+                const textContent = textInput.value.trim();
+                const jobId = jobSelect.value;
+
+                if (!selectedFile && textContent.length < 50) {
+                    alert('Please upload a PDF resume or paste resume text with at least 50 characters.');
+                    return;
+                }
+
+                auditBtn.disabled = true;
+                auditBtn.textContent = 'Analyzing with ATS Engine...';
+
+                try {
+                    let response;
+                    if (selectedFile) {
+                        const formData = new FormData();
+                        formData.append('resume_file', selectedFile);
+                        if (jobId) formData.append('job_id', jobId);
+
+                        response = await fetch("{{ url_for('student_ai.api_audit_resume') }}", {
+                            method: 'POST',
+                            body: formData
+                        });
+                    } else {
+                        response = await fetch("{{ url_for('student_ai.api_audit_resume') }}", {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ resume_text: textContent, job_id: jobId ? parseInt(jobId) : null })
+                        });
+                    }
+
+                    if (response.ok) {
+                        const data = await response.json();
+                        // Render results
+                        document.getElementById('ats-score-num').textContent = data.ats_score;
+                        document.getElementById('ats-verdict-badge').textContent = data.ats_verdict || (data.ats_score + '/100 ATS Score');
+                        document.getElementById('critique-summary').textContent = data.formatting_critique || data.actionable_next_step;
+
+                        // Found Keywords
+                        const foundContainer = document.getElementById('found-keywords-container');
+                        foundContainer.innerHTML = '';
+                        (data.found_keywords || []).forEach(kw => {
+                            const badge = document.createElement('span');
+                            badge.className = 'badge';
+                            badge.style.cssText = 'background: #EDF7F2; color: var(--accent-sage); border: 1px solid rgba(45, 106, 79, 0.2); font-size: 11px; margin-right: 4px; margin-bottom: 4px;';
+                            badge.textContent = kw;
+                            foundContainer.appendChild(badge);
+                        });
+
+                        // Missing Keywords
+                        const missingContainer = document.getElementById('missing-keywords-container');
+                        missingContainer.innerHTML = '';
+                        (data.missing_keywords || []).forEach(kw => {
+                            const badge = document.createElement('span');
+                            badge.className = 'badge';
+                            badge.style.cssText = 'background: #FFF0F0; color: #C92A2A; border: 1px solid rgba(201, 42, 42, 0.2); font-size: 11px; margin-right: 4px; margin-bottom: 4px;';
+                            badge.textContent = kw;
+                            missingContainer.appendChild(badge);
+                        });
+
+                        // Bullet Rewrites
+                        const rewriteContainer = document.getElementById('bullet-rewrites-container');
+                        rewriteContainer.innerHTML = '';
+                        (data.bullet_point_rewrites || []).forEach(sug => {
+                            const card = document.createElement('div');
+                            card.className = 'rewrite-card';
+                            card.innerHTML = `
+                                <div style="font-size: 12px; color: var(--text-dim); margin-bottom: 4px; text-decoration: line-through;">
+                                    ${sug.original_pattern}
+                                </div>
+                                <div style="font-size: 13.5px; color: var(--accent-sage); line-height: 1.5; font-weight: 600;">
+                                    ✨ ${sug.improved_xyz_bullet}
+                                </div>
+                            `;
+                            rewriteContainer.appendChild(card);
+                        });
+
+                        if (window.lucide) window.lucide.createIcons();
+                    } else {
+                        const err = await response.json();
+                        alert(err.error || 'Failed to analyze resume.');
+                    }
+                } catch (e) {
+                    console.error(e);
+                    alert('Error connecting to Resume AI service.');
+                } finally {
+                    auditBtn.disabled = false;
+                    auditBtn.textContent = 'Run ATS Audit';
+                }
+            });
+        }
+    });
+</script>
+{% endblock %}

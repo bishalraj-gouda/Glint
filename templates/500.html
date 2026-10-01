@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+
+{% block title %}500 — System Exception | PlacementIQ AI{% endblock %}
+
+{% block content %}
+<div style="min-height: 70vh; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 2.5rem 1.5rem;">
+    <!-- Warning Glow Badge -->
+    <div style="width: 80px; height: 80px; border-radius: 50%; background: rgba(239, 68, 68, 0.12); border: 1px solid rgba(239, 68, 68, 0.25); display: flex; align-items: center; justify-content: center; margin-bottom: 1.5rem; box-shadow: 0 0 30px rgba(239, 68, 68, 0.2);">
+        <i data-lucide="alert-octagon" style="width: 40px; height: 40px; color: #f87171;"></i>
+    </div>
+
+    <div style="font-size: 5.5rem; font-weight: 800; color: #f87171; line-height: 1; letter-spacing: -2px;">
+        500
+    </div>
+
+    <h2 style="font-size: 1.6rem; font-weight: 700; margin: 1.25rem 0 0.5rem; color: #fff;">
+        Internal Intelligence Service Exception
+    </h2>
+
+    <p style="color: var(--text-muted); max-width: 480px; margin-bottom: 2rem; font-size: 0.95rem; line-height: 1.6;">
+        An unexpected telemetry exception occurred while processing placement data. The incident has been recorded and the workspace can be safely reloaded.
+    </p>
+
+    <div style="display: flex; gap: 0.75rem; flex-wrap: wrap; justify-content: center;">
+        {% if session_user_role == 'admin' %}
+        <a href="{{ url_for('admin.dashboard') }}" class="btn btn-primary">
+            <i data-lucide="shield-check" style="width: 16px; height: 16px;"></i>
+            Return to Command Center
+        </a>
+        {% elif session_user_role == 'recruiter' %}
+        <a href="{{ url_for('recruiter.dashboard') }}" class="btn btn-primary">
+            <i data-lucide="layout-dashboard" style="width: 16px; height: 16px;"></i>
+            Return to Recruiter Dashboard
+        </a>
+        {% elif session_user_role == 'student' %}
+        <a href="{{ url_for('student.dashboard') }}" class="btn btn-primary">
+            <i data-lucide="layout-dashboard" style="width: 16px; height: 16px;"></i>
+            Return to Student Dashboard
+        </a>
+        {% else %}
+        <a href="{{ url_for('index') }}" class="btn btn-primary">
+            <i data-lucide="refresh-cw" style="width: 16px; height: 16px;"></i>
+            Reload Workspace
+        </a>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

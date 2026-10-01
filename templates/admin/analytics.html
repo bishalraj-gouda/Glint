@@ -1,0 +1,475 @@
+{% extends "base.html" %}
+
+{% block title %}Placement Analytics & Telemetry — PlacementIQ Admin{% endblock %}
+
+{% block extra_css %}
+<style>
+    .funnel-container {
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+    }
+    .funnel-step {
+        background: var(--bg-card, #FFFDFC);
+        border: 1px solid var(--border-subtle, #EAE3D7);
+        border-radius: var(--radius-sm, 10px);
+        padding: 0.85rem 1.15rem;
+        transition: all 0.2s ease;
+    }
+    .funnel-step:hover {
+        background: #FFFBF9;
+        border-color: var(--accent-coral, #E76F51);
+    }
+    .funnel-bar-bg {
+        height: 6px;
+        background: var(--border-subtle, #EAE3D7);
+        border-radius: 999px;
+        margin-top: 0.6rem;
+        overflow: hidden;
+    }
+    .funnel-bar-fill {
+        height: 100%;
+        border-radius: 999px;
+        transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .chart-container {
+        position: relative;
+        height: 260px;
+        width: 100%;
+    }
+    .analytics-panel {
+        background: var(--bg-card, #FFFDFC);
+        border: 1px solid var(--border-subtle, #EAE3D7);
+        border-radius: 16px;
+        padding: 22px;
+        box-shadow: var(--shadow-sm, 0 1px 3px rgba(35, 25, 15, 0.04));
+    }
+    @media (max-width: 900px) {
+        .analytics-grid-two {
+            grid-template-columns: 1fr !important;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="analytics-page-wrapper">
+    <!-- Header -->
+    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 24px; flex-wrap: wrap; gap: 16px;">
+        <div>
+            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
+                <span class="badge" style="background: #FFF0EB; color: var(--accent-coral, #E76F51); border: 1px solid rgba(231, 111, 81, 0.3); font-weight: 700;">
+                    <i data-lucide="bar-chart-3" style="width: 13px; height: 13px; vertical-align: middle;"></i> Institutional Intelligence
+                </span>
+                <span class="badge badge-placed" style="font-size: 0.8rem; padding: 3px 8px;">
+                    Cohort 2025–2026
+                </span>
+            </div>
+            <h1 style="font-family: var(--font-display, 'Outfit'); font-size: 28px; font-weight: 800; color: var(--text-main, #23190F); margin: 0;">
+                Placement Analytics & Telemetry
+            </h1>
+            <p style="color: var(--text-dim, #5C5248); font-size: 14px; margin-top: 4px;">
+                Institutional placement velocity, department-level conversions, and compensation analytics.
+            </p>
+        </div>
+
+        <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+            <a href="{{ url_for('admin.database_view') }}" class="btn btn-outline btn-sm" style="display: inline-flex; align-items: center; gap: 6px;">
+                <i data-lucide="database" style="width: 14px; height: 14px;"></i>
+                <span>Database Manager</span>
+            </a>
+            <a href="{{ url_for('admin.dashboard') }}" class="btn btn-secondary btn-sm" style="display: inline-flex; align-items: center; gap: 6px;">
+                <i data-lucide="arrow-left" style="width: 14px; height: 14px;"></i>
+                <span>Dashboard</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- Primary Analytics KPI Cards -->
+    <div class="kpi-grid" style="margin-bottom: 24px;">
+        <div class="kpi-card" style="border-top: 4px solid var(--accent-sage, #2D6A4F);">
+            <div class="kpi-header">
+                <div class="kpi-title">Placement Rate</div>
+                <div class="kpi-icon-wrap" style="color: var(--accent-sage, #2D6A4F); background: #EDF7F2;">
+                    <i data-lucide="trending-up"></i>
+                </div>
+            </div>
+            <div class="kpi-value" style="color: var(--accent-sage, #2D6A4F);">{{ analytics.summary.placement_rate }}%</div>
+            <div class="kpi-subtext">{{ analytics.summary.total_placed }} of {{ analytics.summary.total_students }} candidates placed</div>
+        </div>
+
+        <div class="kpi-card" style="border-top: 4px solid var(--accent-coral, #E76F51);">
+            <div class="kpi-header">
+                <div class="kpi-title">Average Package</div>
+                <div class="kpi-icon-wrap" style="color: var(--accent-coral, #E76F51); background: #FFF0EB;">
+                    <i data-lucide="indian-rupee"></i>
+                </div>
+            </div>
+            <div class="kpi-value">₹{{ "%.1f"|format(analytics.summary.avg_package) }} LPA</div>
+            <div class="kpi-subtext">Median: ₹{{ "%.1f"|format(analytics.summary.median_package) }} LPA</div>
+        </div>
+
+        <div class="kpi-card" style="border-top: 4px solid #F4A261;">
+            <div class="kpi-header">
+                <div class="kpi-title">Highest CTC</div>
+                <div class="kpi-icon-wrap" style="color: #EA580C; background: #FFF7ED;">
+                    <i data-lucide="trophy"></i>
+                </div>
+            </div>
+            <div class="kpi-value">₹{{ "%.1f"|format(analytics.summary.highest_package) }} LPA</div>
+            <div class="kpi-subtext">Peak offer package confirmed</div>
+        </div>
+
+        <div class="kpi-card" style="border-top: 4px solid #6366f1;">
+            <div class="kpi-header">
+                <div class="kpi-title">Corporate Partners</div>
+                <div class="kpi-icon-wrap" style="color: #6366f1; background: #EEF2FF;">
+                    <i data-lucide="building-2"></i>
+                </div>
+            </div>
+            <div class="kpi-value">{{ analytics.summary.total_companies }}</div>
+            <div class="kpi-subtext">{{ analytics.summary.total_jobs }} active & completed drives</div>
+        </div>
+    </div>
+
+    <!-- Visual Charts Row -->
+    <div style="display: grid; grid-template-columns: 1.4fr 1fr; gap: 24px; margin-bottom: 24px;" class="analytics-grid-two">
+        <!-- Branch-Wise Placement Rate Chart -->
+        <div class="analytics-panel">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <i data-lucide="bar-chart-2" style="color: var(--accent-coral, #E76F51); width: 20px; height: 20px;"></i>
+                    <h3 style="font-family: var(--font-display, 'Outfit'); font-size: 17px; font-weight: 800; color: var(--text-main, #23190F); margin: 0;">
+                        Department Placement Rate (%)
+                    </h3>
+                </div>
+                <span class="badge" style="background: #FAF7F2; border: 1px solid var(--border-subtle, #EAE3D7); color: var(--text-main, #23190F); font-weight: 600;">
+                    By Academic Branch
+                </span>
+            </div>
+            <div class="chart-container">
+                <canvas id="deptPlacementChart"></canvas>
+            </div>
+        </div>
+
+        <!-- CTC Salary Tier Distribution -->
+        <div class="analytics-panel">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <i data-lucide="pie-chart" style="color: var(--accent-sage, #2D6A4F); width: 20px; height: 20px;"></i>
+                    <h3 style="font-family: var(--font-display, 'Outfit'); font-size: 17px; font-weight: 800; color: var(--text-main, #23190F); margin: 0;">
+                        Compensation Breakdown
+                    </h3>
+                </div>
+                <span class="badge" style="background: #EDF7F2; color: #2D6A4F; font-weight: 600;">Offer Tiers</span>
+            </div>
+            <div class="chart-container">
+                <canvas id="ctcTierChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Funnel & Department Table Row -->
+    <div style="display: grid; grid-template-columns: 1.5fr 1fr; gap: 24px; margin-bottom: 24px;" class="analytics-grid-two">
+        <!-- Department Breakdown Table -->
+        <div class="analytics-panel">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <i data-lucide="layers" style="color: var(--accent-coral, #E76F51); width: 20px; height: 20px;"></i>
+                    <h3 style="font-family: var(--font-display, 'Outfit'); font-size: 17px; font-weight: 800; color: var(--text-main, #23190F); margin: 0;">
+                        Branch-Level Placement Telemetry
+                    </h3>
+                </div>
+            </div>
+            <div style="overflow-x: auto;">
+                <table class="data-table" style="width: 100%; border-collapse: collapse; font-size: 13.5px;">
+                    <thead>
+                        <tr style="border-bottom: 1px solid var(--border-subtle, #EAE3D7); text-align: left;">
+                            <th style="padding: 10px 12px; color: var(--text-dim, #5C5248); font-size: 11.5px; text-transform: uppercase;">Branch</th>
+                            <th style="padding: 10px 12px; color: var(--text-dim, #5C5248); font-size: 11.5px; text-transform: uppercase;">Enrolled</th>
+                            <th style="padding: 10px 12px; color: var(--text-dim, #5C5248); font-size: 11.5px; text-transform: uppercase;">Placed</th>
+                            <th style="padding: 10px 12px; color: var(--text-dim, #5C5248); font-size: 11.5px; text-transform: uppercase;">Conversion %</th>
+                            <th style="padding: 10px 12px; color: var(--text-dim, #5C5248); font-size: 11.5px; text-transform: uppercase;">Avg CTC</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for d in analytics.dept_stats %}
+                        <tr style="border-bottom: 1px solid var(--border-subtle, #EAE3D7);">
+                            <td style="padding: 12px;">
+                                <div style="font-weight: 700; color: var(--text-main, #23190F);">{{ d.code }}</div>
+                                <div style="font-size: 12px; color: var(--text-dim, #8C8278);">{{ d.name }}</div>
+                            </td>
+                            <td style="padding: 12px; color: var(--text-main, #23190F);">{{ d.enrolled }}</td>
+                            <td style="padding: 12px;">
+                                <span style="font-weight: 700; color: var(--accent-sage, #2D6A4F);">{{ d.placed }}</span>
+                            </td>
+                            <td style="padding: 12px;">
+                                <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                    <span style="font-weight: 700; min-width: 42px; color: var(--text-main, #23190F);">{{ d.placement_rate }}%</span>
+                                    <div style="flex: 1; height: 6px; background: var(--border-subtle, #EAE3D7); border-radius: 999px; overflow: hidden; min-width: 60px;">
+                                        <div style="width: {{ d.placement_rate }}%; height: 100%; background: linear-gradient(90deg, var(--accent-coral, #E76F51), #F4A261); border-radius: 999px;"></div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td style="padding: 12px;">
+                                {% if d.avg_package > 0 %}
+                                <span style="font-weight: 700; color: var(--accent-sage, #2D6A4F);">₹{{ d.avg_package }} LPA</span>
+                                {% else %}
+                                <span style="color: var(--text-dim, #8C8278);">-</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Recruitment Stage Funnel -->
+        <div class="analytics-panel">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <i data-lucide="filter" style="color: var(--accent-coral, #E76F51); width: 20px; height: 20px;"></i>
+                    <h3 style="font-family: var(--font-display, 'Outfit'); font-size: 17px; font-weight: 800; color: var(--text-main, #23190F); margin: 0;">
+                        Campus Conversion Funnel
+                    </h3>
+                </div>
+                <span class="badge" style="background: #FFF0EB; color: var(--accent-coral, #E76F51); font-weight: 600;">Pipeline Velocity</span>
+            </div>
+            
+            <div class="funnel-container">
+                <!-- Enrolled -->
+                <div class="funnel-step">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <span style="font-weight: 600; font-size: 0.88rem; color: var(--text-main, #23190F);">1. Total Enrolled Students</span>
+                        <span style="font-weight: 700; color: var(--text-main, #23190F);">{{ analytics.funnel.enrolled }}</span>
+                    </div>
+                    <div class="funnel-bar-bg">
+                        <div class="funnel-bar-fill" style="width: 100%; background: #6366f1;"></div>
+                    </div>
+                </div>
+
+                <!-- Eligible -->
+                <div class="funnel-step">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <span style="font-weight: 600; font-size: 0.88rem; color: var(--text-main, #23190F);">2. Academically Eligible (CGPA &ge; 6.5)</span>
+                        <span style="font-weight: 700; color: #0284c7;">{{ analytics.funnel.eligible }}</span>
+                    </div>
+                    <div class="funnel-bar-bg">
+                        {% set eligible_pct = (analytics.funnel.eligible / analytics.funnel.enrolled * 100) if analytics.funnel.enrolled > 0 else 0 %}
+                        <div class="funnel-bar-fill" style="width: {{ eligible_pct }}%; background: #0284c7;"></div>
+                    </div>
+                </div>
+
+                <!-- Applied -->
+                <div class="funnel-step">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <span style="font-weight: 600; font-size: 0.88rem; color: var(--text-main, #23190F);">3. Applied to Opportunities</span>
+                        <span style="font-weight: 700; color: #8b5cf6;">{{ analytics.funnel.applied }}</span>
+                    </div>
+                    <div class="funnel-bar-bg">
+                        {% set applied_pct = (analytics.funnel.applied / analytics.funnel.enrolled * 100) if analytics.funnel.enrolled > 0 else 0 %}
+                        <div class="funnel-bar-fill" style="width: {{ applied_pct }}%; background: #8b5cf6;"></div>
+                    </div>
+                </div>
+
+                <!-- Shortlisted -->
+                <div class="funnel-step">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <span style="font-weight: 600; font-size: 0.88rem; color: var(--text-main, #23190F);">4. Shortlisted by Recruiters</span>
+                        <span style="font-weight: 700; color: #2563eb;">{{ analytics.funnel.shortlisted }}</span>
+                    </div>
+                    <div class="funnel-bar-bg">
+                        {% set short_pct = (analytics.funnel.shortlisted / analytics.funnel.enrolled * 100) if analytics.funnel.enrolled > 0 else 0 %}
+                        <div class="funnel-bar-fill" style="width: {{ short_pct }}%; background: #2563eb;"></div>
+                    </div>
+                </div>
+
+                <!-- Interviewed -->
+                <div class="funnel-step">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <span style="font-weight: 600; font-size: 0.88rem; color: var(--text-main, #23190F);">5. Participated in Interviews</span>
+                        <span style="font-weight: 700; color: #d97706;">{{ analytics.funnel.interviewed }}</span>
+                    </div>
+                    <div class="funnel-bar-bg">
+                        {% set int_pct = (analytics.funnel.interviewed / analytics.funnel.enrolled * 100) if analytics.funnel.enrolled > 0 else 0 %}
+                        <div class="funnel-bar-fill" style="width: {{ int_pct }}%; background: #d97706;"></div>
+                    </div>
+                </div>
+
+                <!-- Placed -->
+                <div class="funnel-step">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <span style="font-weight: 600; font-size: 0.88rem; color: var(--text-main, #23190F);">6. Offers Confirmed & Placed</span>
+                        <span style="font-weight: 700; color: var(--accent-sage, #2D6A4F);">{{ analytics.funnel.placed }}</span>
+                    </div>
+                    <div class="funnel-bar-bg">
+                        {% set placed_pct = (analytics.funnel.placed / analytics.funnel.enrolled * 100) if analytics.funnel.enrolled > 0 else 0 %}
+                        <div class="funnel-bar-fill" style="width: {{ placed_pct }}%; background: var(--accent-sage, #2D6A4F);"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Partner Companies Overview -->
+    <div class="analytics-panel">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+            <div style="display: flex; align-items: center; gap: 8px;">
+                <i data-lucide="building" style="color: var(--accent-coral, #E76F51); width: 20px; height: 20px;"></i>
+                <h3 style="font-family: var(--font-display, 'Outfit'); font-size: 17px; font-weight: 800; color: var(--text-main, #23190F); margin: 0;">
+                    Corporate Recruiter Engagement
+                </h3>
+            </div>
+            <span class="badge" style="background: #EDF7F2; color: #2D6A4F; font-weight: 600;">{{ analytics.company_stats|length }} Participating Firms</span>
+        </div>
+        <div style="overflow-x: auto;">
+            <table class="data-table" style="width: 100%; border-collapse: collapse; font-size: 13.5px;">
+                <thead>
+                    <tr style="border-bottom: 1px solid var(--border-subtle, #EAE3D7); text-align: left;">
+                        <th style="padding: 10px 12px; color: var(--text-dim, #5C5248); font-size: 11.5px; text-transform: uppercase;">Company</th>
+                        <th style="padding: 10px 12px; color: var(--text-dim, #5C5248); font-size: 11.5px; text-transform: uppercase;">Industry Sector</th>
+                        <th style="padding: 10px 12px; color: var(--text-dim, #5C5248); font-size: 11.5px; text-transform: uppercase;">Location</th>
+                        <th style="padding: 10px 12px; color: var(--text-dim, #5C5248); font-size: 11.5px; text-transform: uppercase;">Active Drives</th>
+                        <th style="padding: 10px 12px; color: var(--text-dim, #5C5248); font-size: 11.5px; text-transform: uppercase;">Offers Made</th>
+                        <th style="padding: 10px 12px; color: var(--text-dim, #5C5248); font-size: 11.5px; text-transform: uppercase;">Avg Package</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for c in analytics.company_stats %}
+                    <tr style="border-bottom: 1px solid var(--border-subtle, #EAE3D7);">
+                        <td style="padding: 12px;">
+                            <div style="font-weight: 700; color: var(--text-main, #23190F);">{{ c.name }}</div>
+                        </td>
+                        <td style="padding: 12px;">
+                            <span class="badge badge-shortlisted">{{ c.industry }}</span>
+                        </td>
+                        <td style="padding: 12px; color: var(--text-dim, #5C5248); font-size: 13px;">{{ c.location }}</td>
+                        <td style="padding: 12px; color: var(--text-main, #23190F);">{{ c.drives_posted }}</td>
+                        <td style="padding: 12px;">
+                            <span style="font-weight: 700; {% if c.hires > 0 %}color: var(--accent-sage, #2D6A4F);{% else %}color: var(--text-dim, #8C8278);{% endif %}">
+                                {{ c.hires }} hired
+                            </span>
+                        </td>
+                        <td style="padding: 12px;">
+                            {% if c.avg_ctc > 0 %}
+                            <span style="font-weight: 700; color: var(--accent-sage, #2D6A4F);">₹{{ c.avg_ctc }} LPA</span>
+                            {% else %}
+                            <span style="color: var(--text-dim, #8C8278);">-</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="6" style="text-align: center; color: var(--text-dim, #8C8278); padding: 2rem;">
+                            No partner company engagements recorded yet.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<!-- Chart.js CDN -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    // 1. Department Placement Rate Bar Chart
+    const deptLabels = [{% for d in analytics.dept_stats %}"{{ d.code }}"{% if not loop.last %}, {% endif %}{% endfor %}];
+    const deptRates = [{% for d in analytics.dept_stats %}{{ d.placement_rate }}{% if not loop.last %}, {% endif %}{% endfor %}];
+
+    const ctxDept = document.getElementById('deptPlacementChart');
+    if (ctxDept) {
+        new Chart(ctxDept, {
+            type: 'bar',
+            data: {
+                labels: deptLabels,
+                datasets: [{
+                    label: 'Placement %',
+                    data: deptRates,
+                    backgroundColor: [
+                        'rgba(231, 111, 81, 0.85)',
+                        'rgba(45, 106, 79, 0.85)',
+                        'rgba(244, 162, 97, 0.85)',
+                        'rgba(99, 102, 241, 0.85)'
+                    ],
+                    borderColor: [
+                        '#E76F51',
+                        '#2D6A4F',
+                        '#F4A261',
+                        '#6366f1'
+                    ],
+                    borderWidth: 1.5,
+                    borderRadius: 6
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        callbacks: {
+                            label: (ctx) => `${ctx.raw}% Placed`
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        max: 100,
+                        grid: { color: 'rgba(35, 25, 15, 0.06)' },
+                        ticks: { color: '#5C5248', callback: (v) => v + '%' }
+                    },
+                    x: {
+                        grid: { display: false },
+                        ticks: { color: '#23190F', font: { weight: '600' } }
+                    }
+                }
+            }
+        });
+    }
+
+    // 2. CTC Tier Doughnut Chart
+    const ctcTiers = {{ analytics.ctc_tiers | tojson }};
+    const ctcLabels = Object.keys(ctcTiers);
+    const ctcValues = Object.values(ctcTiers);
+
+    const ctxCtc = document.getElementById('ctcTierChart');
+    if (ctxCtc) {
+        new Chart(ctxCtc, {
+            type: 'doughnut',
+            data: {
+                labels: ctcLabels,
+                datasets: [{
+                    data: ctcValues,
+                    backgroundColor: [
+                        'rgba(45, 106, 79, 0.85)',
+                        'rgba(231, 111, 81, 0.85)',
+                        'rgba(244, 162, 97, 0.85)',
+                        'rgba(99, 102, 241, 0.85)'
+                    ],
+                    borderColor: '#FFFDFC',
+                    borderWidth: 2
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'right',
+                        labels: { color: '#5C5248', boxWidth: 12, padding: 12 }
+                    }
+                },
+                cutout: '65%'
+            }
+        });
+    }
+});
+</script>
+{% endblock %}

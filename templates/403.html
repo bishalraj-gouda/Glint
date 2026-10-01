@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+
+{% block title %}403 Forbidden — PlacementIQ AI{% endblock %}
+
+{% block content %}
+<div style="min-height: 65vh; display: flex; align-items: center; justify-content: center; text-align: center; padding: 40px 20px;">
+    <div style="max-width: 520px; background: rgba(15, 23, 42, 0.8); border: 1px solid rgba(239, 68, 68, 0.3); border-radius: 20px; padding: 40px; box-shadow: 0 20px 50px rgba(0,0,0,0.5);">
+        <div style="width: 70px; height: 70px; margin: 0 auto 20px; border-radius: 50%; background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.3); display: flex; align-items: center; justify-content: center; color: #ef4444;">
+            <i data-lucide="shield-alert" style="width: 36px; height: 36px;"></i>
+        </div>
+        <h1 style="font-family: 'Outfit', sans-serif; font-size: 28px; font-weight: 800; color: #ffffff; margin-bottom: 10px;">
+            403 — Access Forbidden
+        </h1>
+        <p style="color: #94a3b8; font-size: 14px; line-height: 1.6; margin-bottom: 24px;">
+            You do not have the required role permissions to access this institutional resource.
+            {% if current_role %}
+            <br><span style="display: inline-block; margin-top: 8px; font-size: 12px; color: #cbd5e1; background: rgba(255,255,255,0.06); padding: 4px 10px; border-radius: 6px;">Your Active Role: <strong>{{ current_role }}</strong></span>
+            {% endif %}
+        </p>
+        <div style="display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;">
+            {% if current_role == 'STUDENT' %}
+            <a href="{{ url_for('student.dashboard') }}" class="btn btn-primary" style="display: inline-flex; align-items: center; gap: 6px;">
+                <i data-lucide="layout-dashboard" style="width: 15px; height: 15px;"></i> Go to Student Dashboard
+            </a>
+            {% elif current_role == 'RECRUITER' %}
+            <a href="{{ url_for('recruiter.dashboard') }}" class="btn btn-primary" style="display: inline-flex; align-items: center; gap: 6px;">
+                <i data-lucide="layout-dashboard" style="width: 15px; height: 15px;"></i> Go to Recruiter Dashboard
+            </a>
+            {% elif current_role == 'ADMIN' %}
+            <a href="{{ url_for('admin.dashboard') }}" class="btn btn-primary" style="display: inline-flex; align-items: center; gap: 6px;">
+                <i data-lucide="shield-check" style="width: 15px; height: 15px;"></i> Go to Admin Command
+            </a>
+            {% else %}
+            <a href="{{ url_for('auth.login') }}" class="btn btn-primary" style="display: inline-flex; align-items: center; gap: 6px;">
+                <i data-lucide="log-in" style="width: 15px; height: 15px;"></i> Return to Login
+            </a>
+            {% endif %}
+            <a href="javascript:history.back()" class="btn btn-secondary" style="display: inline-flex; align-items: center; gap: 6px;">
+                <i data-lucide="arrow-left" style="width: 15px; height: 15px;"></i> Go Back
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

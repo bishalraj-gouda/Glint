@@ -1,0 +1,364 @@
+<!-- Floating AI Recruiter Copilot Drawer Component -->
+<div id="ai-recruiter-copilot-container">
+    <!-- Floating Trigger Pill -->
+    <button id="recruiter-copilot-toggle-btn" class="recruiter-copilot-pill" title="Open AI Recruiter Copilot" onclick="toggleRecruiterCopilot()">
+        <div class="recruiter-copilot-pulsing-dot"></div>
+        <i data-lucide="sparkles" style="width: 17px; height: 17px;"></i>
+        <span>AI Recruiter Copilot</span>
+    </button>
+
+    <!-- Slide-out Drawer Panel -->
+    <div id="recruiter-copilot-drawer" class="recruiter-copilot-panel">
+        <!-- Header -->
+        <div class="recruiter-copilot-header">
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <div class="recruiter-copilot-avatar-icon">
+                    <i data-lucide="crosshair" style="width: 18px; height: 18px;"></i>
+                </div>
+                <div>
+                    <div style="font-weight: 700; color: #ffffff; font-size: 14px;">AI Recruiter Copilot</div>
+                    <div style="font-size: 11px; color: #06b6d4; display: flex; align-items: center; gap: 4px;">
+                        <span style="display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: #06b6d4;"></span>
+                        Grounded in {{ session_company_name or 'Company' }} Requisitions
+                    </div>
+                </div>
+            </div>
+            <button id="recruiter-copilot-close-btn" class="recruiter-copilot-close" title="Close Drawer" onclick="toggleRecruiterCopilot()">
+                <i data-lucide="x" style="width: 16px; height: 16px;"></i>
+            </button>
+        </div>
+
+        <!-- Quick Prompt Chips -->
+        <div class="recruiter-copilot-chips-bar">
+            <button class="recruiter-copilot-chip" onclick="sendRecruiterQuickPrompt('Who are the top candidates for Python, SQL, and Data Analytics?')">
+                🎯 Top Candidates
+            </button>
+            <button class="recruiter-copilot-chip" onclick="sendRecruiterQuickPrompt('Draft 3 deep-dive technical interview questions for our software requisitions.')">
+                ❓ Interview Questions
+            </button>
+            <button class="recruiter-copilot-chip" onclick="sendRecruiterQuickPrompt('How should we assess hands-on practical skills vs academic CGPA?')">
+                ⚖️ Assessment Rubric
+            </button>
+        </div>
+
+        <!-- Message History Stream -->
+        <div id="recruiter-copilot-messages" class="recruiter-copilot-messages-container">
+            <div class="recruiter-copilot-message copilot-ai">
+                <div class="recruiter-copilot-bubble">
+                    Hello {{ session_display_name or 'Hiring Lead' }}! 👋 I'm your AI Recruiter Copilot for {{ session_company_name or 'your firm' }}.
+                    I can rank campus profiles against your open requisitions, draft probing interview questions, or evaluate candidate dossiers. How can I assist your hiring pipeline today?
+                </div>
+            </div>
+        </div>
+
+        <!-- Chat Input Bar -->
+        <div class="recruiter-copilot-input-bar">
+            <input type="text" id="recruiter-copilot-input" placeholder="Ask about top candidates, interview rubrics, technical tests..." autocomplete="off">
+            <button id="recruiter-copilot-send-btn" class="recruiter-copilot-send" title="Send Message" onclick="sendRecruiterMessage()">
+                <i data-lucide="send" style="width: 15px; height: 15px;"></i>
+            </button>
+        </div>
+    </div>
+</div>
+
+<style>
+    .recruiter-copilot-pill {
+        position: fixed;
+        bottom: 24px;
+        right: 24px;
+        z-index: 999;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 11px 20px;
+        border-radius: 9999px;
+        background: linear-gradient(135deg, #2D6A4F 0%, #52B788 100%);
+        color: #ffffff;
+        border: none;
+        box-shadow: 0 8px 24px rgba(45, 106, 79, 0.4);
+        cursor: pointer;
+        font-family: 'Plus Jakarta Sans', sans-serif;
+        font-size: 13.5px;
+        font-weight: 700;
+        transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .recruiter-copilot-pill:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 12px 28px rgba(45, 106, 79, 0.5);
+    }
+    .recruiter-copilot-pulsing-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: #52B788;
+        box-shadow: 0 0 8px #52B788;
+        animation: pulseRecruiterDot 2s infinite;
+    }
+    @keyframes pulseRecruiterDot {
+        0%, 100% { opacity: 1; transform: scale(1); }
+        50% { opacity: 0.5; transform: scale(0.8); }
+    }
+    .recruiter-copilot-panel {
+        position: fixed;
+        bottom: 84px;
+        right: 24px;
+        width: 390px;
+        height: 520px;
+        background: #FFFFFF;
+        border: 1px solid #EAE3D7;
+        border-radius: 20px;
+        box-shadow: 0 18px 48px rgba(45, 35, 20, 0.15);
+        z-index: 1000;
+        display: none;
+        flex-direction: column;
+        overflow: hidden;
+    }
+    .recruiter-copilot-panel.active {
+        display: flex;
+        animation: slideUpFadeRecruiter 0.25s ease-out;
+    }
+    @keyframes slideUpFadeRecruiter {
+        from { opacity: 0; transform: translateY(16px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    .recruiter-copilot-header {
+        padding: 16px 18px;
+        border-bottom: 1px solid #EAE3D7;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        background: #FAF7F2;
+    }
+    .recruiter-copilot-avatar-icon {
+        width: 32px;
+        height: 32px;
+        border-radius: 8px;
+        background: #EAF4EE;
+        color: #2D6A4F;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .recruiter-copilot-close {
+        background: #FAF7F2;
+        border: none;
+        color: #888174;
+        cursor: pointer;
+        padding: 6px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: color 0.2s;
+    }
+    .recruiter-copilot-close:hover {
+        background: #EAE3D7;
+        color: #1F1C18;
+    }
+    .recruiter-copilot-chips-bar {
+        padding: 10px 14px;
+        display: flex;
+        gap: 6px;
+        overflow-x: auto;
+        white-space: nowrap;
+        background: #FFFDFC;
+        border-bottom: 1px solid #EAE3D7;
+    }
+    .recruiter-copilot-chip {
+        background: #FAF7F2;
+        border: 1px solid #EAE3D7;
+        color: #555047;
+        padding: 5px 11px;
+        border-radius: 12px;
+        font-size: 11.5px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s;
+        flex-shrink: 0;
+    }
+    .recruiter-copilot-chip:hover {
+        background: #EAF4EE;
+        border-color: #2D6A4F;
+        color: #2D6A4F;
+    }
+    .recruiter-copilot-messages-container {
+        flex: 1;
+        padding: 16px;
+        overflow-y: auto;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        background: #FAF7F2;
+    }
+    .recruiter-copilot-message {
+        display: flex;
+        flex-direction: column;
+        max-width: 88%;
+    }
+    .recruiter-copilot-message.copilot-ai {
+        align-self: flex-start;
+    }
+    .recruiter-copilot-message.copilot-user {
+        align-self: flex-end;
+    }
+    .recruiter-copilot-bubble {
+        padding: 10px 14px;
+        border-radius: 14px;
+        font-size: 13px;
+        line-height: 1.5;
+        word-break: break-word;
+    }
+    .copilot-ai .recruiter-copilot-bubble {
+        background: #FFFFFF;
+        color: #1F1C18;
+        border: 1px solid #EAE3D7;
+        border-bottom-left-radius: 4px;
+        box-shadow: 0 1px 3px rgba(30, 20, 10, 0.04);
+    }
+    .copilot-user .recruiter-copilot-bubble {
+        background: #2D6A4F;
+        color: #ffffff;
+        border-bottom-right-radius: 4px;
+    }
+    .recruiter-copilot-input-bar {
+        padding: 12px 14px;
+        border-top: 1px solid #EAE3D7;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        background: #FFFFFF;
+    }
+    .recruiter-copilot-input-bar input {
+        flex: 1;
+        background: #FAF7F2;
+        border: 1px solid #DCD3C4;
+        border-radius: 20px;
+        padding: 8px 14px;
+        color: #1F1C18;
+        font-size: 13px;
+        outline: none;
+    }
+    .recruiter-copilot-input-bar input:focus {
+        border-color: #2D6A4F;
+    }
+    .recruiter-copilot-send {
+        width: 34px;
+        height: 34px;
+        border-radius: 50%;
+        background: #2D6A4F;
+        border: none;
+        color: #ffffff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: background 0.2s;
+    }
+    .recruiter-copilot-send:hover {
+        background: #22523C;
+    }
+</style>
+
+<script>
+let recruiterChatHistory = [];
+
+window.toggleRecruiterCopilot = function() {
+    const drawer = document.getElementById('recruiter-copilot-drawer');
+    if (!drawer) return;
+    drawer.classList.toggle('active');
+    if (drawer.classList.contains('active')) {
+        const input = document.getElementById('recruiter-copilot-input');
+        if (input) input.focus();
+        if (window.lucide) window.lucide.createIcons();
+    }
+};
+
+window.sendRecruiterQuickPrompt = function(promptText) {
+    const input = document.getElementById('recruiter-copilot-input');
+    if (input) {
+        input.value = promptText;
+        sendRecruiterMessage();
+    }
+};
+
+window.sendRecruiterMessage = async function() {
+    const input = document.getElementById('recruiter-copilot-input');
+    if (!input) return;
+    const msg = input.value.trim();
+    if (!msg) return;
+
+    input.value = '';
+    const container = document.getElementById('recruiter-copilot-messages');
+
+    // Append user message
+    const userDiv = document.createElement('div');
+    userDiv.className = 'recruiter-copilot-message copilot-user';
+    userDiv.innerHTML = `<div class="recruiter-copilot-bubble">${escapeHtml(msg)}</div>`;
+    container.appendChild(userDiv);
+    container.scrollTop = container.scrollHeight;
+
+    // Append thinking bubble
+    const thinkingDiv = document.createElement('div');
+    thinkingDiv.className = 'recruiter-copilot-message copilot-ai';
+    thinkingDiv.id = 'recruiter-copilot-thinking';
+    thinkingDiv.innerHTML = `
+        <div class="recruiter-copilot-bubble" style="display: flex; gap: 4px; align-items: center; color: #94a3b8;">
+            <i data-lucide="loader-2" class="spin" style="width: 14px; height: 14px;"></i>
+            <span>Consulting talent database...</span>
+        </div>
+    `;
+    container.appendChild(thinkingDiv);
+    container.scrollTop = container.scrollHeight;
+    if (window.lucide) window.lucide.createIcons();
+
+    try {
+        const res = await fetch('/recruiter/ai/api/chat', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ message: msg, history: recruiterChatHistory })
+        });
+        const data = await res.json();
+        thinkingDiv.remove();
+
+        const reply = data.response || "I couldn't process that query right now.";
+        const aiDiv = document.createElement('div');
+        aiDiv.className = 'recruiter-copilot-message copilot-ai';
+        aiDiv.innerHTML = `<div class="recruiter-copilot-bubble">${formatMarkdown(reply)}</div>`;
+        container.appendChild(aiDiv);
+        container.scrollTop = container.scrollHeight;
+
+        recruiterChatHistory.push({ role: 'user', content: msg });
+        recruiterChatHistory.push({ role: 'assistant', content: reply });
+    } catch (e) {
+        thinkingDiv.remove();
+        const errDiv = document.createElement('div');
+        errDiv.className = 'recruiter-copilot-message copilot-ai';
+        errDiv.innerHTML = `<div class="recruiter-copilot-bubble" style="color: #f87171;">Connection error. Please try again.</div>`;
+        container.appendChild(errDiv);
+    }
+};
+
+document.addEventListener('DOMContentLoaded', () => {
+    const input = document.getElementById('recruiter-copilot-input');
+    if (input) {
+        input.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') sendRecruiterMessage();
+        });
+    }
+});
+
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+function formatMarkdown(text) {
+    if (!text) return '';
+    return text
+        .replace(/\n\n/g, '<br><br>')
+        .replace(/\n/g, '<br>')
+        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+        .replace(/\*(.*?)\*/g, '<em>$1</em>');
+}
+</script>

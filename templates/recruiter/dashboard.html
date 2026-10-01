@@ -1,0 +1,397 @@
+{% extends "base.html" %}
+
+{% block title %}Recruiter Studio — Glint{% endblock %}
+
+{% block content %}
+<!-- Welcoming Recruiter Header -->
+<div class="page-header" style="margin-bottom: 2rem;">
+    <div>
+        <div style="display: inline-flex; align-items: center; gap: 0.5rem; background: #EAF4EE; border: 1px solid #CDE7D8; padding: 0.25rem 0.85rem; border-radius: var(--radius-full); font-size: 0.78rem; font-weight: 700; color: var(--accent-sage); margin-bottom: 0.6rem;">
+            <span>🏢</span> {{ company.name }} • {{ company.industry }}
+        </div>
+        <h1 class="page-title" style="margin-bottom: 0.3rem;">Talent Acquisition Studio</h1>
+        <p class="page-description">
+            Welcome back, <strong>{{ recruiter.name }}</strong> ({{ recruiter.designation }}) • Active Campus Drive
+        </p>
+    </div>
+    <div style="display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap;">
+        <span class="sticker-tag">
+            <i data-lucide="map-pin" style="width: 14px; height: 14px; color: var(--accent-coral);"></i>
+            {{ company.location }}
+        </span>
+        <a href="{{ url_for('recruiter.post_job_view') }}" class="btn btn-primary btn-sm btn-pill">
+            <i data-lucide="plus-circle" style="width: 15px; height: 15px;"></i>
+            Post Opportunity
+        </a>
+        <a href="{{ url_for('recruiter.schedule_view') }}" class="btn btn-outline btn-sm btn-pill">
+            <i data-lucide="calendar" style="width: 15px; height: 15px;"></i>
+            Interview Schedule
+        </a>
+    </div>
+</div>
+
+<!-- Recruiter Bento KPI Cards (Clickable to jump and filter) -->
+<div class="kpi-grid">
+    <div class="kpi-card" onclick="jumpToSection('posted-requisitions-section', 'Posted Requisitions')" style="border-top: 4px solid var(--accent-coral);" title="Click to view all posted job requisitions">
+        <div class="kpi-header">
+            <div class="kpi-title">Active Job Drives</div>
+            <div class="kpi-icon-wrap" style="background: #FFF0EB; color: var(--accent-coral);"><i data-lucide="briefcase"></i></div>
+        </div>
+        <div class="kpi-value">{{ kpis.active_jobs }}</div>
+        <div class="kpi-subtext">Open requisitions on campus</div>
+        <div class="kpi-click-hint">
+            <span>View job drives</span>
+            <i data-lucide="arrow-down-right" style="width: 14px; height: 14px;"></i>
+        </div>
+    </div>
+
+    <div class="kpi-card" onclick="jumpToRecruiterStage('all', 'All Candidates')" style="border-top: 4px solid var(--accent-sage);" title="Click to view all received student applications">
+        <div class="kpi-header">
+            <div class="kpi-title">Total Applicants</div>
+            <div class="kpi-icon-wrap" style="background: #EAF4EE; color: var(--accent-sage);"><i data-lucide="users"></i></div>
+        </div>
+        <div class="kpi-value">{{ kpis.total_applicants }}</div>
+        <div class="kpi-subtext">Received student applications</div>
+        <div class="kpi-click-hint">
+            <span>Filter all applicants</span>
+            <i data-lucide="arrow-down-right" style="width: 14px; height: 14px;"></i>
+        </div>
+    </div>
+
+    <div class="kpi-card" onclick="jumpToRecruiterStage('shortlisted', 'Shortlisted Candidates')" style="border-top: 4px solid var(--accent-honey);" title="Click to view shortlisted candidates">
+        <div class="kpi-header">
+            <div class="kpi-title">Shortlisted</div>
+            <div class="kpi-icon-wrap" style="background: #FFF8E7; color: var(--status-warning);"><i data-lucide="user-check"></i></div>
+        </div>
+        <div class="kpi-value" id="kpi-shortlisted-count">{{ kpis.shortlisted }}</div>
+        <div class="kpi-subtext">Passed initial threshold review</div>
+        <div class="kpi-click-hint" style="color: var(--status-warning);">
+            <span>Filter shortlisted</span>
+            <i data-lucide="arrow-down-right" style="width: 14px; height: 14px;"></i>
+        </div>
+    </div>
+
+    <div class="kpi-card" onclick="jumpToRecruiterStage('selected', 'Selected Hires / Offers')" style="border-top: 4px solid #137333;" title="Click to view selected candidates">
+        <div class="kpi-header">
+            <div class="kpi-title">Offers / Selected</div>
+            <div class="kpi-icon-wrap" style="background: #E6F4EA; color: #137333;"><i data-lucide="award"></i></div>
+        </div>
+        <div class="kpi-value">{{ kpis.placed }}</div>
+        <div class="kpi-subtext">Confirmed student hires</div>
+        <div class="kpi-click-hint" style="color: #137333;">
+            <span>Filter offers</span>
+            <i data-lucide="arrow-down-right" style="width: 14px; height: 14px;"></i>
+        </div>
+    </div>
+</div>
+
+<!-- Two-Column Bento Layout -->
+<div style="display: grid; grid-template-columns: 1.9fr 1.1fr; gap: 1.85rem; align-items: start;">
+    <!-- Left: Recent Candidates Pipeline with Filter Tabs -->
+    <div class="glass-panel" id="candidate-pipeline-section" style="border-top: 4px solid var(--accent-sage);">
+        <div class="panel-header" style="flex-direction: column; align-items: flex-start; gap: 0.85rem;">
+            <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+                <div class="panel-title">
+                    <i data-lucide="users" style="color: var(--accent-sage); width: 22px; height: 22px;"></i>
+                    Candidate Pipeline
+                </div>
+                <div style="display: flex; gap: 0.5rem; align-items: center;">
+                    <span class="badge badge-eligible" id="candidates-visible-count">{{ recent_applications|length }} Total</span>
+                    <a href="{{ url_for('recruiter.candidates_view') }}" class="btn btn-outline btn-sm">Full Pipeline →</a>
+                </div>
+            </div>
+
+            <!-- Intuitive Stage Filters & Search -->
+            <div class="filter-bar" style="width: 100%; margin-bottom: 0;">
+                <div class="filter-chips" id="stage-filter-chips">
+                    <button type="button" class="filter-pill active" data-stage="all" onclick="setCandidateStageFilter('all', this)">All</button>
+                    <button type="button" class="filter-pill" data-stage="applied" onclick="setCandidateStageFilter('applied', this)">Applied</button>
+                    <button type="button" class="filter-pill" data-stage="shortlisted" onclick="setCandidateStageFilter('shortlisted', this)">Shortlisted</button>
+                    <button type="button" class="filter-pill" data-stage="interview" onclick="setCandidateStageFilter('interview', this)">Interview</button>
+                    <button type="button" class="filter-pill" data-stage="selected" onclick="setCandidateStageFilter('selected', this)">Selected</button>
+                </div>
+                <input type="text" id="candidate-search-input" placeholder="Search candidate, roll, role..." class="filter-search-input" onkeyup="filterCandidatesTable()">
+            </div>
+        </div>
+
+        <div class="table-responsive">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Candidate</th>
+                        <th>Target Role</th>
+                        <th>CGPA</th>
+                        <th>Stage</th>
+                        <th>Match Score</th>
+                        <th style="text-align: right;">Action</th>
+                    </tr>
+                </thead>
+                <tbody id="candidate-table-body">
+                    {% for app in recent_applications %}
+                    <tr class="candidate-row" id="app-row-{{ app.id }}"
+                        data-stage="{{ app.status }}"
+                        data-search="{{ app.student.name|lower }} {{ app.student.roll_number|lower }} {{ app.job.title|lower }} {{ app.status|lower }}">
+                        <td>
+                            <div style="display: flex; align-items: center; gap: 0.75rem;">
+                                <div style="width: 36px; height: 36px; border-radius: var(--radius-full); background: #FFF0EB; color: var(--accent-coral); display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 0.85rem; flex-shrink: 0;">
+                                    {{ app.student.name[0] }}
+                                </div>
+                                <div>
+                                    <div style="font-weight: 700; color: var(--text-main);">{{ app.student.name }}</div>
+                                    <div style="font-size: 0.8rem; color: var(--text-muted);">
+                                        {{ app.student.roll_number }} • {{ app.student.department.code }}
+                                    </div>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <div style="font-weight: 600; font-size: 0.88rem; color: var(--text-main);">{{ app.job.title }}</div>
+                        </td>
+                        <td>
+                            <span class="sticker-tag" style="padding: 2px 8px; font-size: 0.78rem;">
+                                {{ "%.2f"|format(app.student.cgpa) }}
+                            </span>
+                        </td>
+                        <td>
+                            <span class="badge badge-{{ app.status }}" id="status-badge-{{ app.id }}">
+                                {{ app.status | replace('_', ' ') | capitalize }}
+                            </span>
+                        </td>
+                        <td>
+                            <div style="display: flex; align-items: center; gap: 0.4rem;">
+                                <span style="font-weight: 800; color: var(--accent-sage);">{{ "%.0f"|format(app.match_score) }}%</span>
+                                <i data-lucide="sparkles" style="width: 14px; height: 14px; color: var(--accent-sage);"></i>
+                            </div>
+                        </td>
+                        <td style="text-align: right;">
+                            <div id="action-cell-{{ app.id }}">
+                                {% if app.status in ['applied', 'eligible', 'ai_matched'] %}
+                                    <button type="button" class="btn btn-outline btn-sm" onclick="advanceCandidate({{ app.id }}, 'shortlisted', '{{ app.student.name }}')" title="Shortlist candidate for interview round">
+                                        ⭐ Shortlist
+                                    </button>
+                                {% elif app.status == 'shortlisted' %}
+                                    <a href="{{ url_for('recruiter.schedule_view') }}" class="btn btn-outline btn-sm" style="color: var(--accent-iris); border-color: #E0D7FE;" title="Schedule interview">
+                                        📅 Interview
+                                    </a>
+                                {% else %}
+                                    <span style="font-size: 0.78rem; color: var(--text-dim); font-weight: 600;">In Pipeline</span>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="6" style="text-align: center; color: var(--text-dim); padding: 2.5rem;">
+                            <div style="font-size: 1.5rem; margin-bottom: 0.5rem;">🌱</div>
+                            <div style="font-weight: 600;">No applications submitted yet.</div>
+                            <div style="font-size: 0.82rem; margin-top: 0.25rem;">Candidates will appear here as soon as they apply!</div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                    <tr id="candidates-empty-filter" style="display: none;">
+                        <td colspan="6" style="text-align: center; color: var(--text-dim); padding: 2rem;">
+                            No candidates match your current filter.
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Right: Active Job Openings & AI Matching -->
+    <div>
+        <div class="glass-panel" id="posted-requisitions-section" style="border-top: 4px solid var(--accent-coral);">
+            <div class="panel-header">
+                <div class="panel-title">
+                    <i data-lucide="briefcase" style="color: var(--accent-coral); width: 22px; height: 22px;"></i>
+                    Posted Requisitions
+                </div>
+                <a href="{{ url_for('recruiter.post_job_view') }}" class="btn btn-primary btn-sm btn-pill">
+                    + Post Job
+                </a>
+            </div>
+            
+            <div style="display: flex; flex-direction: column; gap: 0.85rem;">
+                {% for job in jobs %}
+                <div class="job-bento-card" style="margin-bottom: 0;">
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 0.5rem; margin-bottom: 0.4rem;">
+                        <div style="font-weight: 700; font-size: 0.98rem; color: var(--text-main);">{{ job.title }}</div>
+                        <span class="badge badge-shortlisted">{{ job.salary_formatted }}</span>
+                    </div>
+                    
+                    <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.82rem; color: var(--text-muted); margin-top: 0.6rem; padding-top: 0.6rem; border-top: 1px solid var(--border-subtle);">
+                        <span>Min CGPA: <strong>{{ job.min_cgpa }}</strong></span>
+                        <span class="badge badge-applied">
+                            <i data-lucide="users" style="width: 12px; height: 12px;"></i>
+                            {{ job.applications|length }} Applicants
+                        </span>
+                    </div>
+                </div>
+                {% else %}
+                <div style="text-align: center; padding: 2rem; color: var(--text-dim);">
+                    <p style="margin-bottom: 0.5rem;">No active postings found.</p>
+                    <a href="{{ url_for('recruiter.post_job_view') }}" class="btn btn-outline btn-sm">Create First Job</a>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- AI Recruiter Suite Card -->
+        <div class="glass-panel" style="border-top: 4px solid var(--accent-iris); background: linear-gradient(135deg, #FFFDFC 0%, #F5F1FF 100%);">
+            <div style="display: flex; align-items: center; gap: 0.85rem; margin-bottom: 0.75rem;">
+                <div style="width: 40px; height: 40px; border-radius: var(--radius-sm); background: #F3F0FF; color: var(--accent-iris); display: flex; align-items: center; justify-content: center;">
+                    <i data-lucide="crosshair" style="width: 20px; height: 20px;"></i>
+                </div>
+                <div>
+                    <div style="font-weight: 800; font-size: 1.05rem; color: var(--text-main);">AI Match Engine</div>
+                    <div style="font-size: 0.8rem; color: var(--text-muted);">Autonomous rank & candidate fit</div>
+                </div>
+            </div>
+            <p style="font-size: 0.88rem; color: var(--text-muted); line-height: 1.5; margin-bottom: 1.15rem;">
+                Upload job descriptions to rank candidates against academic scores, projects, and verified technical proficiencies.
+            </p>
+            <a href="{{ url_for('recruiter_ai.candidate_matching_page') }}" class="btn btn-outline btn-sm" style="width: 100%;">
+                Launch Candidate Matcher →
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let currentCandidateStage = 'all';
+
+/**
+ * Smoothly scrolls to section and triggers glowing pulse highlight
+ */
+function jumpToSection(sectionId, sectionName) {
+    const el = document.getElementById(sectionId);
+    if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        el.classList.remove('section-highlight');
+        void el.offsetWidth;
+        el.classList.add('section-highlight');
+        if (sectionName && window.showGlobalToast) {
+            window.showGlobalToast(`Jumped to ${sectionName}`);
+        }
+        setTimeout(() => {
+            el.classList.remove('section-highlight');
+        }, 2400);
+    }
+}
+window.jumpToSection = jumpToSection;
+
+/**
+ * Jump to pipeline and automatically activate the selected stage filter
+ */
+function jumpToRecruiterStage(stage, stageName) {
+    jumpToSection('candidate-pipeline-section', stageName);
+    const chip = document.querySelector(`.filter-chips .filter-pill[data-stage="${stage}"]`);
+    if (chip) {
+        setCandidateStageFilter(stage, chip);
+    }
+}
+window.jumpToRecruiterStage = jumpToRecruiterStage;
+
+/**
+ * Filter candidates by stage tab
+ */
+function setCandidateStageFilter(stage, btn) {
+    currentCandidateStage = stage;
+    document.querySelectorAll('.filter-chips .filter-pill').forEach(p => p.classList.remove('active'));
+    if (btn) btn.classList.add('active');
+    filterCandidatesTable();
+}
+
+/**
+ * Real-time filter for candidate pipeline table
+ */
+function filterCandidatesTable() {
+    const query = (document.getElementById('candidate-search-input')?.value || '').toLowerCase().trim();
+    const rows = document.querySelectorAll('#candidate-table-body .candidate-row');
+    let visibleCount = 0;
+
+    rows.forEach(row => {
+        const stage = row.getAttribute('data-stage') || '';
+        const searchText = row.getAttribute('data-search') || '';
+
+        const matchesStage = currentCandidateStage === 'all' || stage === currentCandidateStage;
+        const matchesQuery = !query || searchText.includes(query);
+
+        if (matchesStage && matchesQuery) {
+            row.style.display = '';
+            visibleCount++;
+        } else {
+            row.style.display = 'none';
+        }
+    });
+
+    const emptyNotice = document.getElementById('candidates-empty-filter');
+    if (emptyNotice) {
+        emptyNotice.style.display = visibleCount === 0 && rows.length > 0 ? '' : 'none';
+    }
+
+    const badgeCount = document.getElementById('candidates-visible-count');
+    if (badgeCount) {
+        badgeCount.innerText = `${visibleCount} Candidates`;
+    }
+}
+
+/**
+ * 1-Click candidate stage advancement with instant UI update
+ */
+async function advanceCandidate(appId, newStatus, candidateName) {
+    const cell = document.getElementById(`action-cell-${appId}`);
+    const badge = document.getElementById(`status-badge-${appId}`);
+    const row = document.getElementById(`app-row-${appId}`);
+
+    if (cell) {
+        cell.innerHTML = `<span style="font-size: 0.8rem; color: var(--text-dim);"><i data-lucide="loader-2" class="spin"></i> Updating...</span>`;
+        if (window.lucide) window.lucide.createIcons();
+    }
+
+    try {
+        const response = await fetch(`/api/applications/${appId}/status`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ status: newStatus })
+        });
+
+        const data = await response.json();
+        if (response.ok && data.success) {
+            if (badge) {
+                badge.className = `badge badge-${newStatus}`;
+                badge.innerText = newStatus.charAt(0).toUpperCase() + newStatus.slice(1);
+            }
+            if (row) {
+                row.setAttribute('data-stage', newStatus);
+            }
+            if (cell) {
+                cell.innerHTML = `
+                    <a href="{{ url_for('recruiter.schedule_view') }}" class="btn btn-outline btn-sm" style="color: var(--accent-iris); border-color: #E0D7FE;" title="Schedule interview">
+                        📅 Schedule
+                    </a>
+                `;
+            }
+
+            const kpiShort = document.getElementById('kpi-shortlisted-count');
+            if (kpiShort) {
+                const cur = parseInt(kpiShort.innerText) || 0;
+                kpiShort.innerText = cur + 1;
+            }
+
+            showGlobalToast(`⭐ ${candidateName} moved to '${newStatus}'!`);
+            if (window.lucide) window.lucide.createIcons();
+        } else {
+            showGlobalToast(`⚠️ ${data.error || 'Failed to update status'}`);
+            if (cell) cell.innerHTML = `<button type="button" class="btn btn-outline btn-sm" onclick="advanceCandidate(${appId}, '${newStatus}', '${candidateName}')">Retry</button>`;
+        }
+    } catch (err) {
+        console.error(err);
+        showGlobalToast("⚠️ Network issue updating candidate");
+        if (cell) cell.innerHTML = `<button type="button" class="btn btn-outline btn-sm" onclick="advanceCandidate(${appId}, '${newStatus}', '${candidateName}')">Retry</button>`;
+    }
+}
+</script>
+{% endblock %}

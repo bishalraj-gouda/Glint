@@ -1,0 +1,408 @@
+{% extends "base.html" %}
+
+{% block title %}Batch Resume Parser — PlacementIQ AI{% endblock %}
+
+{% block extra_css %}
+<style>
+    .upload-zone {
+        border: 2px dashed rgba(99, 102, 241, 0.4);
+        background: rgba(15, 23, 42, 0.5);
+        border-radius: 16px;
+        padding: 40px 24px;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+    .upload-zone:hover, .upload-zone.dragover {
+        border-color: #818cf8;
+        background: rgba(99, 102, 241, 0.08);
+        transform: translateY(-2px);
+    }
+    .candidate-card {
+        background: rgba(15, 23, 42, 0.7);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 14px;
+        padding: 18px;
+        margin-bottom: 12px;
+        transition: border-color 0.2s;
+    }
+    .candidate-card:hover {
+        border-color: rgba(99, 102, 241, 0.35);
+    }
+    .skill-tag {
+        display: inline-flex;
+        align-items: center;
+        padding: 3px 8px;
+        border-radius: 6px;
+        font-size: 11px;
+        background: rgba(99, 102, 241, 0.12);
+        color: #a5b4fc;
+        border: 1px solid rgba(99, 102, 241, 0.25);
+    }
+    .file-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        background: rgba(255, 255, 255, 0.06);
+        padding: 4px 10px;
+        border-radius: 6px;
+        font-size: 12px;
+        color: #cbd5e1;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header" style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 24px; flex-wrap: wrap; gap: 16px;">
+    <div>
+        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
+            <span class="badge" style="background: rgba(6, 182, 212, 0.2); color: #22d3ee; border: 1px solid rgba(6, 182, 212, 0.4);">
+                <i data-lucide="layers" style="width: 12px; height: 12px; vertical-align: middle;"></i> AI Talent Intake
+            </span>
+            <span class="badge" style="background: rgba(16, 185, 129, 0.15); color: #6ee7b7;">PDF & DOCX Multi-File Support</span>
+        </div>
+        <h1 class="page-title" style="font-family: 'Outfit', sans-serif; font-size: 28px; font-weight: 800; color: #ffffff; margin: 0;">
+            Batch Resume Intelligence Parser
+        </h1>
+        <p class="page-description" style="color: #94a3b8; font-size: 14px; margin-top: 6px;">
+            Upload dozens of applicant resumes simultaneously. AI extracts candidate profiles, maps core technical skills, and ranks candidate match against your job requisitions.
+        </p>
+    </div>
+
+    <div style="display: flex; gap: 10px;">
+        <a href="{{ url_for('recruiter.candidates_view') }}" class="btn btn-outline" style="display: inline-flex; align-items: center; gap: 6px; font-size: 13px;">
+            <i data-lucide="users" style="width: 15px; height: 15px;"></i> Candidate Pipeline
+        </a>
+    </div>
+</div>
+
+<!-- Upload & Requisition Card -->
+<div class="card" style="background: rgba(15, 23, 42, 0.8); border: 1px solid rgba(99, 102, 241, 0.25); border-radius: 18px; padding: 24px; margin-bottom: 28px;">
+    <form id="batch-upload-form" onsubmit="handleBatchUpload(event)">
+        <div style="display: grid; grid-template-columns: 1fr 300px; gap: 20px; align-items: start;" class="responsive-upload-grid">
+            <!-- Dropzone -->
+            <div>
+                <input type="file" id="resume-files-input" name="resumes" multiple accept=".pdf,.docx,.txt" style="display: none;" onchange="handleFileSelection(this)">
+                <div class="upload-zone" id="upload-dropzone" onclick="document.getElementById('resume-files-input').click()">
+                    <div style="width: 52px; height: 52px; border-radius: 14px; background: rgba(99, 102, 241, 0.15); display: flex; align-items: center; justify-content: center; margin: 0 auto 14px; color: #818cf8;">
+                        <i data-lucide="file-up" style="width: 26px; height: 26px;"></i>
+                    </div>
+                    <div style="font-size: 16px; font-weight: 700; color: #ffffff; margin-bottom: 4px;">
+                        Drop multiple resumes here or click to browse
+                    </div>
+                    <div style="font-size: 13px; color: #94a3b8;">
+                        Supports bulk PDF, DOCX, and TXT files (Up to 50 files per batch)
+                    </div>
+                    <div id="file-selection-list" style="margin-top: 14px; display: flex; flex-wrap: wrap; gap: 6px; justify-content: center;"></div>
+                </div>
+            </div>
+
+            <!-- Configuration Sidebar -->
+            <div style="background: rgba(30, 41, 59, 0.4); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 14px; padding: 18px;">
+                <label style="display: block; font-size: 12px; color: #94a3b8; font-weight: 600; text-transform: uppercase; margin-bottom: 8px;">
+                    Benchmark Against Job Requisition
+                </label>
+                <select id="target-job-select" name="job_id" class="form-control" style="background: #1e293b; color: #ffffff; border: 1px solid rgba(255, 255, 255, 0.15); border-radius: 10px; padding: 10px 12px; font-size: 13px; width: 100%; margin-bottom: 16px;">
+                    <option value="">-- No specific job (Extract Only) --</option>
+                    {% for job in jobs %}
+                    <option value="{{ job.id }}">{{ job.title }} ({{ job.role_category }})</option>
+                    {% endfor %}
+                </select>
+
+                <div style="font-size: 12px; color: #64748b; line-height: 1.5; margin-bottom: 18px;">
+                    Selecting a target job automatically evaluates skills overlap and calculates dynamic ATS match scores for every applicant.
+                </div>
+
+                <button type="submit" id="btn-start-parsing" class="btn btn-primary" style="width: 100%; padding: 12px; font-weight: 600; font-size: 14px; border-radius: 10px; display: flex; align-items: center; justify-content: center; gap: 8px;">
+                    <i data-lucide="zap" id="parse-btn-icon" style="width: 16px; height: 16px;"></i>
+                    <span id="parse-btn-text">Parse Resumes in Batch</span>
+                </button>
+            </div>
+        </div>
+    </form>
+</div>
+
+<!-- Results Section (Initially Hidden) -->
+<div id="results-wrapper" style="display: none;">
+    <!-- Metric Summary Cards -->
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 24px;">
+        <div class="card" style="background: rgba(15, 23, 42, 0.7); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 14px; padding: 18px; text-align: center;">
+            <div style="font-size: 11px; text-transform: uppercase; color: #94a3b8; font-weight: 600;">Resumes Processed</div>
+            <div id="stat-total" style="font-size: 32px; font-weight: 800; font-family: 'Outfit'; color: #ffffff; margin-top: 4px;">0</div>
+        </div>
+        <div class="card" style="background: rgba(15, 23, 42, 0.7); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 14px; padding: 18px; text-align: center;">
+            <div style="font-size: 11px; text-transform: uppercase; color: #94a3b8; font-weight: 600;">Successfully Extracted</div>
+            <div id="stat-success" style="font-size: 32px; font-weight: 800; font-family: 'Outfit'; color: #34d399; margin-top: 4px;">0</div>
+        </div>
+        <div class="card" style="background: rgba(15, 23, 42, 0.7); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 14px; padding: 18px; text-align: center;">
+            <div style="font-size: 11px; text-transform: uppercase; color: #94a3b8; font-weight: 600;">Avg Candidate Match</div>
+            <div id="stat-avg-match" style="font-size: 32px; font-weight: 800; font-family: 'Outfit'; color: #818cf8; margin-top: 4px;">0%</div>
+        </div>
+    </div>
+
+    <!-- Candidate List -->
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+        <h3 style="font-family: 'Outfit', sans-serif; font-size: 20px; font-weight: 700; color: #ffffff; margin: 0;">
+            Extracted Candidate Profiles
+        </h3>
+        <button type="button" class="btn btn-secondary btn-sm" onclick="importAllCandidates()">
+            <i data-lucide="user-plus" style="width: 14px; height: 14px;"></i> Add All to Recruitment Pipeline
+        </button>
+    </div>
+
+    <div id="candidates-container"></div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    let selectedFiles = [];
+    let parsedCandidatesList = [];
+
+    const dropzone = document.getElementById('upload-dropzone');
+    ['dragenter', 'dragover'].forEach(eventName => {
+        dropzone.addEventListener(eventName, (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            dropzone.classList.add('dragover');
+        });
+    });
+
+    ['dragleave', 'drop'].forEach(eventName => {
+        dropzone.addEventListener(eventName, (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            dropzone.classList.remove('dragover');
+        });
+    });
+
+    dropzone.addEventListener('drop', (e) => {
+        const dt = e.dataTransfer;
+        if (dt.files && dt.files.length > 0) {
+            selectedFiles = Array.from(dt.files);
+            renderSelectedFilesList();
+        }
+    });
+
+    function handleFileSelection(input) {
+        if (input.files && input.files.length > 0) {
+            selectedFiles = Array.from(input.files);
+            renderSelectedFilesList();
+        }
+    }
+
+    function renderSelectedFilesList() {
+        const container = document.getElementById('file-selection-list');
+        if (!container) return;
+        if (selectedFiles.length === 0) {
+            container.innerHTML = '';
+            return;
+        }
+        container.innerHTML = selectedFiles.slice(0, 8).map(f => `
+            <span class="file-badge">
+                <i data-lucide="file-text" style="width: 13px; height: 13px; color: #818cf8;"></i>
+                ${f.name}
+            </span>
+        `).join('') + (selectedFiles.length > 8 ? `<span class="file-badge">+${selectedFiles.length - 8} more</span>` : '');
+
+        if (window.lucide && typeof window.lucide.createIcons === 'function') {
+            window.lucide.createIcons();
+        }
+    }
+
+    async function handleBatchUpload(e) {
+        e.preventDefault();
+        if (selectedFiles.length === 0) {
+            alert('Please select or drag at least one resume file (.pdf, .docx, or .txt).');
+            return;
+        }
+
+        const formData = new FormData();
+        selectedFiles.forEach(f => {
+            formData.append('resumes', f);
+        });
+
+        const jobSelect = document.getElementById('target-job-select');
+        if (jobSelect && jobSelect.value) {
+            formData.append('job_id', jobSelect.value);
+        }
+
+        const btn = document.getElementById('btn-start-parsing');
+        const btnText = document.getElementById('parse-btn-text');
+        const btnIcon = document.getElementById('parse-btn-icon');
+
+        btn.disabled = true;
+        btnText.textContent = `Parsing ${selectedFiles.length} Resumes...`;
+        if (btnIcon) btnIcon.style.animation = 'spin 1s linear infinite';
+
+        try {
+            const res = await fetch("{{ url_for('recruiter.api_batch_parse_resumes') }}", {
+                method: 'POST',
+                body: formData
+            });
+
+            if (!res.ok) {
+                const err = await res.json();
+                throw new Error(err.error || 'Server error occurred');
+            }
+
+            const data = await res.json();
+            parsedCandidatesList = data.candidates || [];
+
+            renderResults(data);
+        } catch (err) {
+            console.error('Batch parse error:', err);
+            alert('Failed to parse resumes: ' + err.message);
+        } finally {
+            btn.disabled = false;
+            btnText.textContent = 'Parse Resumes in Batch';
+            if (btnIcon) btnIcon.style.animation = 'none';
+        }
+    }
+
+    function renderResults(data) {
+        const wrapper = document.getElementById('results-wrapper');
+        const container = document.getElementById('candidates-container');
+        if (!wrapper || !container) return;
+
+        wrapper.style.display = 'block';
+
+        const total = data.total_files || parsedCandidatesList.length;
+        const success = data.parsed_count || parsedCandidatesList.length;
+        const avgMatch = parsedCandidatesList.length > 0 ?
+            Math.round(parsedCandidatesList.reduce((acc, c) => acc + (c.match_score || 0), 0) / parsedCandidatesList.length) : 0;
+
+        document.getElementById('stat-total').textContent = total;
+        document.getElementById('stat-success').textContent = success;
+        document.getElementById('stat-avg-match').textContent = avgMatch + '%';
+
+        container.innerHTML = parsedCandidatesList.map((c, idx) => {
+            const skillsHtml = (c.skills || []).map(s => `<span class="skill-tag">${escapeHtml(s)}</span>`).join(' ');
+            const scoreColor = (c.match_score >= 80) ? '#34d399' : ((c.match_score >= 60) ? '#38bdf8' : '#f59e0b');
+
+            return `
+            <div class="candidate-card" id="candidate-card-${idx}">
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 14px;">
+                    <div style="display: flex; align-items: flex-start; gap: 14px;">
+                        <div style="width: 44px; height: 44px; border-radius: 12px; background: rgba(99, 102, 241, 0.15); display: flex; align-items: center; justify-content: center; color: #818cf8; font-weight: 700; font-size: 16px; flex-shrink: 0;">
+                            ${escapeHtml((c.name || 'C')[0])}
+                        </div>
+                        <div>
+                            <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+                                <h4 style="font-size: 17px; font-weight: 700; color: #ffffff; margin: 0;">${escapeHtml(c.name || 'Candidate')}</h4>
+                                <span class="badge" style="font-size: 11px; background: rgba(255, 255, 255, 0.06); color: #cbd5e1;">${escapeHtml(c.filename)}</span>
+                            </div>
+                            <div style="font-size: 13px; color: #94a3b8; margin: 4px 0;">
+                                ${escapeHtml(c.headline || 'Technical Candidate')} • ${escapeHtml(c.education || 'Degree')}
+                            </div>
+                            <div style="display: flex; gap: 16px; font-size: 12px; color: #64748b; flex-wrap: wrap;">
+                                ${c.email ? `<span><i data-lucide="mail" style="width: 12px; height: 12px; vertical-align: middle;"></i> ${escapeHtml(c.email)}</span>` : ''}
+                                ${c.phone ? `<span><i data-lucide="phone" style="width: 12px; height: 12px; vertical-align: middle;"></i> ${escapeHtml(c.phone)}</span>` : ''}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div style="text-align: right; min-width: 140px;">
+                        <div style="font-size: 11px; text-transform: uppercase; color: #94a3b8; font-weight: 600;">Job Match Score</div>
+                        <div style="font-size: 26px; font-weight: 800; font-family: 'Outfit'; color: ${scoreColor}; margin: 2px 0;">
+                            ${c.match_score || 70}%
+                        </div>
+                        <button type="button" class="btn btn-primary btn-sm" id="btn-import-${idx}" onclick="importSingleCandidate(${idx})" style="font-size: 11px; padding: 4px 10px;">
+                            <i data-lucide="user-check" style="width: 12px; height: 12px;"></i> Add to Pipeline
+                        </button>
+                    </div>
+                </div>
+
+                <div style="margin-top: 14px; padding-top: 12px; border-top: 1px solid rgba(255, 255, 255, 0.05);">
+                    <div style="font-size: 11px; text-transform: uppercase; color: #94a3b8; font-weight: 600; margin-bottom: 6px;">Extracted Skills</div>
+                    <div style="display: flex; flex-wrap: wrap; gap: 6px;">
+                        ${skillsHtml || '<span style="font-size: 12px; color: #64748b;">No specific skill keywords recognized.</span>'}
+                    </div>
+                </div>
+
+                ${c.summary ? `
+                <div style="margin-top: 10px; font-size: 12.5px; color: #cbd5e1; background: rgba(0, 0, 0, 0.2); padding: 8px 12px; border-radius: 8px;">
+                    ${escapeHtml(c.summary)}
+                </div>` : ''}
+            </div>`;
+        }).join('');
+
+        if (window.lucide && typeof window.lucide.createIcons === 'function') {
+            window.lucide.createIcons();
+        }
+
+        wrapper.scrollIntoView({ behavior: 'smooth' });
+    }
+
+    async function importSingleCandidate(idx) {
+        const candidate = parsedCandidatesList[idx];
+        if (!candidate) return;
+
+        const btn = document.getElementById(`btn-import-${idx}`);
+        if (btn) {
+            btn.disabled = true;
+            btn.textContent = 'Importing...';
+        }
+
+        const jobSelect = document.getElementById('target-job-select');
+        const jobId = jobSelect && jobSelect.value ? parseInt(jobSelect.value, 10) : null;
+
+        try {
+            const res = await fetch("{{ url_for('recruiter.api_import_parsed_candidate') }}", {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    candidate: candidate,
+                    job_id: jobId
+                })
+            });
+
+            if (!res.ok) throw new Error('Failed to import');
+            const data = await res.json();
+
+            if (btn) {
+                btn.className = 'btn btn-secondary btn-sm';
+                btn.innerHTML = '<i data-lucide="check" style="width: 12px; height: 12px; color: #34d399;"></i> Added';
+            }
+        } catch (e) {
+            console.error(e);
+            alert('Failed to import candidate: ' + e.message);
+            if (btn) {
+                btn.disabled = false;
+                btn.textContent = 'Retry Add';
+            }
+        } finally {
+            if (window.lucide && typeof window.lucide.createIcons === 'function') {
+                window.lucide.createIcons();
+            }
+        }
+    }
+
+    async function importAllCandidates() {
+        for (let i = 0; i < parsedCandidatesList.length; i++) {
+            await importSingleCandidate(i);
+        }
+    }
+
+    function escapeHtml(str) {
+        if (!str) return '';
+        return String(str)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#039;');
+    }
+</script>
+<style>
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+@media (max-width: 800px) {
+    .responsive-upload-grid {
+        grid-template-columns: 1fr !important;
+    }
+}
+</style>
+{% endblock %}

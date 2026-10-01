@@ -1,0 +1,244 @@
+{% extends "base.html" %}
+
+{% block title %}Build My Next Project — PlacementIQ AI{% endblock %}
+
+{% block extra_css %}
+<style>
+    .blueprint-hero {
+        background: linear-gradient(135deg, rgba(30, 27, 75, 0.7) 0%, rgba(15, 23, 42, 0.9) 100%);
+        border: 1px solid rgba(99, 102, 241, 0.3);
+        border-radius: 20px;
+        padding: 30px;
+        margin-bottom: 28px;
+        position: relative;
+    }
+    .stack-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 12px;
+        border-radius: 8px;
+        background: rgba(30, 41, 59, 0.6);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        font-size: 13px;
+        color: #e2e8f0;
+    }
+    .phase-step {
+        background: rgba(15, 23, 42, 0.65);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 12px;
+        padding: 18px;
+        margin-bottom: 12px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="project-gen-wrapper">
+    <!-- Header -->
+    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 24px; flex-wrap: wrap; gap: 16px;">
+        <div>
+            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 6px;">
+                <span class="badge" style="background: rgba(99, 102, 241, 0.2); color: #818cf8; border: 1px solid rgba(99, 102, 241, 0.4);">
+                    <i data-lucide="hammer" style="width: 13px; height: 13px; vertical-align: middle;"></i> Skill-Gap Bridging Architect
+                </span>
+                <span class="badge badge-shortlisted">Production Grade Blueprint</span>
+            </div>
+            <h1 style="font-family: 'Outfit', sans-serif; font-size: 30px; font-weight: 800; color: #ffffff; margin: 0;">
+                Build My Next Project
+            </h1>
+            <p style="color: #94a3b8; font-size: 14px; margin-top: 6px;">
+                Generate high-caliber, resume-defining portfolio architectures engineered specifically to eliminate your skill deficits.
+            </p>
+        </div>
+
+        <!-- Customizer Form -->
+        <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+            <select id="domain-select" class="form-control" style="background: #1e293b; color: #fff; border: 1px solid rgba(255,255,255,0.15); border-radius: 10px; padding: 10px 14px; font-size: 13px;">
+                <option value="Cloud Infrastructure & DevOps">Cloud Infrastructure & DevOps</option>
+                <option value="Fintech & High-Frequency Transactions">Fintech & Payments</option>
+                <option value="Developer Productivity Tools">Developer Tooling</option>
+                <option value="AI & Applied Machine Learning">AI & Applied Machine Learning</option>
+                <option value="Healthcare & Telemetry">Healthcare Systems</option>
+            </select>
+            <button class="btn btn-primary" id="btn-generate-project" style="display: flex; align-items: center; gap: 6px;">
+                <i data-lucide="sparkles" id="gen-icon" style="width: 15px; height: 15px;"></i>
+                <span>Architect Next Project</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Active Blueprint Display -->
+    {% set bp = initial_idea.blueprint %}
+    <div class="blueprint-hero" id="blueprint-container">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 16px; flex-wrap: wrap; gap: 12px;">
+            <div>
+                <span class="badge" style="background: rgba(14, 165, 233, 0.2); color: #38bdf8; border: 1px solid rgba(14, 165, 233, 0.4);" id="bp-domain">
+                    {{ bp.target_industry_domain }}
+                </span>
+                <h2 style="font-family: 'Outfit', sans-serif; font-size: 28px; font-weight: 800; color: #ffffff; margin: 8px 0 4px 0;" id="bp-title">
+                    {{ bp.title }}
+                </h2>
+                <div style="font-size: 15px; color: #cbd5e1; font-weight: 500;" id="bp-tagline">
+                    {{ bp.tagline }}
+                </div>
+            </div>
+        </div>
+
+        <!-- Problem Statement -->
+        <div style="background: rgba(15, 23, 42, 0.7); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 12px; padding: 16px; margin: 18px 0;">
+            <div style="font-size: 11px; text-transform: uppercase; color: #818cf8; font-weight: 700; margin-bottom: 4px;">Real-World Problem Statement</div>
+            <div style="font-size: 13.5px; color: #e2e8f0; line-height: 1.6;" id="bp-problem">
+                {{ bp.problem_statement }}
+            </div>
+        </div>
+
+        <!-- Tech Stack Grid -->
+        <div style="margin-bottom: 24px;">
+            <div style="font-size: 12px; text-transform: uppercase; color: #94a3b8; font-weight: 700; margin-bottom: 10px;">Recommended Technology Stack</div>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px;" id="bp-stack-grid">
+                <div class="stack-chip">
+                    <span style="color: #818cf8; font-weight: 600;">Frontend:</span> <span id="stack-frontend">{{ bp.recommended_tech_stack.frontend }}</span>
+                </div>
+                <div class="stack-chip">
+                    <span style="color: #34d399; font-weight: 600;">Backend:</span> <span id="stack-backend">{{ bp.recommended_tech_stack.backend }}</span>
+                </div>
+                <div class="stack-chip">
+                    <span style="color: #f59e0b; font-weight: 600;">Database:</span> <span id="stack-db">{{ bp.recommended_tech_stack.database }}</span>
+                </div>
+                <div class="stack-chip">
+                    <span style="color: #38bdf8; font-weight: 600;">DevOps:</span> <span id="stack-devops">{{ bp.recommended_tech_stack.devops_cloud }}</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Two Column Implementation & Resume Pitch -->
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px;" class="responsive-blueprint-split">
+            <!-- Implementation Roadmap -->
+            <div>
+                <h4 style="font-size: 16px; font-weight: 700; color: #ffffff; margin-bottom: 12px; display: flex; align-items: center; gap: 6px;">
+                    <i data-lucide="layers" style="width: 16px; height: 16px; color: #818cf8;"></i> Implementation Phases
+                </h4>
+                <div id="bp-phases-container">
+                    {% for ph in bp.implementation_phases %}
+                    <div class="phase-step">
+                        <div style="font-size: 13px; font-weight: 700; color: #c7d2fe; margin-bottom: 6px;">
+                            Phase {{ ph.phase }}: {{ ph.name }}
+                        </div>
+                        <ul style="margin: 0; padding-left: 20px; font-size: 12.5px; color: #94a3b8; line-height: 1.5;">
+                            {% for t in ph.tasks %}
+                            <li>{{ t }}</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Pitch & Resume Bullet Points -->
+            <div>
+                <h4 style="font-size: 16px; font-weight: 700; color: #ffffff; margin-bottom: 12px; display: flex; align-items: center; gap: 6px;">
+                    <i data-lucide="sparkles" style="width: 16px; height: 16px; color: #34d399;"></i> Ready-to-Use Placement Assets
+                </h4>
+
+                <!-- Resume Bullet -->
+                <div style="background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.25); border-radius: 12px; padding: 16px; margin-bottom: 16px;">
+                    <div style="font-size: 11px; text-transform: uppercase; color: #6ee7b7; font-weight: 700; margin-bottom: 4px;">
+                        📄 Ready-to-Paste Resume Bullet
+                    </div>
+                    <div style="font-size: 13px; color: #d1fae5; line-height: 1.5;" id="bp-resume-bullet">
+                        {{ bp.resume_bullet_point }}
+                    </div>
+                </div>
+
+                <!-- Interview Hook -->
+                <div style="background: rgba(14, 165, 233, 0.08); border: 1px solid rgba(14, 165, 233, 0.25); border-radius: 12px; padding: 16px;">
+                    <div style="font-size: 11px; text-transform: uppercase; color: #7dd3fc; font-weight: 700; margin-bottom: 4px;">
+                        🎙️ 30-Second Interview Pitch Hook
+                    </div>
+                    <div style="font-size: 13px; color: #e0f2fe; line-height: 1.5;" id="bp-interview-hook">
+                        {{ bp.interview_pitch_hook }}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const genBtn = document.getElementById('btn-generate-project');
+        const domainSelect = document.getElementById('domain-select');
+        const icon = document.getElementById('gen-icon');
+
+        if (genBtn) {
+            genBtn.addEventListener('click', async function() {
+                const domain = domainSelect.value;
+                genBtn.disabled = true;
+                icon.style.animation = 'spin 1s linear infinite';
+
+                try {
+                    const res = await fetch("{{ url_for('student_ai.api_generate_project') }}", {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ domain: domain })
+                    });
+
+                    if (res.ok) {
+                        const data = await res.json();
+                        const bp = data.blueprint;
+
+                        document.getElementById('bp-title').textContent = bp.title;
+                        document.getElementById('bp-tagline').textContent = bp.tagline;
+                        document.getElementById('bp-domain').textContent = bp.target_industry_domain;
+                        document.getElementById('bp-problem').textContent = bp.problem_statement;
+                        document.getElementById('stack-frontend').textContent = bp.recommended_tech_stack.frontend;
+                        document.getElementById('stack-backend').textContent = bp.recommended_tech_stack.backend;
+                        document.getElementById('stack-db').textContent = bp.recommended_tech_stack.database;
+                        document.getElementById('stack-devops').textContent = bp.recommended_tech_stack.devops_cloud;
+                        document.getElementById('bp-resume-bullet').textContent = bp.resume_bullet_point;
+                        document.getElementById('bp-interview-hook').textContent = bp.interview_pitch_hook;
+
+                        // Render phases
+                        const phasesContainer = document.getElementById('bp-phases-container');
+                        phasesContainer.innerHTML = '';
+                        (bp.implementation_phases || []).forEach(ph => {
+                            const step = document.createElement('div');
+                            step.className = 'phase-step';
+                            const tasksList = (ph.tasks || []).map(t => `<li>${t}</li>`).join('');
+                            step.innerHTML = `
+                                <div style="font-size: 13px; font-weight: 700; color: #c7d2fe; margin-bottom: 6px;">
+                                    Phase ${ph.phase}: ${ph.name}
+                                </div>
+                                <ul style="margin: 0; padding-left: 20px; font-size: 12.5px; color: #94a3b8; line-height: 1.5;">
+                                    ${tasksList}
+                                </ul>
+                            `;
+                            phasesContainer.appendChild(step);
+                        });
+                    }
+                } catch (e) {
+                    console.error(e);
+                    alert('Failed to generate project blueprint.');
+                } finally {
+                    genBtn.disabled = false;
+                    icon.style.animation = 'none';
+                }
+            });
+        }
+    });
+</script>
+<style>
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+@media (max-width: 900px) {
+    .responsive-blueprint-split {
+        grid-template-columns: 1fr !important;
+    }
+}
+</style>
+{% endblock %}

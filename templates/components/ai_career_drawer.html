@@ -1,0 +1,333 @@
+<!-- Floating AI Career Copilot Drawer Component -->
+<div id="ai-career-copilot-container">
+    <!-- Floating Trigger Pill -->
+    <button id="copilot-toggle-btn" class="copilot-pill" title="Open AI Career Copilot">
+        <div class="copilot-pulsing-dot"></div>
+        <i data-lucide="sparkles" style="width: 17px; height: 17px;"></i>
+        <span>AI Career Copilot</span>
+    </button>
+
+    <!-- Slide-out Drawer Panel -->
+    <div id="copilot-drawer" class="copilot-panel">
+        <!-- Header -->
+        <div class="copilot-header">
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <div class="copilot-avatar-icon">
+                    <i data-lucide="bot" style="width: 18px; height: 18px;"></i>
+                </div>
+                <div>
+                    <div style="font-weight: 700; color: #ffffff; font-size: 14px;">Glint AI Copilot</div>
+                    <div style="font-size: 11px; color: #34d399; display: flex; align-items: center; gap: 4px;">
+                        <span style="display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: #34d399;"></span>
+                        Grounded in your Career Profile
+                    </div>
+                </div>
+            </div>
+            <button id="copilot-close-btn" class="copilot-close" title="Close Drawer">
+                <i data-lucide="x" style="width: 16px; height: 16px;"></i>
+            </button>
+        </div>
+
+        <!-- Quick Prompt Chips -->
+        <div class="copilot-chips-bar">
+            <button class="copilot-chip" onclick="sendQuickPrompt('What is the fastest way to raise my Readiness Score?')">
+                🚀 Raise Score
+            </button>
+            <button class="copilot-chip" onclick="sendQuickPrompt('Suggest 2 high-impact projects for my skill gaps')">
+                💡 Project Ideas
+            </button>
+            <button class="copilot-chip" onclick="sendQuickPrompt('How do I prepare for upcoming campus interviews?')">
+                🎙️ Interview Tips
+            </button>
+        </div>
+
+        <!-- Message History Stream -->
+        <div id="copilot-messages" class="copilot-messages-container">
+            <div class="copilot-message copilot-ai">
+                <div class="copilot-bubble">
+                    Hello {{ session_display_name or 'there' }}! 👋 I'm your Glint Career Copilot. 
+                    I continuously track your academic coursework, technical skills, and project portfolio. 
+                    How can I help you accelerate your campus placement preparation today?
+                </div>
+            </div>
+        </div>
+
+        <!-- Chat Input Bar -->
+        <div class="copilot-input-bar">
+            <input type="text" id="copilot-input" placeholder="Ask about jobs, skill gaps, interview answers..." autocomplete="off">
+            <button id="copilot-send-btn" class="copilot-send" title="Send Message">
+                <i data-lucide="send" style="width: 15px; height: 15px;"></i>
+            </button>
+        </div>
+    </div>
+</div>
+
+<style>
+    .copilot-pill {
+        position: fixed;
+        bottom: 24px;
+        right: 24px;
+        z-index: 999;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 11px 20px;
+        border-radius: 9999px;
+        background: linear-gradient(135deg, #E76F51 0%, #F4A261 100%);
+        color: #ffffff;
+        border: none;
+        box-shadow: 0 8px 24px rgba(231, 111, 81, 0.4);
+        cursor: pointer;
+        font-family: 'Plus Jakarta Sans', sans-serif;
+        font-size: 13.5px;
+        font-weight: 700;
+        transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .copilot-pill:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 12px 28px rgba(231, 111, 81, 0.5);
+    }
+    .copilot-pulsing-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: #2D6A4F;
+        box-shadow: 0 0 8px #52B788;
+        animation: pulseDot 2s infinite;
+    }
+    @keyframes pulseDot {
+        0%, 100% { opacity: 1; transform: scale(1); }
+        50% { opacity: 0.5; transform: scale(0.8); }
+    }
+    .copilot-panel {
+        position: fixed;
+        bottom: 84px;
+        right: 24px;
+        width: 380px;
+        height: 520px;
+        background: #FFFFFF;
+        border: 1px solid #EAE3D7;
+        border-radius: 20px;
+        box-shadow: 0 18px 48px rgba(45, 35, 20, 0.15);
+        z-index: 1000;
+        display: none;
+        flex-direction: column;
+        overflow: hidden;
+    }
+    .copilot-panel.active {
+        display: flex;
+        animation: slideUpFade 0.25s ease-out;
+    }
+    @keyframes slideUpFade {
+        from { opacity: 0; transform: translateY(16px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    .copilot-header {
+        padding: 16px 18px;
+        border-bottom: 1px solid #EAE3D7;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        background: #FAF7F2;
+    }
+    .copilot-avatar-icon {
+        width: 32px;
+        height: 32px;
+        border-radius: 8px;
+        background: #FFF0EB;
+        color: #E76F51;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .copilot-close {
+        background: #FAF7F2;
+        border: none;
+        color: #888174;
+        cursor: pointer;
+        padding: 6px;
+        border-radius: 50%;
+    }
+    .copilot-close:hover {
+        background: #EAE3D7;
+        color: #1F1C18;
+    }
+    .copilot-chips-bar {
+        display: flex;
+        gap: 6px;
+        overflow-x: auto;
+        padding: 8px 14px;
+        background: #FFFDFC;
+        border-bottom: 1px solid #EAE3D7;
+    }
+    .copilot-chip {
+        flex-shrink: 0;
+        font-size: 11px;
+        font-weight: 600;
+        padding: 5px 11px;
+        border-radius: 14px;
+        background: #FAF7F2;
+        border: 1px solid #EAE3D7;
+        color: #555047;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+    .copilot-chip:hover {
+        background: #FFF0EB;
+        border-color: #E76F51;
+        color: #E76F51;
+    }
+    .copilot-messages-container {
+        flex: 1;
+        overflow-y: auto;
+        padding: 16px;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        background: #FAF7F2;
+    }
+    .copilot-message {
+        display: flex;
+        flex-direction: column;
+        max-width: 85%;
+    }
+    .copilot-message.copilot-ai {
+        align-self: flex-start;
+    }
+    .copilot-message.copilot-user {
+        align-self: flex-end;
+    }
+    .copilot-bubble {
+        padding: 10px 14px;
+        border-radius: 14px;
+        font-size: 13px;
+        line-height: 1.5;
+    }
+    .copilot-ai .copilot-bubble {
+        background: #FFFFFF;
+        border: 1px solid #EAE3D7;
+        color: #1F1C18;
+        box-shadow: 0 1px 3px rgba(30, 20, 10, 0.04);
+    }
+    .copilot-user .copilot-bubble {
+        background: #E76F51;
+        color: #ffffff;
+    }
+    .copilot-input-bar {
+        padding: 12px 14px;
+        border-top: 1px solid #EAE3D7;
+        display: flex;
+        gap: 8px;
+        background: #FFFFFF;
+    }
+    .copilot-input-bar input {
+        flex: 1;
+        background: #FAF7F2;
+        border: 1px solid #DCD3C4;
+        border-radius: 10px;
+        color: #1F1C18;
+        padding: 8px 12px;
+        font-size: 13px;
+        outline: none;
+    }
+    .copilot-input-bar input:focus {
+        border-color: #E76F51;
+    }
+    .copilot-send {
+        background: #E76F51;
+        border: none;
+        border-radius: 8px;
+        color: #ffffff;
+        padding: 8px 14px;
+        cursor: pointer;
+        font-weight: 600;
+    }
+</style>
+
+<script>
+    let copilotHistory = [];
+
+    document.addEventListener('DOMContentLoaded', function() {
+        const toggleBtn = document.getElementById('copilot-toggle-btn');
+        const drawer = document.getElementById('copilot-drawer');
+        const closeBtn = document.getElementById('copilot-close-btn');
+        const sendBtn = document.getElementById('copilot-send-btn');
+        const input = document.getElementById('copilot-input');
+        const messagesBox = document.getElementById('copilot-messages');
+
+        if (toggleBtn && drawer) {
+            toggleBtn.addEventListener('click', () => {
+                drawer.classList.toggle('active');
+                if (drawer.classList.contains('active') && input) input.focus();
+            });
+        }
+
+        if (closeBtn && drawer) {
+            closeBtn.addEventListener('click', () => drawer.classList.remove('active'));
+        }
+
+        async function handleSend() {
+            const text = input.value.trim();
+            if (!text) return;
+
+            // Append user bubble
+            appendMessage('user', text);
+            input.value = '';
+            copilotHistory.push({ role: 'user', content: text });
+
+            // Show typing indicator
+            const typingIndicator = document.createElement('div');
+            typingIndicator.className = 'copilot-message copilot-ai';
+            typingIndicator.id = 'copilot-typing';
+            typingIndicator.innerHTML = '<div class="copilot-bubble" style="font-style: italic; color: #94a3b8;">Analyzing your profile and readiness...</div>';
+            messagesBox.appendChild(typingIndicator);
+            messagesBox.scrollTop = messagesBox.scrollHeight;
+
+            try {
+                const response = await fetch("{{ url_for('student_ai.api_career_chat') }}", {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ message: text, history: copilotHistory })
+                });
+
+                typingIndicator.remove();
+
+                if (response.ok) {
+                    const data = await response.json();
+                    appendMessage('ai', data.response);
+                    copilotHistory.push({ role: 'assistant', content: data.response });
+                } else {
+                    appendMessage('ai', 'Sorry, I encountered an issue accessing your career profile. Please try again.');
+                }
+            } catch (e) {
+                if (typingIndicator) typingIndicator.remove();
+                appendMessage('ai', 'Network connection issue. Please check your connectivity.');
+            }
+        }
+
+        function appendMessage(role, text) {
+            const msg = document.createElement('div');
+            msg.className = `copilot-message copilot-${role}`;
+            // Convert simple newlines and bold markdown
+            let formatted = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+            formatted = formatted.replace(/\n/g, '<br>');
+            msg.innerHTML = `<div class="copilot-bubble">${formatted}</div>`;
+            messagesBox.appendChild(msg);
+            messagesBox.scrollTop = messagesBox.scrollHeight;
+        }
+
+        if (sendBtn) sendBtn.addEventListener('click', handleSend);
+        if (input) {
+            input.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') handleSend();
+            });
+        }
+
+        window.sendQuickPrompt = function(promptText) {
+            if (input) {
+                input.value = promptText;
+                handleSend();
+            }
+        };
+    });
+</script>

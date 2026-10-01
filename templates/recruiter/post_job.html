@@ -1,0 +1,372 @@
+{% extends "base.html" %}
+
+{% block title %}Post Opportunity — PlacementIQ AI{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1 class="page-title">Post New Opportunity</h1>
+        <p class="page-description">
+            Publish campus placement requisition for {{ company.name }} and configure AI matching criteria.
+        </p>
+    </div>
+    <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
+        <a href="{{ url_for('recruiter.candidates_view') }}" class="btn btn-outline btn-sm">
+            <i data-lucide="users" style="width: 15px; height: 15px;"></i>
+            Candidate Pipeline
+        </a>
+        <a href="{{ url_for('recruiter.dashboard') }}" class="btn btn-outline btn-sm">
+            <i data-lucide="arrow-left" style="width: 15px; height: 15px;"></i>
+            Back to Dashboard
+        </a>
+    </div>
+</div>
+
+<!-- Quick Template Fillers -->
+<div style="margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap; background: rgba(99, 102, 241, 0.08); border: 1px solid rgba(99, 102, 241, 0.2); padding: 0.85rem 1.25rem; border-radius: var(--radius-sm);">
+    <span style="font-size: 0.85rem; font-weight: 600; color: var(--accent-secondary); display: flex; align-items: center; gap: 0.4rem;">
+        <i data-lucide="sparkles" style="width: 16px; height: 16px;"></i>
+        Quick Pre-fill Template:
+    </span>
+    <button type="button" class="pill-btn" onclick="fillJobTemplate('fsd')">⚡ Full Stack Engineer (8-14 LPA)</button>
+    <button type="button" class="pill-btn" onclick="fillJobTemplate('ai')">⚡ AI / ML Engineer (10-18 LPA)</button>
+    <button type="button" class="pill-btn" onclick="fillJobTemplate('cloud')">⚡ Cloud & DevOps Engineer (9-15 LPA)</button>
+    <button type="button" class="pill-btn" onclick="fillJobTemplate('data')">⚡ Business Intelligence Analyst (7-11 LPA)</button>
+</div>
+
+<!-- Main Two-Column Layout -->
+<div style="display: grid; grid-template-columns: 2.2fr 1fr; gap: 1.75rem;">
+    <!-- Left: Job Form -->
+    <div class="glass-panel" style="margin-bottom: 0;">
+        <div class="panel-header">
+            <div class="panel-title">
+                <i data-lucide="file-plus-2" style="color: var(--accent-primary); width: 20px; height: 20px;"></i>
+                Requisition Details
+            </div>
+            <span class="badge badge-eligible">{{ company.name }}</span>
+        </div>
+
+        <form method="POST" action="{{ url_for('recruiter.post_job_view') }}" id="postJobForm">
+            <!-- Job Title -->
+            <div class="form-group">
+                <label class="form-label" for="jobTitle">Job Title / Designation *</label>
+                <input type="text" class="form-control" id="jobTitle" name="title" required placeholder="e.g. Associate Software Engineer, Cloud Architect" oninput="updatePreview()">
+            </div>
+
+            <!-- Role Category & Location -->
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                <div class="form-group">
+                    <label class="form-label" for="roleCategory">Role Category *</label>
+                    <select class="form-control" id="roleCategory" name="role_category" required onchange="updatePreview()">
+                        <option value="Software Development">Software Development</option>
+                        <option value="Data Science & Analytics">Data Science & Analytics</option>
+                        <option value="AI / Machine Learning">AI / Machine Learning</option>
+                        <option value="Cloud Infrastructure & DevOps">Cloud Infrastructure & DevOps</option>
+                        <option value="Cybersecurity & Networks">Cybersecurity & Networks</option>
+                        <option value="Product & QA Engineering">Product & QA Engineering</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="jobLocation">Work Location *</label>
+                    <input type="text" class="form-control" id="jobLocation" name="location" value="Bangalore / Hybrid" required placeholder="e.g. Bangalore, Hyderabad, Remote" oninput="updatePreview()">
+                </div>
+            </div>
+
+            <!-- Experience & CGPA Criteria -->
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                <div class="form-group">
+                    <label class="form-label" for="experienceLevel">Experience Level</label>
+                    <select class="form-control" id="experienceLevel" name="experience_level">
+                        <option value="Fresher (0-1 yrs)" selected>Fresher (0-1 yrs)</option>
+                        <option value="1-2 Years">1-2 Years</option>
+                        <option value="2-4 Years">2-4 Years</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="minCgpa">Minimum CGPA Cut-off *</label>
+                    <input type="number" step="0.1" min="0" max="10" class="form-control" id="minCgpa" name="min_cgpa" value="7.0" required oninput="updatePreview()">
+                </div>
+            </div>
+
+            <!-- Salary Range & Deadline -->
+            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem;">
+                <div class="form-group">
+                    <label class="form-label" for="salaryMin">Min CTC (LPA) *</label>
+                    <input type="number" step="0.5" min="1" max="100" class="form-control" id="salaryMin" name="salary_min" value="8.0" required oninput="updatePreview()">
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="salaryMax">Max CTC (LPA) *</label>
+                    <input type="number" step="0.5" min="1" max="100" class="form-control" id="salaryMax" name="salary_max" value="14.0" required oninput="updatePreview()">
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="deadline">Application Deadline</label>
+                    <input type="date" class="form-control" id="deadline" name="deadline">
+                </div>
+            </div>
+
+            <!-- Job Description -->
+            <div class="form-group">
+                <label class="form-label" for="jobDescription">Role Overview & Responsibilities *</label>
+                <textarea class="form-control" id="jobDescription" name="description" rows="5" required placeholder="Describe role requirements, team responsibilities, and expected outcomes..." oninput="updatePreview()"></textarea>
+            </div>
+
+            <!-- Skill Requirements Selection -->
+            <div class="form-group">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                    <label class="form-label" style="margin-bottom: 0;">Required Technical & Tool Competencies</label>
+                    <span style="font-size: 0.78rem; color: var(--accent-secondary);" id="selectedSkillCount">0 skills selected</span>
+                </div>
+                <p style="font-size: 0.8rem; color: var(--text-dim); margin-bottom: 0.6rem;">
+                    Click skills below to attach them to this opening. The AI Matching Engine uses these to score candidate fit.
+                </p>
+                
+                <div class="skill-chips-grid">
+                    {% for skill in skills %}
+                    <label class="skill-chip" id="chip-{{ skill.id }}">
+                        <input type="checkbox" name="skills" value="{{ skill.id }}" style="display: none;" onchange="toggleSkillChip(this, '{{ skill.id }}', '{{ skill.name }}')">
+                        <span>{{ skill.name }}</span>
+                        <span style="font-size: 0.7rem; color: var(--text-dim); text-transform: uppercase;">• {{ skill.category }}</span>
+                    </label>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Additional Custom Skills (Comma separated) -->
+            <div class="form-group">
+                <label class="form-label" for="customSkills">Additional Skills / Frameworks (comma-separated)</label>
+                <input type="text" class="form-control" id="customSkills" name="custom_skills" placeholder="e.g. Next.js, Redis, TailwindCSS, Kubernetes">
+            </div>
+
+            <!-- Form Actions -->
+            <div style="display: flex; gap: 1rem; align-items: center; margin-top: 2rem;">
+                <button type="submit" class="btn btn-primary" style="padding: 0.75rem 2rem;">
+                    <i data-lucide="send" style="width: 18px; height: 18px;"></i>
+                    Publish Campus Requisition
+                </button>
+                <button type="reset" class="btn btn-outline" onclick="resetSkillChips()">
+                    Reset Form
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Right: Live Preview & Existing Requisitions -->
+    <div>
+        <!-- Live Preview Card -->
+        <div class="glass-panel" style="border: 1px solid var(--border-glow); background: linear-gradient(180deg, rgba(22, 30, 49, 0.75) 0%, rgba(15, 23, 42, 0.9) 100%);">
+            <div class="panel-header">
+                <div class="panel-title" style="font-size: 0.95rem;">
+                    <i data-lucide="eye" style="color: var(--accent-secondary); width: 18px; height: 18px;"></i>
+                    Live Student View Preview
+                </div>
+                <span class="badge badge-eligible">Live</span>
+            </div>
+            
+            <div style="margin-bottom: 0.75rem;">
+                <div style="font-size: 1.15rem; font-weight: 700; color: #fff;" id="prevTitle">Job Title</div>
+                <div style="font-size: 0.85rem; color: var(--accent-secondary); margin-top: 0.2rem;" id="prevCompany">
+                    {{ company.name }} • <span id="prevLocation">Bangalore / Hybrid</span>
+                </div>
+            </div>
+
+            <div style="display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 1rem;">
+                <span class="badge badge-shortlisted" id="prevSalary">₹8.0 - 14.0 LPA</span>
+                <span class="badge badge-interview" id="prevCgpa">Min CGPA: 7.0</span>
+                <span class="badge badge-applied" id="prevCategory">Software Development</span>
+            </div>
+
+            <div style="font-size: 0.84rem; color: var(--text-muted); line-height: 1.5; margin-bottom: 1rem; max-height: 100px; overflow-hidden; text-overflow: ellipsis;" id="prevDesc">
+                Job responsibilities and criteria will appear here as you draft...
+            </div>
+
+            <div style="border-top: 1px solid var(--border-subtle); padding-top: 0.75rem;">
+                <div style="font-size: 0.75rem; text-transform: uppercase; color: var(--text-dim); margin-bottom: 0.5rem; font-weight: 600;">
+                    Target Competencies
+                </div>
+                <div id="prevSkills" style="display: flex; flex-wrap: wrap; gap: 0.4rem;">
+                    <span style="font-size: 0.78rem; color: var(--text-dim); font-style: italic;">No skills selected yet</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- AI Match System Explanation -->
+        <div class="glass-panel">
+            <div class="panel-header">
+                <div class="panel-title" style="font-size: 0.95rem;">
+                    <i data-lucide="cpu" style="color: var(--accent-purple); width: 18px; height: 18px;"></i>
+                    Explainable AI Matching
+                </div>
+            </div>
+            <p style="font-size: 0.82rem; color: var(--text-muted); line-height: 1.5; margin-bottom: 0.75rem;">
+                When you publish this role, PlacementIQ AI automatically evaluates every registered student:
+            </p>
+            <ul style="font-size: 0.8rem; color: var(--text-muted); padding-left: 1.25rem; line-height: 1.6;">
+                <li><strong style="color: #fff;">Skill Overlap (45%):</strong> Matches required skills against verified profile taxonomy</li>
+                <li><strong style="color: #fff;">Projects Fit (15%):</strong> Semantic match of student GitHub & portfolio repos</li>
+                <li><strong style="color: #fff;">Academic Cut-off (10%):</strong> Automatic filter on CGPA threshold</li>
+                <li><strong style="color: #fff;">Experience Fit (10%):</strong> Internship & practical project depth</li>
+            </ul>
+        </div>
+
+        <!-- Current Active Postings -->
+        <div class="glass-panel">
+            <div class="panel-header">
+                <div class="panel-title" style="font-size: 0.95rem;">
+                    <i data-lucide="briefcase" style="color: var(--accent-secondary); width: 18px; height: 18px;"></i>
+                    Active Requisitions ({{ existing_jobs|length }})
+                </div>
+            </div>
+            {% for j in existing_jobs %}
+            <div style="background: rgba(255, 255, 255, 0.02); border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); padding: 0.75rem; margin-bottom: 0.6rem;">
+                <div style="font-weight: 600; font-size: 0.88rem;">{{ j.title }}</div>
+                <div style="font-size: 0.78rem; color: var(--accent-secondary);">
+                    {{ j.salary_formatted }} • Min CGPA: {{ j.min_cgpa }}
+                </div>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 0.4rem; font-size: 0.75rem; color: var(--text-dim);">
+                    <span>Applicants: {{ j.applications|length }}</span>
+                    <a href="{{ url_for('recruiter.candidates_view', job_id=j.id) }}" style="color: var(--accent-primary); text-decoration: none; font-weight: 600;">
+                        View Pipeline →
+                    </a>
+                </div>
+            </div>
+            {% else %}
+            <p style="color: var(--text-dim); font-size: 0.82rem;">No existing job requisitions.</p>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<script>
+const selectedSkills = new Map();
+
+function toggleSkillChip(checkbox, skillId, skillName) {
+    const chip = document.getElementById('chip-' + skillId);
+    if (checkbox.checked) {
+        chip.classList.add('selected');
+        selectedSkills.set(skillId, skillName);
+    } else {
+        chip.classList.remove('selected');
+        selectedSkills.delete(skillId);
+    }
+    updateSelectedSkillsUI();
+}
+
+function resetSkillChips() {
+    selectedSkills.clear();
+    document.querySelectorAll('.skill-chip').forEach(c => c.classList.remove('selected'));
+    document.querySelectorAll('.skill-chip input').forEach(i => i.checked = false);
+    updateSelectedSkillsUI();
+    setTimeout(updatePreview, 100);
+}
+
+function updateSelectedSkillsUI() {
+    const countEl = document.getElementById('selectedSkillCount');
+    if (countEl) {
+        countEl.textContent = `${selectedSkills.size} skills selected`;
+    }
+    const prevSkills = document.getElementById('prevSkills');
+    if (prevSkills) {
+        if (selectedSkills.size === 0) {
+            prevSkills.innerHTML = '<span style="font-size: 0.78rem; color: var(--text-dim); font-style: italic;">No skills selected yet</span>';
+        } else {
+            let html = '';
+            selectedSkills.forEach((name) => {
+                html += `<span class="badge badge-eligible" style="font-size: 0.72rem; padding: 0.2rem 0.5rem;">${name}</span>`;
+            });
+            prevSkills.innerHTML = html;
+        }
+    }
+}
+
+function updatePreview() {
+    const title = document.getElementById('jobTitle').value || 'Job Title';
+    const loc = document.getElementById('jobLocation').value || 'Bangalore / Hybrid';
+    const minSal = document.getElementById('salaryMin').value || '8.0';
+    const maxSal = document.getElementById('salaryMax').value || '14.0';
+    const cgpa = document.getElementById('minCgpa').value || '7.0';
+    const cat = document.getElementById('roleCategory').value || 'Software Development';
+    const desc = document.getElementById('jobDescription').value || 'Job responsibilities and criteria will appear here as you draft...';
+
+    document.getElementById('prevTitle').textContent = title;
+    document.getElementById('prevLocation').textContent = loc;
+    document.getElementById('prevSalary').textContent = `₹${minSal} - ${maxSal} LPA`;
+    document.getElementById('prevCgpa').textContent = `Min CGPA: ${cgpa}`;
+    document.getElementById('prevCategory').textContent = cat;
+    document.getElementById('prevDesc').textContent = desc.slice(0, 160) + (desc.length > 160 ? '...' : '');
+}
+
+function fillJobTemplate(type) {
+    resetSkillChips();
+    const titleInput = document.getElementById('jobTitle');
+    const catSelect = document.getElementById('roleCategory');
+    const locInput = document.getElementById('jobLocation');
+    const expSelect = document.getElementById('experienceLevel');
+    const minCgpaInput = document.getElementById('minCgpa');
+    const minSalInput = document.getElementById('salaryMin');
+    const maxSalInput = document.getElementById('salaryMax');
+    const descInput = document.getElementById('jobDescription');
+
+    const selectSkillByName = (name) => {
+        document.querySelectorAll('.skill-chip').forEach(chip => {
+            const span = chip.querySelector('span');
+            if (span && span.textContent.trim().toLowerCase() === name.toLowerCase()) {
+                const cb = chip.querySelector('input');
+                cb.checked = true;
+                chip.classList.add('selected');
+                const id = cb.value;
+                selectedSkills.set(id, span.textContent.trim());
+            }
+        });
+    };
+
+    if (type === 'fsd') {
+        titleInput.value = 'Full Stack Software Engineer';
+        catSelect.value = 'Software Development';
+        locInput.value = 'Bangalore, India';
+        expSelect.value = 'Fresher (0-1 yrs)';
+        minCgpaInput.value = '7.5';
+        minSalInput.value = '8.5';
+        maxSalInput.value = '14.5';
+        descInput.value = 'Build scalable web applications, collaborate on modern frontend React micro-frontends, implement high-performance Node/Python backend REST APIs, and integrate relational databases.';
+        ['Python', 'JavaScript', 'React.js', 'Node.js', 'SQL', 'REST APIs', 'Git & GitHub'].forEach(selectSkillByName);
+    } else if (type === 'ai') {
+        titleInput.value = 'Associate AI / Machine Learning Engineer';
+        catSelect.value = 'AI / Machine Learning';
+        locInput.value = 'Bangalore / Hybrid';
+        expSelect.value = 'Fresher (0-1 yrs)';
+        minCgpaInput.value = '8.0';
+        minSalInput.value = '11.0';
+        maxSalInput.value = '18.0';
+        descInput.value = 'Design supervised and unsupervised ML architectures, train predictive models on tabular and time-series data, and deploy containerized model inference endpoints using Docker.';
+        ['Python', 'Machine Learning', 'Pandas & NumPy', 'Scikit-Learn', 'PyTorch', 'SQL', 'Docker'].forEach(selectSkillByName);
+    } else if (type === 'cloud') {
+        titleInput.value = 'Cloud Infrastructure & DevOps Associate';
+        catSelect.value = 'Cloud Infrastructure & DevOps';
+        locInput.value = 'Hyderabad, India';
+        expSelect.value = 'Fresher (0-1 yrs)';
+        minCgpaInput.value = '7.0';
+        minSalInput.value = '9.0';
+        maxSalInput.value = '15.0';
+        descInput.value = 'Implement Infrastructure-as-Code pipelines, manage AWS/GCP cloud environments, configure automated CI/CD workflows with GitHub Actions, and maintain Kubernetes container clusters.';
+        ['AWS', 'Google Cloud Platform', 'Docker', 'Kubernetes', 'Linux', 'Git & GitHub', 'Python'].forEach(selectSkillByName);
+    } else if (type === 'data') {
+        titleInput.value = 'Business Intelligence & Data Analyst';
+        catSelect.value = 'Data Science & Analytics';
+        locInput.value = 'Bangalore, India';
+        expSelect.value = 'Fresher (0-1 yrs)';
+        minCgpaInput.value = '7.0';
+        minSalInput.value = '7.5';
+        maxSalInput.value = '11.5';
+        descInput.value = 'Transform business requirements into interactive executive dashboards, write complex analytical SQL queries, perform exploratory data analysis, and communicate insights to leadership.';
+        ['SQL', 'Power BI', 'Tableau', 'Advanced Excel', 'Applied Statistics', 'Data Modeling'].forEach(selectSkillByName);
+    }
+
+    updateSelectedSkillsUI();
+    updatePreview();
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    updatePreview();
+});
+</script>
+{% endblock %}

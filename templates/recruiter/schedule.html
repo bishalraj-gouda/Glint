@@ -1,0 +1,455 @@
+{% extends "base.html" %}
+
+{% block title %}Interview Schedule — PlacementIQ AI{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1 class="page-title">Interview Schedule & Calendar</h1>
+        <p class="page-description">
+            Coordinate interview rounds, conduct technical assessments, and submit candidate scores for {{ company.name if company else 'your company' }}.
+        </p>
+    </div>
+    <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
+        <button type="button" class="btn btn-primary btn-sm" onclick="openScheduleModal()">
+            <i data-lucide="plus-circle" style="width: 15px; height: 15px;"></i>
+            Schedule Interview
+        </button>
+        <a href="{{ url_for('recruiter.candidates_view') }}" class="btn btn-outline btn-sm">
+            <i data-lucide="users" style="width: 15px; height: 15px;"></i>
+            Candidate Pipeline
+        </a>
+    </div>
+</div>
+
+<!-- Interview Summary KPIs -->
+<div class="kpi-grid">
+    <div class="kpi-card" style="border-left: 4px solid var(--accent-secondary);">
+        <div class="kpi-header">
+            <div class="kpi-title">Total Scheduled</div>
+            <div class="kpi-icon-wrap" style="color: var(--accent-secondary); background: rgba(6, 182, 212, 0.12);"><i data-lucide="calendar"></i></div>
+        </div>
+        <div class="kpi-value">{{ interviews|length }}</div>
+        <div class="kpi-subtext">Campus interview sessions</div>
+    </div>
+
+    <div class="kpi-card" style="border-left: 4px solid var(--status-info);">
+        <div class="kpi-header">
+            <div class="kpi-title">Upcoming Sessions</div>
+            <div class="kpi-icon-wrap" style="color: var(--status-info); background: rgba(59, 130, 246, 0.12);"><i data-lucide="clock"></i></div>
+        </div>
+        <div class="kpi-value">{{ upcoming_count }}</div>
+        <div class="kpi-subtext">Rounds pending completion</div>
+    </div>
+
+    <div class="kpi-card" style="border-left: 4px solid var(--status-success);">
+        <div class="kpi-header">
+            <div class="kpi-title">Completed & Evaluated</div>
+            <div class="kpi-icon-wrap" style="color: var(--status-success); background: rgba(16, 185, 129, 0.12);"><i data-lucide="check-circle-2"></i></div>
+        </div>
+        <div class="kpi-value">{{ completed_count }}</div>
+        <div class="kpi-subtext">Submitted scorecards</div>
+    </div>
+
+    <div class="kpi-card" style="border-left: 4px solid var(--status-warning);">
+        <div class="kpi-header">
+            <div class="kpi-title">Ready for Interview</div>
+            <div class="kpi-icon-wrap" style="color: var(--status-warning); background: rgba(245, 158, 11, 0.12);"><i data-lucide="user-plus"></i></div>
+        </div>
+        <div class="kpi-value">{{ eligible_candidates|length }}</div>
+        <div class="kpi-subtext">Shortlisted applicants to schedule</div>
+    </div>
+</div>
+
+<!-- Two-Column Layout -->
+<div style="display: grid; grid-template-columns: 2fr 1fr; gap: 1.75rem;">
+    <!-- Left: Scheduled Interviews List -->
+    <div>
+        <div class="glass-panel" style="margin-bottom: 0;">
+            <div class="panel-header">
+                <div class="panel-title">
+                    <i data-lucide="calendar-check" style="color: var(--accent-secondary); width: 20px; height: 20px;"></i>
+                    Interview Calendar
+                </div>
+                <div style="display: flex; gap: 0.5rem;">
+                    <a href="{{ url_for('recruiter.schedule_view') }}" class="btn btn-outline btn-sm {% if not filter_status or filter_status == 'all' %}active{% endif %}">
+                        All ({{ interviews|length }})
+                    </a>
+                    <a href="{{ url_for('recruiter.schedule_view', status='scheduled') }}" class="btn btn-outline btn-sm {% if filter_status == 'scheduled' %}active{% endif %}">
+                        Upcoming ({{ upcoming_count }})
+                    </a>
+                    <a href="{{ url_for('recruiter.schedule_view', status='completed') }}" class="btn btn-outline btn-sm {% if filter_status == 'completed' %}active{% endif %}">
+                        Completed ({{ completed_count }})
+                    </a>
+                </div>
+            </div>
+
+            {% for interview in interviews %}
+            <div style="background: rgba(255, 255, 255, 0.02); border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); padding: 1.25rem; margin-bottom: 1rem; transition: all 0.2s ease;">
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 0.75rem; margin-bottom: 0.75rem;">
+                    <!-- Candidate & Job -->
+                    <div style="display: flex; align-items: center; gap: 0.85rem;">
+                        <div style="width: 42px; height: 42px; border-radius: 50%; background: url('https://api.dicebear.com/7.x/avataaars/svg?seed={{ interview.application.student.roll_number }}') center/cover; border: 2px solid var(--accent-secondary); flex-shrink: 0;"></div>
+                        <div>
+                            <div style="font-weight: 700; font-size: 1rem; color: #fff;">
+                                {{ interview.application.student.name }}
+                            </div>
+                            <div style="font-size: 0.82rem; color: var(--text-muted);">
+                                {{ interview.application.job.title }} • {{ interview.application.student.department.code }} (CGPA: {{ "%.2f"|format(interview.application.student.cgpa or 0.0) }})
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Status & Round Badge -->
+                    <div style="display: flex; gap: 0.5rem; align-items: center;">
+                        <span class="badge badge-interview">
+                            Round {{ interview.round_number }}: {{ interview.interview_type | capitalize }}
+                        </span>
+                        <span class="badge {% if interview.status == 'completed' %}badge-selected{% elif interview.status == 'cancelled' %}badge-rejected{% else %}badge-eligible{% endif %}">
+                            {{ interview.status | capitalize }}
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Schedule Time & Interviewer Meta -->
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 0.75rem; margin-bottom: 1rem; background: rgba(0,0,0,0.2); padding: 0.75rem 1rem; border-radius: var(--radius-sm);">
+                    <div style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.84rem; color: var(--text-main);">
+                        <i data-lucide="calendar" style="width: 15px; height: 15px; color: var(--accent-secondary);"></i>
+                        <span>{{ interview.scheduled_date.strftime('%a, %d %B %Y') }}</span>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.84rem; color: var(--text-main);">
+                        <i data-lucide="clock" style="width: 15px; height: 15px; color: var(--accent-secondary);"></i>
+                        <span>{{ interview.scheduled_time }}</span>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.84rem; color: var(--text-muted);">
+                        <i data-lucide="user-check" style="width: 15px; height: 15px; color: var(--accent-primary);"></i>
+                        <span>{{ interview.interviewer_name }}</span>
+                    </div>
+                </div>
+
+                {% if interview.feedback or (interview.score is not none) %}
+                <div style="background: rgba(16, 185, 129, 0.08); border-left: 3px solid var(--status-success); padding: 0.6rem 0.85rem; border-radius: 0 var(--radius-sm) var(--radius-sm) 0; margin-bottom: 0.85rem; font-size: 0.82rem;">
+                    {% if interview.score is not none %}
+                    <div style="font-weight: 600; color: #6ee7b7; margin-bottom: 0.2rem;">
+                        Evaluation Score: {{ "%.0f"|format(interview.score) }}/100
+                    </div>
+                    {% endif %}
+                    <div style="color: var(--text-muted);">{{ interview.feedback or 'No notes recorded.' }}</div>
+                </div>
+                {% endif %}
+
+                <!-- Actions Bar -->
+                <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem;">
+                    <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                        {% if interview.meeting_link_or_venue %}
+                        <a href="{{ interview.meeting_link_or_venue }}" target="_blank" class="btn btn-outline btn-sm" style="color: var(--accent-secondary); border-color: rgba(6, 182, 212, 0.3);">
+                            <i data-lucide="video" style="width: 14px; height: 14px;"></i>
+                            Join Meeting Room
+                        </a>
+                        {% endif %}
+                        {% if interview.google_calendar_url %}
+                        <a href="{{ interview.google_calendar_url }}" target="_blank" class="btn btn-outline btn-sm" style="color: #60a5fa; border-color: rgba(96, 165, 250, 0.3);" title="Add to Google Calendar">
+                            <i data-lucide="calendar-plus" style="width: 14px; height: 14px;"></i>
+                            Google Calendar
+                        </a>
+                        {% endif %}
+                    </div>
+
+                    <div style="display: flex; gap: 0.5rem;">
+                        {% if interview.status == 'scheduled' %}
+                        <button type="button" class="btn btn-primary btn-sm evaluate-modal-trigger"
+                            data-interview-id="{{ interview.id }}"
+                            data-candidate-name="{{ interview.application.student.name|e }}"
+                            data-job-title="{{ interview.application.job.title|e }}"
+                            data-round-num="{{ interview.round_number }}"
+                            data-score="{{ interview.score if interview.score is not none else '' }}"
+                            data-feedback="{{ (interview.feedback or '')|e }}">
+                            <i data-lucide="clipboard-check" style="width: 14px; height: 14px;"></i> Evaluate & Complete
+                        </button>
+                        <form method="POST" action="{{ url_for('recruiter.update_interview', interview_id=interview.id) }}" style="display: inline;" onsubmit="return confirm('Cancel this interview?');">
+                            <input type="hidden" name="action" value="cancel">
+                            <button type="submit" class="btn btn-danger btn-sm" title="Cancel interview">
+                                <i data-lucide="x-circle" style="width: 14px; height: 14px;"></i> Cancel
+                            </button>
+                        </form>
+                        {% else %}
+                        <button type="button" class="btn btn-outline btn-sm evaluate-modal-trigger"
+                            data-interview-id="{{ interview.id }}"
+                            data-candidate-name="{{ interview.application.student.name|e }}"
+                            data-job-title="{{ interview.application.job.title|e }}"
+                            data-round-num="{{ interview.round_number }}"
+                            data-score="{{ interview.score if interview.score is not none else '' }}"
+                            data-feedback="{{ (interview.feedback or '')|e }}">
+                            <i data-lucide="edit-3" style="width: 14px; height: 14px;"></i> Edit Scorecard
+                        </button>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% else %}
+            <div style="text-align: center; padding: 3rem 1.5rem; color: var(--text-dim);">
+                <i data-lucide="calendar" style="width: 40px; height: 40px; margin-bottom: 0.75rem; opacity: 0.35;"></i>
+                <div style="font-size: 1rem; font-weight: 600; color: var(--text-muted); margin-bottom: 0.25rem;">No interview rounds scheduled yet</div>
+                <p style="font-size: 0.85rem; max-width: 360px; margin: 0 auto 1.25rem;">
+                    Schedule rounds for eligible and shortlisted candidates using the scheduling form on the right.
+                </p>
+                <button type="button" class="btn btn-primary btn-sm" onclick="openScheduleModal()">+ Schedule Candidate</button>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Right: Quick Schedule Form -->
+    <div>
+        <div class="glass-panel" id="scheduleFormCard">
+            <div class="panel-header">
+                <div class="panel-title" style="font-size: 1rem;">
+                    <i data-lucide="calendar-plus" style="color: var(--accent-primary); width: 18px; height: 18px;"></i>
+                    Schedule New Round
+                </div>
+            </div>
+
+            <form method="POST" action="{{ url_for('recruiter.schedule_view') }}" id="newInterviewForm">
+                <!-- Select Candidate -->
+                <div class="form-group">
+                    <label class="form-label" for="appSelect">Select Candidate *</label>
+                    <select class="form-control" id="appSelect" name="application_id" required>
+                        <option value="" disabled selected>-- Choose Applicant --</option>
+                        {% for app in eligible_candidates %}
+                        <option value="{{ app.id }}" {% if selected_candidate_id == app.id %}selected{% endif %}>
+                            {{ app.student.name }} — {{ app.job.title }} ({{ app.status | capitalize }})
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <!-- Date & Time -->
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem;">
+                    <div class="form-group">
+                        <label class="form-label" for="schedDate">Date *</label>
+                        <input type="date" class="form-control" id="schedDate" name="scheduled_date" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="schedTime">Time Slot *</label>
+                        <select class="form-control" id="schedTime" name="scheduled_time" required>
+                            <option value="10:00 AM">10:00 AM</option>
+                            <option value="11:30 AM">11:30 AM</option>
+                            <option value="02:00 PM" selected>02:00 PM</option>
+                            <option value="03:30 PM">03:30 PM</option>
+                            <option value="05:00 PM">05:00 PM</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Round & Type -->
+                <div style="display: grid; grid-template-columns: 1fr 1.5fr; gap: 0.75rem;">
+                    <div class="form-group">
+                        <label class="form-label" for="roundNum">Round #</label>
+                        <select class="form-control" id="roundNum" name="round_number">
+                            <option value="1" selected>Round 1</option>
+                            <option value="2">Round 2</option>
+                            <option value="3">Round 3</option>
+                            <option value="4">Round 4</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="interviewType">Type *</label>
+                        <select class="form-control" id="interviewType" name="interview_type" required>
+                            <option value="technical" selected>Technical</option>
+                            <option value="coding">Coding Assessment</option>
+                            <option value="hr">HR & Cultural Fit</option>
+                            <option value="managerial">Managerial Discussion</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Interviewer -->
+                <div class="form-group">
+                    <label class="form-label" for="interviewerName">Interviewer / Panel Name</label>
+                    <input type="text" class="form-control" id="interviewerName" name="interviewer_name" value="{{ recruiter.name if recruiter else 'Technical Panel' }} (Technical Lead)" placeholder="e.g. Lead Engineer, Senior Recruiter">
+                </div>
+
+                <!-- Meeting Link -->
+                <div class="form-group">
+                    <label class="form-label" for="meetingVenue">Meeting Link or Campus Venue</label>
+                    <input type="text" class="form-control" id="meetingVenue" name="meeting_link_or_venue" value="https://meet.google.com/placementiq-interview" placeholder="Google Meet link or Room Number">
+                </div>
+
+                <!-- Submit Button -->
+                <button type="submit" class="btn btn-primary" style="width: 100%; padding: 0.75rem;">
+                    <i data-lucide="calendar-check" style="width: 16px; height: 16px;"></i>
+                    Schedule & Notify Candidate
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Evaluation & Scorecard Modal -->
+<div class="modal-backdrop" id="evaluateModal">
+    <div class="modal-dialog">
+        <div class="modal-header">
+            <div class="modal-title">
+                <i data-lucide="award" style="color: var(--status-success); width: 20px; height: 20px;"></i>
+                Candidate Evaluation Scorecard
+            </div>
+            <button type="button" class="modal-close-btn" onclick="closeEvaluateModal()">
+                <i data-lucide="x" style="width: 18px; height: 18px;"></i>
+            </button>
+        </div>
+        <form method="POST" id="evaluateForm">
+            <div class="modal-body">
+                <div style="margin-bottom: 1.25rem;">
+                    <div id="evalCandidateName" style="font-size: 1.1rem; font-weight: 700; color: #fff;">Candidate</div>
+                    <div id="evalJobDetails" style="font-size: 0.85rem; color: var(--accent-secondary);">Role • Round</div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="evalScore">Technical & Overall Score (0 to 100) *</label>
+                    <input type="number" min="0" max="100" class="form-control" id="evalScore" name="score" required placeholder="e.g. 85">
+                </div>
+
+                <div class="form-group">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.35rem;">
+                        <label class="form-label" for="evalFeedback" style="margin-bottom: 0;">Interviewer Feedback & Notes</label>
+                        <button type="button" class="btn btn-outline btn-sm" id="btnAIEvalHelper" onclick="generateAIEvalSummary()" style="font-size: 0.74rem; padding: 2px 10px; color: #38bdf8; border-color: rgba(56, 189, 248, 0.4); display: flex; align-items: center; gap: 4px;">
+                            <i data-lucide="sparkles" id="aiEvalSparkleIcon" style="width: 12px; height: 12px;"></i>
+                            <span id="aiEvalBtnText">AI Evaluation Summary</span>
+                        </button>
+                    </div>
+                    <textarea class="form-control" id="evalFeedback" name="feedback" rows="4" placeholder="Candidate's technical depth, problem-solving skills, and recommendation for next round or offer..."></textarea>
+                    <div style="font-size: 0.72rem; color: var(--text-dim); margin-top: 4px;">
+                        💡 Click <strong>AI Evaluation Summary</strong> to automatically draft a polished assessment from candidate's profile and your score.
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="advanceStage">Candidate Pipeline Next Step</label>
+                    <select class="form-control" id="advanceStage" name="advance_status">
+                        <option value="interview" selected>Keep in Interview Stage</option>
+                        <option value="selected">Select / Recommend Offer</option>
+                        <option value="placed">Confirm Placement / Hired</option>
+                        <option value="rejected">Reject Candidate</option>
+                    </select>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline btn-sm" onclick="closeEvaluateModal()">Cancel</button>
+                <button type="submit" class="btn btn-primary btn-sm">
+                    <i data-lucide="check" style="width: 14px; height: 14px;"></i> Save Evaluation
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+let currentEvaluatingInterviewId = null;
+
+document.addEventListener('DOMContentLoaded', () => {
+    // Set default date to tomorrow
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    const dateInput = document.getElementById('schedDate');
+    if (dateInput && !dateInput.value) {
+        dateInput.value = tomorrow.toISOString().split('T')[0];
+    }
+
+    // Attach click listeners to all evaluate triggers safely
+    document.querySelectorAll('.evaluate-modal-trigger').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const d = this.dataset;
+            openEvaluateModal(
+                d.interviewId,
+                d.candidateName,
+                d.jobTitle,
+                d.roundNum,
+                d.score,
+                d.feedback
+            );
+        });
+    });
+});
+
+function openScheduleModal() {
+    const card = document.getElementById('scheduleFormCard');
+    if (card) {
+        card.scrollIntoView({ behavior: 'smooth' });
+        const appSelect = document.getElementById('appSelect');
+        if (appSelect) appSelect.focus();
+    }
+}
+
+function openEvaluateModal(interviewId, candidateName, jobTitle, roundNum, currentScore, currentFeedback) {
+    currentEvaluatingInterviewId = interviewId;
+    document.getElementById('evalCandidateName').textContent = candidateName;
+    document.getElementById('evalJobDetails').textContent = `${jobTitle} • Round ${roundNum}`;
+    document.getElementById('evalScore').value = currentScore || '';
+    document.getElementById('evalFeedback').value = currentFeedback || '';
+    document.getElementById('evaluateForm').action = `/recruiter/schedule/${interviewId}/update`;
+
+    const modal = document.getElementById('evaluateModal');
+    if (modal) {
+        modal.classList.add('show');
+    }
+    if (window.lucide) window.lucide.createIcons();
+}
+
+async function generateAIEvalSummary() {
+    if (!currentEvaluatingInterviewId) return;
+
+    const scoreInput = document.getElementById('evalScore');
+    const feedbackArea = document.getElementById('evalFeedback');
+    const stageSelect = document.getElementById('advanceStage');
+    const btn = document.getElementById('btnAIEvalHelper');
+    const btnText = document.getElementById('aiEvalBtnText');
+
+    const originalText = btnText.textContent;
+    btn.disabled = true;
+    btnText.textContent = 'Generating...';
+
+    try {
+        const res = await fetch('/recruiter/ai/api/evaluation-summary', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                interview_id: currentEvaluatingInterviewId,
+                score: scoreInput.value || 75,
+                draft_notes: feedbackArea.value || ''
+            })
+        });
+
+        const data = await res.json();
+        if (data.formatted_feedback) {
+            feedbackArea.value = data.formatted_feedback;
+        }
+        if (data.recommended_status && stageSelect) {
+            stageSelect.value = data.recommended_status;
+        }
+        btnText.textContent = '✓ Summary Generated!';
+        setTimeout(() => {
+            btnText.textContent = originalText;
+            btn.disabled = false;
+        }, 2500);
+    } catch (e) {
+        alert('Could not generate AI evaluation summary. Please try again.');
+        btnText.textContent = originalText;
+        btn.disabled = false;
+    }
+}
+
+function closeEvaluateModal() {
+    const modal = document.getElementById('evaluateModal');
+    if (modal) {
+        modal.classList.remove('show');
+    }
+}
+
+window.addEventListener('click', (e) => {
+    const modal = document.getElementById('evaluateModal');
+    if (e.target === modal) {
+        closeEvaluateModal();
+    }
+});
+</script>
+{% endblock %}

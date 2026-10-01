@@ -1,0 +1,328 @@
+{% extends "base.html" %}
+
+{% block title %}Placement Command Dashboard — Glint{% endblock %}
+
+{% block extra_css %}
+<style>
+    .admin-kpi-clickable {
+        cursor: pointer;
+        transition: transform 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
+    }
+    .admin-kpi-clickable:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 6px 16px rgba(35, 25, 15, 0.06);
+    }
+    .quick-status-strip {
+        background: var(--bg-card, #FFFDFC);
+        border: 1px solid var(--border-subtle, #EAE3D7);
+        border-radius: var(--radius-md, 14px);
+        padding: 1rem 1.4rem;
+        margin-bottom: 1.75rem;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+        flex-wrap: wrap;
+        box-shadow: var(--shadow-sm, 0 1px 3px rgba(35, 25, 15, 0.04));
+    }
+    .branch-progress-bar {
+        height: 6px;
+        background: var(--border-subtle, #EAE3D7);
+        border-radius: 999px;
+        overflow: hidden;
+        margin-top: 6px;
+    }
+    .branch-progress-fill {
+        height: 100%;
+        background: linear-gradient(90deg, var(--accent-coral, #E76F51), #F4A261);
+        border-radius: 999px;
+        transition: width 0.4s ease;
+    }
+    .admin-panel-card {
+        background: var(--bg-card, #FFFDFC);
+        border: 1px solid var(--border-subtle, #EAE3D7);
+        border-radius: 16px;
+        padding: 22px;
+        box-shadow: var(--shadow-sm, 0 1px 3px rgba(35, 25, 15, 0.04));
+    }
+    .quick-export-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 12px;
+        border-radius: 8px;
+        background: var(--bg-surface, #FAF7F2);
+        border: 1px solid var(--border-subtle, #EAE3D7);
+        color: var(--text-dim, #5C5248);
+        font-size: 12.5px;
+        font-weight: 600;
+        text-decoration: none;
+        transition: all 0.15s ease;
+    }
+    .quick-export-chip:hover {
+        background: #FFF0EB;
+        border-color: var(--accent-coral, #E76F51);
+        color: var(--accent-coral, #E76F51);
+    }
+    @media (max-width: 900px) {
+        .admin-dual-grid {
+            grid-template-columns: 1fr !important;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="admin-dashboard-wrapper">
+    <!-- Header -->
+    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 24px; flex-wrap: wrap; gap: 16px;">
+        <div>
+            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
+                <span class="badge" style="background: #FFF0EB; color: var(--accent-coral, #E76F51); border: 1px solid rgba(231, 111, 81, 0.3); font-weight: 700;">
+                    <i data-lucide="layout-dashboard" style="width: 13px; height: 13px; vertical-align: middle;"></i> Institutional Command
+                </span>
+                <span class="badge" style="background: #EDF7F2; color: #2D6A4F; font-weight: 600;">
+                    <span style="display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: #2D6A4F; margin-right: 4px;"></span>
+                    Drive Season 2025–2026
+                </span>
+            </div>
+            <h1 style="font-family: var(--font-display, 'Outfit'); font-size: 28px; font-weight: 800; color: var(--text-main, #23190F); margin: 0;">
+                Campus Placement Dashboard
+            </h1>
+            <p style="color: var(--text-dim, #5C5248); font-size: 14px; margin-top: 4px;">
+                Institutional placement operations, recruiter engagement, and student career telemetry.
+            </p>
+        </div>
+
+        <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+            <a href="{{ url_for('admin.database_view') }}" class="btn btn-outline" style="display: inline-flex; align-items: center; gap: 6px;" title="Manage entire relational database">
+                <i data-lucide="database" style="width: 15px; height: 15px;"></i>
+                <span>Database Manager</span>
+            </a>
+            <a href="{{ url_for('admin.analytics_view') }}" class="btn btn-primary" style="display: inline-flex; align-items: center; gap: 6px;" title="Deep dive placement analytics">
+                <i data-lucide="bar-chart-3" style="width: 15px; height: 15px;"></i>
+                <span>Placement Analytics</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- Clickable Interactive Bento KPIs -->
+    <div class="kpi-grid" style="margin-bottom: 22px;">
+        <!-- Card 1: Total Enrolled -> Clicks to Students Table -->
+        <div class="kpi-card admin-kpi-clickable" onclick="window.location.href='{{ url_for('admin.database_view', table='students') }}';" style="border-top: 4px solid var(--accent-coral, #E76F51);" title="Click to view all student profiles in Database Manager">
+            <div class="kpi-header">
+                <div class="kpi-title">Total Enrolled</div>
+                <div class="kpi-icon-wrap" style="background: #FFF0EB; color: var(--accent-coral, #E76F51);">
+                    <i data-lucide="graduation-cap"></i>
+                </div>
+            </div>
+            <div class="kpi-value">{{ kpis.total_students }}</div>
+            <div class="kpi-subtext" style="display: flex; justify-content: space-between; align-items: center;">
+                <span>{{ kpis.eligible_students }} Eligible (CGPA &ge; 6.5)</span>
+                <i data-lucide="arrow-right" style="width: 13px; height: 13px; opacity: 0.6;"></i>
+            </div>
+        </div>
+
+        <!-- Card 2: Placement Rate -> Clicks to Analytics -->
+        <div class="kpi-card admin-kpi-clickable" onclick="window.location.href='{{ url_for('admin.analytics_view') }}';" style="border-top: 4px solid var(--accent-sage, #2D6A4F);" title="Click to view placement compensation & funnel analytics">
+            <div class="kpi-header">
+                <div class="kpi-title">Placement Rate</div>
+                <div class="kpi-icon-wrap" style="background: #EDF7F2; color: var(--accent-sage, #2D6A4F);">
+                    <i data-lucide="trending-up"></i>
+                </div>
+            </div>
+            <div class="kpi-value" style="color: var(--accent-sage, #2D6A4F);">{{ kpis.placement_rate }}%</div>
+            <div class="kpi-subtext" style="display: flex; justify-content: space-between; align-items: center;">
+                <span>{{ kpis.total_placed }} Candidates Placed</span>
+                <i data-lucide="arrow-right" style="width: 13px; height: 13px; opacity: 0.6;"></i>
+            </div>
+        </div>
+
+        <!-- Card 3: Partner Companies -> Clicks to Companies Table -->
+        <div class="kpi-card admin-kpi-clickable" onclick="window.location.href='{{ url_for('admin.database_view', table='companies') }}';" style="border-top: 4px solid #F4A261;" title="Click to view partner companies in Database Manager">
+            <div class="kpi-header">
+                <div class="kpi-title">Partner Companies</div>
+                <div class="kpi-icon-wrap" style="background: #FFF7ED; color: #EA580C;">
+                    <i data-lucide="building"></i>
+                </div>
+            </div>
+            <div class="kpi-value">{{ kpis.active_companies }}</div>
+            <div class="kpi-subtext" style="display: flex; justify-content: space-between; align-items: center;">
+                <span>{{ kpis.active_recruiters }} Registered Recruiters</span>
+                <i data-lucide="arrow-right" style="width: 13px; height: 13px; opacity: 0.6;"></i>
+            </div>
+        </div>
+
+        <!-- Card 4: Total Applications -> Clicks to Applications Table -->
+        <div class="kpi-card admin-kpi-clickable" onclick="window.location.href='{{ url_for('admin.database_view', table='applications') }}';" style="border-top: 4px solid #818cf8;" title="Click to view application pipeline in Database Manager">
+            <div class="kpi-header">
+                <div class="kpi-title">Total Applications</div>
+                <div class="kpi-icon-wrap" style="background: #EEF2FF; color: #6366f1;">
+                    <i data-lucide="send"></i>
+                </div>
+            </div>
+            <div class="kpi-value">{{ kpis.total_applications }}</div>
+            <div class="kpi-subtext" style="display: flex; justify-content: space-between; align-items: center;">
+                <span>{{ kpis.active_jobs }} Active Job Drives</span>
+                <i data-lucide="arrow-right" style="width: 13px; height: 13px; opacity: 0.6;"></i>
+            </div>
+        </div>
+    </div>
+
+    <!-- Institutional Placement Status & Quick Navigation Strip -->
+    <div class="quick-status-strip">
+        <div style="display: flex; align-items: center; gap: 1rem;">
+            <div style="width: 38px; height: 38px; border-radius: var(--radius-sm, 10px); background: #FAF7F2; border: 1px solid var(--border-subtle, #EAE3D7); color: var(--accent-coral, #E76F51); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                <i data-lucide="activity" style="width: 18px; height: 18px;"></i>
+            </div>
+            <div>
+                <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 2px;">
+                    <span class="badge" style="background: #EDF7F2; color: #2D6A4F; font-size: 11px; font-weight: 700;">
+                        <span style="display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: #2D6A4F; margin-right: 4px;"></span>
+                        Campaign Health: On Track
+                    </span>
+                    <span style="font-size: 12.5px; color: var(--text-dim, #8C8278);">Overall Campus Conversion: <strong style="color: var(--text-main, #23190F);">{{ kpis.placement_rate }}%</strong></span>
+                </div>
+                <div style="font-size: 13.5px; font-weight: 600; color: var(--text-main, #23190F);">
+                    {{ kpis.total_placed }} candidate placements confirmed across {{ kpis.active_companies }} partner companies with {{ kpis.active_jobs }} active on-campus requisitions.
+                </div>
+            </div>
+        </div>
+
+        <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+            <a href="{{ url_for('admin.skills_view') }}" class="btn btn-outline btn-sm" style="display: inline-flex; align-items: center; gap: 5px;">
+                <i data-lucide="cpu" style="width: 13px; height: 13px;"></i> Campus Skill Gaps
+            </a>
+            <a href="{{ url_for('admin.database_view') }}" class="btn btn-outline btn-sm" style="display: inline-flex; align-items: center; gap: 5px;">
+                <i data-lucide="database" style="width: 13px; height: 13px;"></i> Manage Database
+            </a>
+        </div>
+    </div>
+
+    <!-- Dual Content Grid: Confirmed Placements & Department Branches -->
+    <div style="display: grid; grid-template-columns: 1.7fr 1.3fr; gap: 24px;" class="admin-dual-grid">
+        <!-- Left: Recent Confirmed Placements -->
+        <div class="admin-panel-card">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <i data-lucide="award" style="color: var(--accent-sage, #2D6A4F); width: 20px; height: 20px;"></i>
+                    <h3 style="font-family: var(--font-display, 'Outfit'); font-size: 17px; font-weight: 800; color: var(--text-main, #23190F); margin: 0;">
+                        Recent Confirmed Placements
+                    </h3>
+                </div>
+                <span class="badge" style="background: #EDF7F2; color: #2D6A4F; font-weight: 600;">{{ recent_placements|length }} Recent Offers</span>
+            </div>
+
+            <div style="overflow-x: auto;">
+                <table class="data-table" style="width: 100%; border-collapse: collapse; font-size: 13.5px;">
+                    <thead>
+                        <tr style="border-bottom: 1px solid var(--border-subtle, #EAE3D7); text-align: left;">
+                            <th style="padding: 10px 12px; color: var(--text-dim, #5C5248); font-size: 11.5px; text-transform: uppercase;">Candidate</th>
+                            <th style="padding: 10px 12px; color: var(--text-dim, #5C5248); font-size: 11.5px; text-transform: uppercase;">Hiring Company</th>
+                            <th style="padding: 10px 12px; color: var(--text-dim, #5C5248); font-size: 11.5px; text-transform: uppercase;">Role</th>
+                            <th style="padding: 10px 12px; color: var(--text-dim, #5C5248); font-size: 11.5px; text-transform: uppercase;">Package</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for p in recent_placements %}
+                        <tr style="border-bottom: 1px solid var(--border-subtle, #EAE3D7);">
+                            <td style="padding: 12px;">
+                                <div style="font-weight: 700; color: var(--text-main, #23190F);">{{ p.student.name }}</div>
+                                <div style="font-size: 12px; color: var(--text-dim, #8C8278);">{{ p.student.roll_number }} • {{ p.student.department.code }}</div>
+                            </td>
+                            <td style="padding: 12px; font-weight: 500; color: var(--text-main, #23190F);">{{ p.company.name }}</td>
+                            <td style="padding: 12px; color: var(--text-dim, #5C5248);">{{ p.job.title }}</td>
+                            <td style="padding: 12px;">
+                                <span class="badge" style="background: #EDF7F2; color: #2D6A4F; font-weight: 700; font-size: 12px;">
+                                    ₹{{ "%.1f"|format(p.package_lpa) }} LPA
+                                </span>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="4" style="text-align: center; color: var(--text-dim, #8C8278); padding: 30px;">
+                                No placements confirmed yet for this cohort.
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <div style="margin-top: 14px; text-align: right;">
+                <a href="{{ url_for('admin.database_view', table='placements') }}" style="font-size: 13px; font-weight: 600; color: var(--accent-coral, #E76F51); text-decoration: none; display: inline-flex; align-items: center; gap: 4px;">
+                    View All {{ kpis.total_placed }} Placements in Database <i data-lucide="arrow-right" style="width: 14px; height: 14px;"></i>
+                </a>
+            </div>
+        </div>
+
+        <!-- Right: Academic Branches & Distribution -->
+        <div class="admin-panel-card">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <i data-lucide="layers" style="color: var(--accent-coral, #E76F51); width: 20px; height: 20px;"></i>
+                    <h3 style="font-family: var(--font-display, 'Outfit'); font-size: 17px; font-weight: 800; color: var(--text-main, #23190F); margin: 0;">
+                        Academic Branches
+                    </h3>
+                </div>
+                <span class="badge" style="background: #FAF7F2; border: 1px solid var(--border-subtle, #EAE3D7); color: var(--text-main, #23190F); font-weight: 700;">
+                    {{ departments|length }} Departments
+                </span>
+            </div>
+
+            <div style="display: flex; flex-direction: column; gap: 14px;">
+                {% for dept in departments %}
+                {% set dept_students = dept.students.count() %}
+                {% set dept_pct = ((dept_students / (kpis.total_students or 1)) * 100)|round|int %}
+                <div style="padding: 10px 14px; background: var(--bg-surface, #FAF7F2); border-radius: 10px; border: 1px solid var(--border-subtle, #EAE3D7);">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <span style="font-weight: 800; font-size: 14px; color: var(--text-main, #23190F);">{{ dept.code }}</span>
+                            <span style="font-size: 12px; color: var(--text-dim, #5C5248); margin-left: 6px;">{{ dept.name }}</span>
+                        </div>
+                        <span class="badge" style="background: #FFFDFC; border: 1px solid var(--border-subtle, #EAE3D7); color: var(--text-main, #23190F); font-weight: 700; font-size: 11px;">
+                            {{ dept_students }} Students ({{ dept_pct }}%)
+                        </span>
+                    </div>
+                    <div class="branch-progress-bar">
+                        <div class="branch-progress-fill" style="width: {{ dept_pct }}%;"></div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+
+            <div style="margin-top: 16px; text-align: right;">
+                <a href="{{ url_for('admin.database_view', table='departments') }}" style="font-size: 13px; font-weight: 600; color: var(--accent-coral, #E76F51); text-decoration: none; display: inline-flex; align-items: center; gap: 4px;">
+                    Manage Departments in Database <i data-lucide="arrow-right" style="width: 14px; height: 14px;"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bottom Quick Institutional Data Export Bar -->
+    <div style="margin-top: 24px; padding: 14px 20px; background: var(--bg-card, #FFFDFC); border: 1px solid var(--border-subtle, #EAE3D7); border-radius: 12px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+        <div style="display: flex; align-items: center; gap: 8px;">
+            <i data-lucide="download" style="width: 16px; height: 16px; color: var(--accent-coral, #E76F51);"></i>
+            <span style="font-size: 13px; font-weight: 700; color: var(--text-main, #23190F);">One-Click Institutional Data Exports:</span>
+        </div>
+        <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+            <a href="{{ url_for('admin.export_table_csv', table_name='placements') }}" class="quick-export-chip">
+                <i data-lucide="file-spreadsheet" style="width: 13px; height: 13px;"></i>
+                Placements CSV
+            </a>
+            <a href="{{ url_for('admin.export_table_csv', table_name='students') }}" class="quick-export-chip">
+                <i data-lucide="file-spreadsheet" style="width: 13px; height: 13px;"></i>
+                Student Batch CSV
+            </a>
+            <a href="{{ url_for('admin.export_table_csv', table_name='companies') }}" class="quick-export-chip">
+                <i data-lucide="file-spreadsheet" style="width: 13px; height: 13px;"></i>
+                Companies CSV
+            </a>
+            <a href="{{ url_for('admin.export_table_csv', table_name='jobs') }}" class="quick-export-chip">
+                <i data-lucide="file-spreadsheet" style="width: 13px; height: 13px;"></i>
+                Job Drives CSV
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

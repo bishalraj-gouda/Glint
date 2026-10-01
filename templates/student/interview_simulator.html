@@ -1,0 +1,553 @@
+{% extends "base.html" %}
+
+{% block title %}AI Interview Simulator — PlacementIQ AI{% endblock %}
+
+{% block extra_css %}
+<style>
+    .interview-studio {
+        display: grid;
+        grid-template-columns: 1fr 340px;
+        gap: 24px;
+    }
+    .stage-card {
+        background: rgba(15, 23, 42, 0.75);
+        border: 1px solid rgba(99, 102, 241, 0.25);
+        border-radius: 20px;
+        padding: 28px;
+        position: relative;
+    }
+    .question-box {
+        background: linear-gradient(135deg, rgba(30, 27, 75, 0.4) 0%, rgba(15, 23, 42, 0.8) 100%);
+        border: 1px solid rgba(99, 102, 241, 0.3);
+        border-radius: 14px;
+        padding: 22px;
+        margin: 18px 0;
+    }
+    .answer-textarea {
+        width: 100%;
+        min-height: 180px;
+        background: rgba(15, 23, 42, 0.8);
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        border-radius: 12px;
+        color: #ffffff;
+        font-family: 'Inter', sans-serif;
+        font-size: 14px;
+        line-height: 1.6;
+        padding: 16px;
+        resize: vertical;
+        box-sizing: border-box;
+    }
+    .answer-textarea:focus {
+        outline: none;
+        border-color: #818cf8;
+        box-shadow: 0 0 15px rgba(99, 102, 241, 0.3);
+    }
+    .score-chip {
+        display: inline-flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 8px 16px;
+        border-radius: 12px;
+        background: rgba(15, 23, 42, 0.7);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    .score-chip .val {
+        font-family: 'Outfit', sans-serif;
+        font-size: 20px;
+        font-weight: 700;
+        color: #ffffff;
+    }
+    .score-chip .lbl {
+        font-size: 11px;
+        text-transform: uppercase;
+        color: #94a3b8;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="interview-page-wrapper">
+    <!-- Header -->
+    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 24px; flex-wrap: wrap; gap: 16px;">
+        <div>
+            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 6px;">
+                <span class="badge" style="background: rgba(99, 102, 241, 0.2); color: #818cf8; border: 1px solid rgba(99, 102, 241, 0.4);">
+                    <i data-lucide="video" style="width: 13px; height: 13px; vertical-align: middle;"></i> Real-Time AI Technical Evaluator
+                </span>
+                <span class="badge badge-shortlisted">Multi-Turn Adaptive Scoring</span>
+            </div>
+            <h1 style="font-family: 'Outfit', sans-serif; font-size: 30px; font-weight: 800; color: #ffffff; margin: 0;">
+                AI Mock Interview Simulator Studio
+            </h1>
+            <p style="color: #94a3b8; font-size: 14px; margin-top: 6px;">
+                Practice realistic technical and behavioral rounds with instant 3-axis critique and exemplary answer breakdowns.
+            </p>
+        </div>
+    </div>
+
+    <!-- Main Studio Grid -->
+    <div class="interview-studio">
+        <!-- Live Interview Stage -->
+        <div class="stage-card">
+            <!-- Setup State (When no session active) -->
+            <div id="setup-view">
+                <h3 style="font-family: 'Outfit', sans-serif; font-size: 20px; font-weight: 700; color: #ffffff; margin-bottom: 16px;">
+                    Configure Your Placement Practice Session
+                </h3>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px;">
+                    <div>
+                        <label style="font-size: 13px; color: #cbd5e1; font-weight: 600; display: block; margin-bottom: 6px;">Target Role Title</label>
+                        <input type="text" id="role-input" class="form-control" value="Software Development Engineer" style="background: #1e293b; color: #fff; border: 1px solid rgba(255,255,255,0.15); border-radius: 10px; padding: 10px 14px; width: 100%; box-sizing: border-box;">
+                    </div>
+                    <div>
+                        <label style="font-size: 13px; color: #cbd5e1; font-weight: 600; display: block; margin-bottom: 6px;">Interview Track</label>
+                        <select id="track-input" class="form-control" style="background: #1e293b; color: #fff; border: 1px solid rgba(255,255,255,0.15); border-radius: 10px; padding: 10px 14px; width: 100%; box-sizing: border-box;">
+                            <option value="technical">Technical Architecture & DSA</option>
+                            <option value="behavioral">Behavioral & STAR Leadership</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div style="background: rgba(30, 41, 59, 0.5); border-radius: 12px; padding: 16px; margin-bottom: 24px; border: 1px solid rgba(255,255,255,0.06);">
+                    <div style="font-size: 13px; color: #e2e8f0; font-weight: 600; margin-bottom: 4px;">🎯 What to expect:</div>
+                    <ul style="color: #94a3b8; font-size: 13px; margin: 0; padding-left: 20px; line-height: 1.6;">
+                        <li>Dynamic questions calibrated to top tier tech companies (Amazon, Microsoft, Tier-1 Product firms)</li>
+                        <li>Live evaluation across Technical Accuracy, Communication Clarity, and Depth & Completeness</li>
+                        <li>Exemplary model answers so you learn how high-performing engineers structure their points</li>
+                    </ul>
+                </div>
+
+                <button class="btn btn-primary" id="btn-start-session" style="padding: 12px 24px; font-size: 15px; font-weight: 600; display: inline-flex; align-items: center; gap: 8px;">
+                    <i data-lucide="play" style="width: 16px; height: 16px;"></i>
+                    <span>Launch AI Mock Interview Session</span>
+                </button>
+            </div>
+
+            <!-- Active Question View (Hidden by default) -->
+            <div id="active-session-view" style="display: none;">
+                <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.08); padding-bottom: 14px; margin-bottom: 16px;">
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <span class="badge badge-shortlisted" id="q-counter">Question 1 of 4</span>
+                        <span class="badge" style="background: rgba(99, 102, 241, 0.2); color: #818cf8;" id="q-category">Category</span>
+                    </div>
+                    <button class="btn btn-outline btn-sm" id="btn-hint" style="font-size: 12px;">
+                        <i data-lucide="help-circle" style="width: 13px; height: 13px;"></i> View Hint
+                    </button>
+                </div>
+
+                <div id="hint-box" style="display: none; background: rgba(245, 158, 11, 0.1); border: 1px solid rgba(245, 158, 11, 0.25); border-radius: 8px; padding: 10px 14px; font-size: 13px; color: #fde68a; margin-bottom: 14px;">
+                    💡 <span id="hint-text"></span>
+                </div>
+
+                <div class="question-box">
+                    <div style="font-size: 11px; text-transform: uppercase; color: #818cf8; font-weight: 700; margin-bottom: 6px;">Interviewer Prompt:</div>
+                    <h3 style="font-family: 'Outfit', sans-serif; font-size: 18px; font-weight: 600; color: #ffffff; line-height: 1.5; margin: 0;" id="q-text">
+                        Loading interview prompt...
+                    </h3>
+                </div>
+
+                <!-- Answer Input Area -->
+                <div style="margin-bottom: 16px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                        <label style="font-size: 13px; color: #cbd5e1; font-weight: 600; margin: 0;">
+                            Your Technical Explanation:
+                        </label>
+                        <button type="button" id="btn-mic-toggle" class="btn btn-outline btn-sm" style="font-size: 12px; display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-color: rgba(239, 68, 68, 0.4); color: #fca5a5;">
+                            <i data-lucide="mic" id="mic-icon" style="width: 14px; height: 14px;"></i>
+                            <span id="mic-label">Record Voice Answer</span>
+                        </button>
+                    </div>
+                    <div id="mic-status-bar" style="display: none; font-size: 12px; color: #ef4444; background: rgba(239, 68, 68, 0.1); border-radius: 6px; padding: 6px 12px; margin-bottom: 8px; align-items: center; gap: 8px;">
+                        <span style="display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #ef4444; animation: pulse 1s infinite;"></span>
+                        Listening live... Speak clearly into your microphone.
+                    </div>
+                    <textarea class="answer-textarea" id="answer-input" placeholder="Structure your answer clearly. Explain concepts, edge cases, trade-offs, and practical examples... or speak using the voice recording button above."></textarea>
+                </div>
+
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <div style="font-size: 12px; color: #64748b;" id="char-counter">0 words written</div>
+                    <button class="btn btn-primary" id="btn-submit-answer" style="display: flex; align-items: center; gap: 8px;">
+                        <i data-lucide="send" id="submit-icon" style="width: 15px; height: 15px;"></i>
+                        <span>Submit for AI Evaluation</span>
+                    </button>
+                </div>
+
+                <!-- Evaluation & Feedback Area (Appears after answer submission) -->
+                <div id="evaluation-card" style="display: none; margin-top: 24px; background: rgba(30, 41, 59, 0.7); border: 1px solid rgba(99, 102, 241, 0.3); border-radius: 16px; padding: 22px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 12px;">
+                        <h4 style="font-size: 16px; font-weight: 700; color: #ffffff; margin: 0; display: flex; align-items: center; gap: 8px;">
+                            <i data-lucide="award" style="width: 18px; height: 18px; color: #818cf8;"></i> AI Performance Score
+                        </h4>
+                        <!-- 4 Axis Scores -->
+                        <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                            <div class="score-chip">
+                                <span class="val" id="score-accuracy" style="color: #6ee7b7;">--</span>
+                                <span class="lbl">Technical</span>
+                            </div>
+                            <div class="score-chip">
+                                <span class="val" id="score-clarity" style="color: #93c5fd;">--</span>
+                                <span class="lbl">Clarity</span>
+                            </div>
+                            <div class="score-chip">
+                                <span class="val" id="score-confidence" style="color: #f472b6;">--</span>
+                                <span class="lbl">Confidence</span>
+                            </div>
+                            <div class="score-chip">
+                                <span class="val" id="score-depth" style="color: #fcd34d;">--</span>
+                                <span class="lbl">Depth</span>
+                            </div>
+                            <div class="score-chip" style="border-color: #6366f1;">
+                                <span class="val" id="score-overall" style="color: #c084fc;">--</span>
+                                <span class="lbl">Overall</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Adaptive Follow-Up Probing Alert if applicable -->
+                    <div id="followup-probe-box" style="display: none; background: rgba(99, 102, 241, 0.15); border: 1px solid rgba(99, 102, 241, 0.35); border-radius: 10px; padding: 12px 14px; margin-bottom: 14px;">
+                        <div style="font-size: 11px; text-transform: uppercase; color: #a5b4fc; font-weight: 700; margin-bottom: 4px;">Dynamic Probing Follow-Up:</div>
+                        <div id="followup-probe-text" style="font-size: 13px; color: #e0e7ff;"></div>
+                    </div>
+
+                    <!-- Feedback Text -->
+                    <div style="margin-bottom: 16px;">
+                        <div style="font-size: 12px; text-transform: uppercase; color: #94a3b8; font-weight: 600; margin-bottom: 4px;">Constructive Critique:</div>
+                        <div style="font-size: 13.5px; color: #e2e8f0; line-height: 1.6;" id="critique-text"></div>
+                    </div>
+
+                    <!-- Model Answer Box -->
+                    <div style="background: rgba(15, 23, 42, 0.6); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 10px; padding: 14px; margin-bottom: 20px;">
+                        <div style="font-size: 11px; text-transform: uppercase; color: #38bdf8; font-weight: 700; margin-bottom: 4px;">
+                            ⭐ Exemplary Model Answer (Tier-1 Benchmark)
+                        </div>
+                        <div style="font-size: 13px; color: #94a3b8; line-height: 1.6;" id="model-answer-text"></div>
+                    </div>
+
+                    <button class="btn btn-primary" id="btn-next-step" style="width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px;">
+                        <span>Continue to Next Question</span>
+                        <i data-lucide="arrow-right" style="width: 16px; height: 16px;"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Completed Debrief Summary / Final Scorecard -->
+            <div id="session-summary-view" style="display: none; padding: 24px 16px;">
+                <div style="text-align: center; margin-bottom: 24px;">
+                    <div style="width: 72px; height: 72px; border-radius: 50%; background: rgba(16, 185, 129, 0.2); border: 2px solid #34d399; display: flex; align-items: center; justify-content: center; margin: 0 auto 16px; color: #34d399;">
+                        <i data-lucide="award" style="width: 36px; height: 36px;"></i>
+                    </div>
+                    <h2 style="font-family: 'Outfit', sans-serif; font-size: 26px; font-weight: 800; color: #ffffff; margin-bottom: 6px;">
+                        Placement Mock Scorecard
+                    </h2>
+                    <div style="font-size: 46px; font-weight: 800; font-family: 'Outfit'; color: #818cf8; margin-bottom: 6px;" id="final-avg-score">
+                        --
+                    </div>
+                    <p style="color: #cbd5e1; font-size: 14px; max-width: 520px; margin: 0 auto;" id="final-summary-verdict">
+                        You have successfully completed this practice round. Keep practicing across diverse system domains.
+                    </p>
+                </div>
+
+                <!-- 4 Metrics Breakdown Card -->
+                <div style="background: rgba(15, 23, 42, 0.7); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 16px; padding: 18px; margin-bottom: 20px;">
+                    <h4 style="font-size: 14px; font-weight: 700; color: #ffffff; margin: 0 0 12px 0;">Evaluation Breakdown</h4>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 10px;">
+                        <div class="score-chip" style="padding: 10px;">
+                            <span class="val" id="final-metric-tech" style="color: #6ee7b7; font-size: 18px;">--</span>
+                            <span class="lbl" style="font-size: 10px;">Technical</span>
+                        </div>
+                        <div class="score-chip" style="padding: 10px;">
+                            <span class="val" id="final-metric-clarity" style="color: #93c5fd; font-size: 18px;">--</span>
+                            <span class="lbl" style="font-size: 10px;">Clarity</span>
+                        </div>
+                        <div class="score-chip" style="padding: 10px;">
+                            <span class="val" id="final-metric-conf" style="color: #f472b6; font-size: 18px;">--</span>
+                            <span class="lbl" style="font-size: 10px;">Confidence</span>
+                        </div>
+                        <div class="score-chip" style="padding: 10px;">
+                            <span class="val" id="final-metric-depth" style="color: #fcd34d; font-size: 18px;">--</span>
+                            <span class="lbl" style="font-size: 10px;">Depth</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div style="display: flex; justify-content: center; gap: 12px;">
+                    <button class="btn btn-outline" onclick="window.location.reload();">Practice Another Round</button>
+                    <a href="{{ url_for('student.dashboard') }}" class="btn btn-primary">View Readiness Score</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar: Interview Track History -->
+        <div>
+            <div class="card" style="background: rgba(15, 23, 42, 0.7); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 16px; padding: 20px;">
+                <h4 style="font-family: 'Outfit', sans-serif; font-size: 16px; font-weight: 700; color: #ffffff; margin-bottom: 14px; display: flex; align-items: center; gap: 8px;">
+                    <i data-lucide="history" style="width: 16px; height: 16px; color: #818cf8;"></i> Session History
+                </h4>
+                {% if history %}
+                <div style="display: flex; flex-direction: column; gap: 10px;">
+                    {% for sess in history %}
+                    <div style="background: rgba(30, 41, 59, 0.4); border-radius: 10px; padding: 12px; border-left: 3px solid {% if sess.total_score >= 75 %}#10b981{% elif sess.total_score >= 50 %}#f59e0b{% else %}#ef4444{% endif %};">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <div style="font-size: 13px; font-weight: 600; color: #ffffff;">{{ sess.role_title }}</div>
+                            <span class="badge badge-{% if sess.total_score >= 75 %}shortlisted{% else %}pending{% endif %}" style="font-size: 11px;">
+                                {{ sess.total_score }}/100
+                            </span>
+                        </div>
+                        <div style="font-size: 11px; color: #64748b; margin-top: 4px;">{{ sess.interview_type | capitalize }} · {{ sess.created_at }}</div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div style="text-align: center; color: #64748b; font-size: 13px; padding: 24px 0;">
+                    No past sessions yet.<br>Start your first mock interview above!
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    let currentSessionId = null;
+    let currentQuestionData = null;
+    let isLastQuestion = false;
+
+    document.addEventListener('DOMContentLoaded', function() {
+        const startBtn = document.getElementById('btn-start-session');
+        const submitBtn = document.getElementById('btn-submit-answer');
+        const nextBtn = document.getElementById('btn-next-step');
+        const answerInput = document.getElementById('answer-input');
+        const hintBtn = document.getElementById('btn-hint');
+        const hintBox = document.getElementById('hint-box');
+        const micBtn = document.getElementById('btn-mic-toggle');
+        const micStatusBar = document.getElementById('mic-status-bar');
+        const micLabel = document.getElementById('mic-label');
+
+        // Speech Recognition setup (Web Speech API)
+        let recognition = null;
+        let isRecording = false;
+
+        const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
+        if (SpeechRec) {
+            recognition = new SpeechRec();
+            recognition.continuous = true;
+            recognition.interimResults = true;
+            recognition.lang = 'en-US';
+
+            recognition.onresult = function(event) {
+                let interimTranscript = '';
+                for (let i = event.resultIndex; i < event.results.length; ++i) {
+                    if (event.results[i].isFinal) {
+                        answerInput.value += (answerInput.value ? ' ' : '') + event.results[i][0].transcript;
+                    } else {
+                        interimTranscript += event.results[i][0].transcript;
+                    }
+                }
+                const words = answerInput.value.trim().split(/\s+/).filter(w => w.length > 0);
+                document.getElementById('char-counter').textContent = words.length + ' words written';
+            };
+
+            recognition.onerror = function(event) {
+                console.warn('Speech recognition error:', event.error);
+                stopRecording();
+            };
+
+            recognition.onend = function() {
+                if (isRecording) {
+                    stopRecording();
+                }
+            };
+        }
+
+        function stopRecording() {
+            isRecording = false;
+            if (recognition) recognition.stop();
+            if (micStatusBar) micStatusBar.style.display = 'none';
+            if (micLabel) micLabel.textContent = 'Record Voice Answer';
+            if (micBtn) micBtn.style.background = 'transparent';
+        }
+
+        if (micBtn) {
+            micBtn.addEventListener('click', function() {
+                if (!SpeechRec) {
+                    alert('Speech recognition is not supported in this browser. You can type your response directly.');
+                    return;
+                }
+                if (isRecording) {
+                    stopRecording();
+                } else {
+                    isRecording = true;
+                    recognition.start();
+                    if (micStatusBar) micStatusBar.style.display = 'flex';
+                    if (micLabel) micLabel.textContent = 'Stop Recording';
+                    micBtn.style.background = 'rgba(239, 68, 68, 0.2)';
+                }
+            });
+        }
+
+        if (answerInput) {
+            answerInput.addEventListener('input', function() {
+                const words = this.value.trim().split(/\s+/).filter(w => w.length > 0);
+                document.getElementById('char-counter').textContent = words.length + ' words written';
+            });
+        }
+
+        if (hintBtn) {
+            hintBtn.addEventListener('click', function() {
+                hintBox.style.display = hintBox.style.display === 'none' ? 'block' : 'none';
+            });
+        }
+
+        // Start Interview Session
+        if (startBtn) {
+            startBtn.addEventListener('click', async function() {
+                startBtn.disabled = true;
+                startBtn.textContent = 'Generating Tailored Questions...';
+
+                const role = document.getElementById('role-input').value;
+                const track = document.getElementById('track-input').value;
+
+                try {
+                    const res = await fetch("{{ url_for('student_ai.api_start_interview') }}", {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ role_title: role, interview_type: track })
+                    });
+
+                    if (res.ok) {
+                        const data = await res.json();
+                        currentSessionId = data.session_id;
+                        currentQuestionData = data.current_question;
+                        
+                        // Switch view
+                        document.getElementById('setup-view').style.display = 'none';
+                        document.getElementById('active-session-view').style.display = 'block';
+
+                        loadQuestion(data.current_question, 0, data.total_questions);
+                    } else {
+                        alert('Could not start interview session.');
+                    }
+                } catch (e) {
+                    console.error(e);
+                    alert('Error connecting to interview service.');
+                } finally {
+                    startBtn.disabled = false;
+                }
+            });
+        }
+
+        // Submit Answer for Evaluation
+        if (submitBtn) {
+            submitBtn.addEventListener('click', async function() {
+                stopRecording();
+                const answerText = answerInput.value.trim();
+                if (!answerText) {
+                    alert('Please write or speak an answer before submitting.');
+                    return;
+                }
+
+                submitBtn.disabled = true;
+                submitBtn.textContent = 'Evaluating with AI...';
+
+                try {
+                    const res = await fetch("{{ url_for('student_ai.api_submit_interview_answer') }}", {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ session_id: currentSessionId, answer: answerText })
+                    });
+
+                    if (res.ok) {
+                        const data = await res.json();
+                        const evalData = data.evaluation;
+                        isLastQuestion = data.completed;
+
+                        // Populate score badges
+                        document.getElementById('score-accuracy').textContent = evalData.technical_accuracy;
+                        document.getElementById('score-clarity').textContent = evalData.communication_clarity;
+                        const confEl = document.getElementById('score-confidence');
+                        if (confEl) confEl.textContent = evalData.confidence_delivery || 75;
+                        document.getElementById('score-depth').textContent = evalData.depth_completeness;
+                        document.getElementById('score-overall').textContent = evalData.score;
+                        document.getElementById('critique-text').textContent = evalData.feedback;
+                        document.getElementById('model-answer-text').textContent = evalData.exemplary_model_answer;
+
+                        // Follow-up probe if available
+                        const probeBox = document.getElementById('followup-probe-box');
+                        const probeText = document.getElementById('followup-probe-text');
+                        if (probeBox && probeText) {
+                            if (evalData.followup_probe) {
+                                probeText.textContent = evalData.followup_probe;
+                                probeBox.style.display = 'block';
+                            } else {
+                                probeBox.style.display = 'none';
+                            }
+                        }
+
+                        // Next step button text
+                        if (isLastQuestion) {
+                            nextBtn.textContent = 'Complete Session & View Scorecard';
+                            const scorecard = data.scorecard || {};
+                            const metrics = scorecard.metrics || {};
+                            document.getElementById('final-avg-score').textContent = (metrics.composite_score || data.session_total_score || evalData.score) + '/100';
+                            
+                            const elTech = document.getElementById('final-metric-tech');
+                            const elClarity = document.getElementById('final-metric-clarity');
+                            const elConf = document.getElementById('final-metric-conf');
+                            const elDepth = document.getElementById('final-metric-depth');
+
+                            if (elTech) elTech.textContent = metrics.technical_accuracy || evalData.technical_accuracy;
+                            if (elClarity) elClarity.textContent = metrics.communication_clarity || evalData.communication_clarity;
+                            if (elConf) elConf.textContent = metrics.confidence_delivery || evalData.confidence_delivery || 75;
+                            if (elDepth) elDepth.textContent = metrics.depth_completeness || evalData.depth_completeness;
+                        } else {
+                            nextBtn.textContent = 'Continue to Next Question';
+                            currentQuestionData = data.next_question;
+                            window._nextQuestionIndex = data.next_question_index;
+                        }
+
+                        document.getElementById('evaluation-card').style.display = 'block';
+                    }
+                } catch (e) {
+                    console.error(e);
+                    alert('Failed to evaluate answer.');
+                } finally {
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = 'Submit for AI Evaluation';
+                }
+            });
+        }
+
+        // Next Question or Finish
+        if (nextBtn) {
+            nextBtn.addEventListener('click', function() {
+                if (isLastQuestion) {
+                    document.getElementById('active-session-view').style.display = 'none';
+                    document.getElementById('session-summary-view').style.display = 'block';
+                } else {
+                    document.getElementById('evaluation-card').style.display = 'none';
+                    answerInput.value = '';
+                    document.getElementById('char-counter').textContent = '0 words written';
+                    loadQuestion(currentQuestionData, window._nextQuestionIndex || 1, 4);
+                }
+            });
+        }
+    });
+
+    function loadQuestion(q, idx, total) {
+        document.getElementById('q-counter').textContent = `Question ${idx + 1} of ${total}`;
+        document.getElementById('q-category').textContent = q.category || 'Technical';
+        document.getElementById('q-text').textContent = q.question;
+        document.getElementById('hint-text').textContent = q.hint || 'Focus on practical algorithmic trade-offs.';
+        document.getElementById('hint-box').style.display = 'none';
+    }
+</script>
+<style>
+@media (max-width: 900px) {
+    .interview-studio {
+        grid-template-columns: 1fr !important;
+    }
+}
+</style>
+{% endblock %}

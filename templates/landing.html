@@ -1,0 +1,225 @@
+{% extends "base.html" %}
+
+{% block title %}Glint — Where Campus Talent Meets Opportunity{% endblock %}
+
+{% block content %}
+<div style="max-width: 1240px; margin: 0 auto; padding: 1.5rem 1rem 4rem;">
+    <!-- Top Landing Navigation -->
+    <nav style="display: flex; justify-content: space-between; align-items: center; padding: 1rem 0 2.5rem; border-bottom: 1px solid var(--border-subtle); margin-bottom: 3.5rem;">
+        <div style="display: flex; align-items: center; gap: 0.85rem;">
+            <div class="brand-badge" style="width: 44px; height: 44px; font-size: 1.25rem;">GL</div>
+            <div>
+                <div class="brand-title" style="font-size: 1.35rem;">Glint</div>
+                <div class="brand-subtitle">Campus Career & Placement Platform</div>
+            </div>
+        </div>
+        <div style="display: flex; align-items: center; gap: 1rem;">
+            <a href="{{ url_for('auth.login') }}" class="btn btn-outline btn-pill">Sign In</a>
+            <a href="{{ url_for('auth.register') }}" class="btn btn-primary btn-pill">
+                Get Started
+                <i data-lucide="arrow-right" style="width: 16px; height: 16px;"></i>
+            </a>
+        </div>
+    </nav>
+
+    <!-- Welcoming Editorial Hero (Playbook x Bamco Warmth) -->
+    <section style="text-align: center; padding: 2.5rem 1rem 4.5rem; position: relative;">
+        <!-- Warm Friendly Pill -->
+        <div style="display: inline-flex; align-items: center; gap: 0.6rem; background: #FFF0EB; border: 1px solid #FCD9CE; padding: 0.45rem 1.2rem; border-radius: var(--radius-full); font-size: 0.85rem; font-weight: 700; color: var(--accent-coral); margin-bottom: 1.75rem; box-shadow: 0 2px 8px rgba(231, 111, 81, 0.08);">
+            <i data-lucide="sparkles" style="width: 16px; height: 16px;"></i>
+            A warmer, more human way to place campus talent
+        </div>
+        
+        <h1 style="font-family: var(--font-display); font-size: clamp(2.4rem, 5.5vw, 4.2rem); font-weight: 800; line-height: 1.15; letter-spacing: -1.5px; margin-bottom: 1.6rem; max-width: 950px; margin-left: auto; margin-right: auto; color: var(--text-main);">
+            Where campus talent blossoms into <span style="background: var(--accent-gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">meaningful careers</span>.
+        </h1>
+        
+        <p style="font-size: 1.25rem; color: var(--text-muted); max-width: 720px; margin: 0 auto 2.75rem; line-height: 1.65; font-weight: 500;">
+            Glint pairs the joyful creative clarity of modern portfolios with the welcoming care of student-first mentorship. Explainable AI matching, comprehensive skill taxonomies, and collaborative placement intelligence.
+        </p>
+
+        <!-- CTA Buttons with Playbook Tactile Feel -->
+        <div style="display: flex; justify-content: center; gap: 1rem; flex-wrap: wrap; margin-bottom: 2rem;">
+            <a href="{{ url_for('auth.login') }}" class="btn btn-primary btn-pill" style="padding: 0.9rem 2.2rem; font-size: 1.05rem;">
+                <i data-lucide="sparkles" style="width: 19px; height: 19px;"></i>
+                Explore Live Platform
+            </a>
+            <a href="{{ url_for('auth.register') }}" class="btn btn-sage btn-pill" style="padding: 0.9rem 2.2rem; font-size: 1.05rem;">
+                <i data-lucide="user-plus" style="width: 19px; height: 19px;"></i>
+                Create Free Account
+            </a>
+        </div>
+
+        <!-- 1-Click Interactive Demo Box -->
+        <div style="display: inline-flex; align-items: center; gap: 0.75rem; background: #FFFFFF; border: 1px solid var(--border-medium); padding: 0.65rem 1.25rem; border-radius: var(--radius-full); box-shadow: var(--shadow-sm); font-size: 0.86rem; color: var(--text-muted);">
+            <span style="font-weight: 700; color: var(--text-main);">⚡ Instant Demo Logins:</span>
+            <a href="{{ url_for('auth.login') }}" style="color: var(--accent-coral); font-weight: 700; text-decoration: none;">🎓 Rahul (Student)</a>
+            <span style="color: var(--border-medium);">•</span>
+            <a href="{{ url_for('auth.login') }}" style="color: var(--accent-sage); font-weight: 700; text-decoration: none;">🏢 Priya (Recruiter)</a>
+            <span style="color: var(--border-medium);">•</span>
+            <a href="{{ url_for('auth.login') }}" style="color: var(--accent-iris); font-weight: 700; text-decoration: none;">🏛️ Admin (Campus Lead)</a>
+        </div>
+    </section>
+
+    <!-- Warm Bento Journey: The 7 Steps of Placement Success -->
+    <section class="glass-panel" style="padding: 2.75rem; margin-bottom: 4.5rem; background: linear-gradient(180deg, #FFFFFF 0%, #FAF7F2 100%);">
+        <div style="text-align: center; margin-bottom: 2.5rem;">
+            <div class="badge badge-ai_matched" style="margin-bottom: 0.75rem;">🌱 Thoughtful Placement Lifecycle</div>
+            <h2 style="font-family: var(--font-display); font-size: 1.9rem; font-weight: 800; color: var(--text-main); margin-bottom: 0.4rem;">
+                The Autonomous Placement Bridge
+            </h2>
+            <p style="color: var(--text-muted); font-size: 1rem; max-width: 620px; margin: 0 auto;">
+                From individual student talent ↔ recruiter job specifications ↔ real-time campus placement analytics.
+            </p>
+        </div>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 1rem; text-align: center;">
+            <div style="padding: 1.25rem 1rem; background: #FFFFFF; border-radius: var(--radius-md); border: 1px solid var(--border-subtle); box-shadow: var(--shadow-sm); transition: transform 0.2s;" onmouseover="this.style.transform='translateY(-3px)'" onmouseout="this.style.transform='translateY(0)'">
+                <div style="width: 44px; height: 44px; border-radius: var(--radius-sm); background: #FFF0EB; color: var(--accent-coral); display: flex; align-items: center; justify-content: center; margin: 0 auto 0.75rem;">
+                    <i data-lucide="user"></i>
+                </div>
+                <div style="font-weight: 700; font-size: 0.92rem; color: var(--text-main);">1. Profile</div>
+                <div style="color: var(--text-dim); font-size: 0.78rem; margin-top: 2px;">Verified skills & CGPA</div>
+            </div>
+
+            <div style="padding: 1.25rem 1rem; background: #FFFFFF; border-radius: var(--radius-md); border: 1px solid var(--border-subtle); box-shadow: var(--shadow-sm); transition: transform 0.2s;" onmouseover="this.style.transform='translateY(-3px)'" onmouseout="this.style.transform='translateY(0)'">
+                <div style="width: 44px; height: 44px; border-radius: var(--radius-sm); background: #EAF4EE; color: var(--accent-sage); display: flex; align-items: center; justify-content: center; margin: 0 auto 0.75rem;">
+                    <i data-lucide="gauge"></i>
+                </div>
+                <div style="font-weight: 700; font-size: 0.92rem; color: var(--text-main);">2. Readiness</div>
+                <div style="color: var(--text-dim); font-size: 0.78rem; margin-top: 2px;">Placement fit modeling</div>
+            </div>
+
+            <div style="padding: 1.25rem 1rem; background: #FFFFFF; border-radius: var(--radius-md); border: 1px solid var(--border-subtle); box-shadow: var(--shadow-sm); transition: transform 0.2s;" onmouseover="this.style.transform='translateY(-3px)'" onmouseout="this.style.transform='translateY(0)'">
+                <div style="width: 44px; height: 44px; border-radius: var(--radius-sm); background: #FFF8E7; color: var(--status-warning); display: flex; align-items: center; justify-content: center; margin: 0 auto 0.75rem;">
+                    <i data-lucide="scan-line"></i>
+                </div>
+                <div style="font-weight: 700; font-size: 0.92rem; color: var(--text-main);">3. Skill Gaps</div>
+                <div style="color: var(--text-dim); font-size: 0.78rem; margin-top: 2px;">Missing vs required</div>
+            </div>
+
+            <div style="padding: 1.25rem 1rem; background: #FFFFFF; border-radius: var(--radius-md); border: 1px solid var(--border-subtle); box-shadow: var(--shadow-sm); transition: transform 0.2s;" onmouseover="this.style.transform='translateY(-3px)'" onmouseout="this.style.transform='translateY(0)'">
+                <div style="width: 44px; height: 44px; border-radius: var(--radius-sm); background: #EFF6FF; color: var(--status-info); display: flex; align-items: center; justify-content: center; margin: 0 auto 0.75rem;">
+                    <i data-lucide="map"></i>
+                </div>
+                <div style="font-weight: 700; font-size: 0.92rem; color: var(--text-main);">4. Roadmap</div>
+                <div style="color: var(--text-dim); font-size: 0.78rem; margin-top: 2px;">Actionable milestones</div>
+            </div>
+
+            <div style="padding: 1.25rem 1rem; background: #FFFFFF; border-radius: var(--radius-md); border: 1px solid var(--border-subtle); box-shadow: var(--shadow-sm); transition: transform 0.2s;" onmouseover="this.style.transform='translateY(-3px)'" onmouseout="this.style.transform='translateY(0)'">
+                <div style="width: 44px; height: 44px; border-radius: var(--radius-sm); background: #F3F0FF; color: var(--accent-iris); display: flex; align-items: center; justify-content: center; margin: 0 auto 0.75rem;">
+                    <i data-lucide="check-check"></i>
+                </div>
+                <div style="font-weight: 700; font-size: 0.92rem; color: var(--text-main);">5. Match Fit</div>
+                <div style="color: var(--text-dim); font-size: 0.78rem; margin-top: 2px;">Explainable scoring</div>
+            </div>
+
+            <div style="padding: 1.25rem 1rem; background: #FFFFFF; border-radius: var(--radius-md); border: 1px solid var(--border-subtle); box-shadow: var(--shadow-sm); transition: transform 0.2s;" onmouseover="this.style.transform='translateY(-3px)'" onmouseout="this.style.transform='translateY(0)'">
+                <div style="width: 44px; height: 44px; border-radius: var(--radius-sm); background: #FFF0EB; color: var(--accent-coral); display: flex; align-items: center; justify-content: center; margin: 0 auto 0.75rem;">
+                    <i data-lucide="video"></i>
+                </div>
+                <div style="font-weight: 700; font-size: 0.92rem; color: var(--text-main);">6. Simulator</div>
+                <div style="color: var(--text-dim); font-size: 0.78rem; margin-top: 2px;">AI mock interview</div>
+            </div>
+
+            <div style="padding: 1.25rem 1rem; background: #FFFFFF; border-radius: var(--radius-md); border: 1px solid var(--border-subtle); box-shadow: var(--shadow-sm); transition: transform 0.2s;" onmouseover="this.style.transform='translateY(-3px)'" onmouseout="this.style.transform='translateY(0)'">
+                <div style="width: 44px; height: 44px; border-radius: var(--radius-sm); background: #E6F4EA; color: #137333; display: flex; align-items: center; justify-content: center; margin: 0 auto 0.75rem;">
+                    <i data-lucide="trophy"></i>
+                </div>
+                <div style="font-weight: 700; font-size: 0.92rem; color: var(--text-main);">7. Placed!</div>
+                <div style="color: var(--text-dim); font-size: 0.78rem; margin-top: 2px;">Offer & celebration</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Three User Dimensions (Playbook Style Bento Pillars) -->
+    <section style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 1.75rem; margin-bottom: 5rem;">
+        <!-- Student Pillar -->
+        <div class="glass-panel" style="margin-bottom: 0; display: flex; flex-direction: column; justify-content: space-between; border-top: 4px solid var(--accent-coral);">
+            <div>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem;">
+                    <div style="width: 48px; height: 48px; border-radius: var(--radius-sm); background: #FFF0EB; color: var(--accent-coral); display: flex; align-items: center; justify-content: center;">
+                        <i data-lucide="graduation-cap" style="width: 24px; height: 24px;"></i>
+                    </div>
+                    <span class="badge badge-ai_matched">For Students</span>
+                </div>
+                <h3 style="font-family: var(--font-display); font-size: 1.35rem; font-weight: 800; margin-bottom: 0.6rem; color: var(--text-main);">
+                    Student Intelligence
+                </h3>
+                <p style="color: var(--text-muted); font-size: 0.94rem; line-height: 1.6; margin-bottom: 1.35rem;">
+                    Track your verified skill portfolio, monitor your <strong>Placement Readiness Score</strong>, discover missing technical requirements, and apply directly to campus drives.
+                </p>
+                <ul style="list-style: none; display: flex; flex-direction: column; gap: 0.65rem; font-size: 0.88rem; color: var(--text-main); margin-bottom: 1.75rem;">
+                    <li style="display: flex; align-items: center; gap: 0.6rem;"><i data-lucide="check-circle-2" style="width: 16px; height: 16px; color: var(--accent-sage);"></i> AI Placement Readiness Scoring</li>
+                    <li style="display: flex; align-items: center; gap: 0.6rem;"><i data-lucide="check-circle-2" style="width: 16px; height: 16px; color: var(--accent-sage);"></i> Explainable Job Match Breakdown</li>
+                    <li style="display: flex; align-items: center; gap: 0.6rem;"><i data-lucide="check-circle-2" style="width: 16px; height: 16px; color: var(--accent-sage);"></i> 1-Click "Quick Apply" with instant status</li>
+                    <li style="display: flex; align-items: center; gap: 0.6rem;"><i data-lucide="check-circle-2" style="width: 16px; height: 16px; color: var(--accent-sage);"></i> Personalized Skill Gap Analysis & 4-Week Roadmap</li>
+                </ul>
+            </div>
+            <a href="{{ url_for('auth.login') }}" class="btn btn-outline" style="width: 100%;">
+                Student Portal Sign In →
+            </a>
+        </div>
+
+        <!-- Recruiter Pillar -->
+        <div class="glass-panel" style="margin-bottom: 0; display: flex; flex-direction: column; justify-content: space-between; border-top: 4px solid var(--accent-sage);">
+            <div>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem;">
+                    <div style="width: 48px; height: 48px; border-radius: var(--radius-sm); background: #EAF4EE; color: var(--accent-sage); display: flex; align-items: center; justify-content: center;">
+                        <i data-lucide="building-2" style="width: 24px; height: 24px;"></i>
+                    </div>
+                    <span class="badge badge-eligible">For Recruiters</span>
+                </div>
+                <h3 style="font-family: var(--font-display); font-size: 1.35rem; font-weight: 800; margin-bottom: 0.6rem; color: var(--text-main);">
+                    Recruiter Intelligence
+                </h3>
+                <p style="color: var(--text-muted); font-size: 0.94rem; line-height: 1.6; margin-bottom: 1.35rem;">
+                    Paste raw Job Descriptions to extract technical requirements automatically. Candidate matches are ranked and explained factor-by-factor.
+                </p>
+                <ul style="list-style: none; display: flex; flex-direction: column; gap: 0.65rem; font-size: 0.88rem; color: var(--text-main); margin-bottom: 1.75rem;">
+                    <li style="display: flex; align-items: center; gap: 0.6rem;"><i data-lucide="check-circle-2" style="width: 16px; height: 16px; color: var(--accent-sage);"></i> Automated JD Skill Extraction</li>
+                    <li style="display: flex; align-items: center; gap: 0.6rem;"><i data-lucide="check-circle-2" style="width: 16px; height: 16px; color: var(--accent-sage);"></i> Candidate AI Insights & Readiness</li>
+                    <li style="display: flex; align-items: center; gap: 0.6rem;"><i data-lucide="check-circle-2" style="width: 16px; height: 16px; color: var(--accent-sage);"></i> Visual Multi-Stage Recruitment Pipeline</li>
+                    <li style="display: flex; align-items: center; gap: 0.6rem;"><i data-lucide="check-circle-2" style="width: 16px; height: 16px; color: var(--accent-sage);"></i> Explainable Semantic Candidate Matcher</li>
+                </ul>
+            </div>
+            <a href="{{ url_for('auth.login') }}" class="btn btn-outline" style="width: 100%;">
+                Recruiter Studio Sign In →
+            </a>
+        </div>
+
+        <!-- Institutional Pillar -->
+        <div class="glass-panel" style="margin-bottom: 0; display: flex; flex-direction: column; justify-content: space-between; border-top: 4px solid var(--accent-iris);">
+            <div>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem;">
+                    <div style="width: 48px; height: 48px; border-radius: var(--radius-sm); background: #F3F0FF; color: var(--accent-iris); display: flex; align-items: center; justify-content: center;">
+                        <i data-lucide="shield-check" style="width: 24px; height: 24px;"></i>
+                    </div>
+                    <span class="badge badge-interview">For Leadership</span>
+                </div>
+                <h3 style="font-family: var(--font-display); font-size: 1.35rem; font-weight: 800; margin-bottom: 0.6rem; color: var(--text-main);">
+                    Campus Command Center
+                </h3>
+                <p style="color: var(--text-muted); font-size: 0.94rem; line-height: 1.6; margin-bottom: 1.35rem;">
+                    Executive placement command center with dynamic conversion funnels, department metrics, and campus-wide skill gap analytics.
+                </p>
+                <ul style="list-style: none; display: flex; flex-direction: column; gap: 0.65rem; font-size: 0.88rem; color: var(--text-main); margin-bottom: 1.75rem;">
+                    <li style="display: flex; align-items: center; gap: 0.6rem;"><i data-lucide="check-circle-2" style="width: 16px; height: 16px; color: var(--accent-sage);"></i> Department-wise Placement Rates</li>
+                    <li style="display: flex; align-items: center; gap: 0.6rem;"><i data-lucide="check-circle-2" style="width: 16px; height: 16px; color: var(--accent-sage);"></i> Industry Demand vs Supply Matrix</li>
+                    <li style="display: flex; align-items: center; gap: 0.6rem;"><i data-lucide="check-circle-2" style="width: 16px; height: 16px; color: var(--accent-sage);"></i> Autonomous Curriculum Interventions</li>
+                    <li style="display: flex; align-items: center; gap: 0.6rem;"><i data-lucide="check-circle-2" style="width: 16px; height: 16px; color: var(--accent-sage);"></i> Campus Career Forecasting</li>
+                </ul>
+            </div>
+            <a href="{{ url_for('auth.login') }}" class="btn btn-outline" style="width: 100%;">
+                Leadership Portal Sign In →
+            </a>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer style="text-align: center; padding: 2.5rem 0 1rem; border-top: 1px solid var(--border-subtle); color: var(--text-dim); font-size: 0.9rem;">
+        <p style="margin-bottom: 0.4rem;"><strong>Glint</strong> — Campus Career & Placement Platform.</p>
+        <p style="font-size: 0.82rem;">Crafted with warm care, modern bento visual intelligence, and explainable AI.</p>
+    </footer>
+</div>
+{% endblock %}

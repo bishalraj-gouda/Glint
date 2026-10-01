@@ -1,0 +1,406 @@
+{% extends "base.html" %}
+
+{% block title %}AI Career Twin — {{ student.full_name }} | PlacementIQ AI{% endblock %}
+
+{% block extra_css %}
+<style>
+    .twin-hero {
+        background: linear-gradient(135deg, rgba(30, 27, 75, 0.7) 0%, rgba(15, 23, 42, 0.9) 100%);
+        border: 1px solid rgba(99, 102, 241, 0.25);
+        border-radius: 20px;
+        padding: 32px;
+        position: relative;
+        overflow: hidden;
+        margin-bottom: 28px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+    }
+    .twin-hero::before {
+        content: '';
+        position: absolute;
+        top: -60px;
+        right: -60px;
+        width: 220px;
+        height: 220px;
+        background: radial-gradient(circle, rgba(129, 140, 248, 0.25) 0%, transparent 70%);
+        pointer-events: none;
+    }
+    .score-circle-container {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 140px;
+        height: 140px;
+        border-radius: 50%;
+        background: conic-gradient(
+            #6366f1 0% calc(var(--score) * 1%),
+            rgba(255, 255, 255, 0.08) calc(var(--score) * 1%) 100%
+        );
+        padding: 10px;
+        box-shadow: 0 0 25px rgba(99, 102, 241, 0.35);
+    }
+    .score-circle-inner {
+        width: 100%;
+        height: 100%;
+        border-radius: 50%;
+        background: #0f172a;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+    }
+    .score-number {
+        font-family: 'Outfit', sans-serif;
+        font-size: 38px;
+        font-weight: 800;
+        color: #ffffff;
+        line-height: 1;
+    }
+    .score-label {
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: #94a3b8;
+        margin-top: 4px;
+    }
+    .pillar-card {
+        background: rgba(15, 23, 42, 0.65);
+        border: 1px solid rgba(255, 255, 255, 0.07);
+        border-radius: 16px;
+        padding: 20px;
+        transition: transform 0.2s ease, border-color 0.2s ease;
+    }
+    .pillar-card:hover {
+        transform: translateY(-3px);
+        border-color: rgba(99, 102, 241, 0.4);
+    }
+    .pillar-progress-track {
+        height: 8px;
+        background: rgba(255, 255, 255, 0.08);
+        border-radius: 4px;
+        overflow: hidden;
+        margin: 12px 0 8px;
+    }
+    .pillar-progress-bar {
+        height: 100%;
+        border-radius: 4px;
+        transition: width 1s ease-in-out;
+    }
+    .tag-bubble {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 12px;
+        border-radius: 30px;
+        font-size: 12px;
+        font-weight: 500;
+        background: rgba(99, 102, 241, 0.12);
+        border: 1px solid rgba(99, 102, 241, 0.25);
+        color: #c7d2fe;
+    }
+    .tag-bubble-danger {
+        background: rgba(239, 68, 68, 0.12);
+        border-color: rgba(239, 68, 68, 0.25);
+        color: #fca5a5;
+    }
+    .tag-bubble-success {
+        background: rgba(16, 185, 129, 0.12);
+        border-color: rgba(16, 185, 129, 0.25);
+        color: #6ee7b7;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="twin-page-wrapper">
+    <!-- Header Section -->
+    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 24px; flex-wrap: wrap; gap: 16px;">
+        <div>
+            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 6px;">
+                <span class="badge" style="background: rgba(99, 102, 241, 0.2); color: #818cf8; border: 1px solid rgba(99, 102, 241, 0.4); font-size: 12px; padding: 4px 10px;">
+                    <i data-lucide="bot" style="width: 13px; height: 13px; vertical-align: middle;"></i> Live Digital Career Twin
+                </span>
+                <span style="font-size: 13px; color: #64748b;">Synced: <span id="sync-timestamp">{{ twin.last_calculated }}</span></span>
+            </div>
+            <h1 style="font-family: 'Outfit', sans-serif; font-size: 32px; font-weight: 800; color: #ffffff; margin: 0;">
+                {{ twin.twin_persona }}
+            </h1>
+            <p style="color: #94a3b8; font-size: 15px; margin-top: 6px;">
+                Verified Profile Synthesis for <strong style="color: #e2e8f0;">{{ student.full_name }}</strong> ({{ student.department }} · Year {{ student.year }})
+            </p>
+        </div>
+
+        <div style="display: flex; gap: 12px;">
+            <button class="btn btn-outline" id="btn-refresh-twin" style="display: flex; align-items: center; gap: 8px;">
+                <i data-lucide="refresh-cw" id="refresh-icon" style="width: 16px; height: 16px;"></i>
+                <span>Recalculate AI Twin</span>
+            </button>
+            <a href="{{ url_for('student_ai.skill_gaps_page') }}" class="btn btn-primary" style="display: flex; align-items: center; gap: 8px;">
+                <i data-lucide="compass" style="width: 16px; height: 16px;"></i>
+                <span>View Skill Gaps & Roadmap</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- Twin Hero Score & Executive Memo -->
+    <div class="twin-hero">
+        <div style="display: grid; grid-template-columns: auto 1fr auto; gap: 32px; align-items: center;" class="responsive-hero-grid">
+            <!-- Radial Score Arc -->
+            <div class="score-circle-container" id="radial-container" style="--score: {{ twin.overall_score }};">
+                <div class="score-circle-inner">
+                    <div class="score-number" id="twin-score-display">{{ twin.overall_score }}</div>
+                    <div class="score-label">Readiness</div>
+                </div>
+            </div>
+
+            <!-- Executive Synthesis -->
+            <div>
+                <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 12px;">
+                    <span class="badge" style="background: rgba(16, 185, 129, 0.2); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.4); font-weight: 600;">
+                        {{ twin.predicted_readiness_tier }}
+                    </span>
+                    <span class="badge" style="background: rgba(14, 165, 233, 0.2); color: #38bdf8; border: 1px solid rgba(14, 165, 233, 0.4);">
+                        <i data-lucide="award" style="width: 13px; height: 13px; vertical-align: middle;"></i> {{ twin.market_competitiveness }}
+                    </span>
+                </div>
+                <h3 style="font-family: 'Outfit', sans-serif; font-size: 20px; font-weight: 700; color: #ffffff; margin-bottom: 10px;">
+                    Executive Career Twin Synthesis
+                </h3>
+                <p style="color: #cbd5e1; font-size: 15px; line-height: 1.6; margin: 0;" id="executive-summary-text">
+                    {{ twin.executive_summary }}
+                </p>
+            </div>
+
+            <!-- Quick Action Box -->
+            <div style="background: rgba(30, 41, 59, 0.8); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 14px; padding: 20px; min-width: 240px;">
+                <div style="font-size: 11px; text-transform: uppercase; color: #94a3b8; font-weight: 600; letter-spacing: 0.05em; margin-bottom: 8px;">
+                    🎯 Recommended Today
+                </div>
+                <div style="font-size: 13px; color: #f1f5f9; line-height: 1.5; font-weight: 500;" id="action-today-text">
+                    {{ twin.recommended_action_today }}
+                </div>
+                <a href="{{ url_for('student_ai.project_generator_page') }}" style="display: inline-flex; align-items: center; gap: 6px; font-size: 12px; color: #818cf8; margin-top: 12px; text-decoration: none; font-weight: 600;">
+                    Execute Action <i data-lucide="arrow-right" style="width: 14px; height: 14px;"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- 4 Deterministic Pillar Cards -->
+    <h3 style="font-family: 'Outfit', sans-serif; font-size: 18px; font-weight: 700; color: #ffffff; margin-bottom: 16px; display: flex; align-items: center; gap: 8px;">
+        <i data-lucide="layers" style="width: 18px; height: 18px; color: #818cf8;"></i> Factual Readiness Breakdown (Deterministic)
+    </h3>
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 20px; margin-bottom: 32px;">
+        <!-- Academic Card -->
+        <div class="pillar-card">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <span style="font-size: 13px; color: #94a3b8; font-weight: 600;">Academic Performance</span>
+                <span class="badge" style="background: rgba(99, 102, 241, 0.15); color: #a5b4fc;">Weight: 25%</span>
+            </div>
+            <div style="display: flex; align-items: baseline; gap: 8px; margin-top: 10px;">
+                <span style="font-size: 26px; font-weight: 800; color: #ffffff; font-family: 'Outfit';">{{ twin.sub_scores.academic }}%</span>
+                <span style="font-size: 13px; color: #64748b;">(CGPA: {{ student.cgpa }})</span>
+            </div>
+            <div class="pillar-progress-track">
+                <div class="pillar-progress-bar" style="width: {{ twin.sub_scores.academic }}%; background: #6366f1;"></div>
+            </div>
+            <div style="font-size: 12px; color: #94a3b8;">Department: {{ student.department }} · Year {{ student.year }}</div>
+        </div>
+
+        <!-- Verified Skills Card -->
+        <div class="pillar-card">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <span style="font-size: 13px; color: #94a3b8; font-weight: 600;">Verified Skills</span>
+                <span class="badge" style="background: rgba(16, 185, 129, 0.15); color: #6ee7b7;">Weight: 35%</span>
+            </div>
+            <div style="display: flex; align-items: baseline; gap: 8px; margin-top: 10px;">
+                <span style="font-size: 26px; font-weight: 800; color: #ffffff; font-family: 'Outfit';">{{ twin.sub_scores.skills }}%</span>
+                <span style="font-size: 13px; color: #64748b;">({{ twin.matched_benchmarks|length }} benchmarks met)</span>
+            </div>
+            <div class="pillar-progress-track">
+                <div class="pillar-progress-bar" style="width: {{ twin.sub_scores.skills }}%; background: #10b981;"></div>
+            </div>
+            <div style="font-size: 12px; color: #94a3b8;">Industry benchmark alignment</div>
+        </div>
+
+        <!-- Projects Card -->
+        <div class="pillar-card">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <span style="font-size: 13px; color: #94a3b8; font-weight: 600;">Hands-on Projects</span>
+                <span class="badge" style="background: rgba(245, 158, 11, 0.15); color: #fcd34d;">Weight: 25%</span>
+            </div>
+            <div style="display: flex; align-items: baseline; gap: 8px; margin-top: 10px;">
+                <span style="font-size: 26px; font-weight: 800; color: #ffffff; font-family: 'Outfit';">{{ twin.sub_scores.projects }}%</span>
+                <span style="font-size: 13px; color: #64748b;">(Verified Repos)</span>
+            </div>
+            <div class="pillar-progress-track">
+                <div class="pillar-progress-bar" style="width: {{ twin.sub_scores.projects }}%; background: #f59e0b;"></div>
+            </div>
+            <div style="font-size: 12px; color: #94a3b8;">Portfolio implementation depth</div>
+        </div>
+
+        <!-- Certifications Card -->
+        <div class="pillar-card">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <span style="font-size: 13px; color: #94a3b8; font-weight: 600;">Credentials & Certs</span>
+                <span class="badge" style="background: rgba(14, 165, 233, 0.15); color: #7dd3fc;">Weight: 15%</span>
+            </div>
+            <div style="display: flex; align-items: baseline; gap: 8px; margin-top: 10px;">
+                <span style="font-size: 26px; font-weight: 800; color: #ffffff; font-family: 'Outfit';">{{ twin.sub_scores.interview }}%</span>
+                <span style="font-size: 13px; color: #64748b;">(External Accreditations)</span>
+            </div>
+            <div class="pillar-progress-track">
+                <div class="pillar-progress-bar" style="width: {{ twin.sub_scores.interview }}%; background: #0ea5e9;"></div>
+            </div>
+            <div style="font-size: 12px; color: #94a3b8;">Third-party industry validation</div>
+        </div>
+    </div>
+
+    <!-- Strengths vs Critical Gaps Diagnostic Split -->
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 32px;" class="responsive-split-grid">
+        <!-- Verified Competitive Strengths -->
+        <div class="card" style="padding: 24px; background: rgba(15, 23, 42, 0.7); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 16px;">
+            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 18px;">
+                <div style="width: 32px; height: 32px; border-radius: 8px; background: rgba(16, 185, 129, 0.15); display: flex; align-items: center; justify-content: center; color: #34d399;">
+                    <i data-lucide="check-circle-2" style="width: 18px; height: 18px;"></i>
+                </div>
+                <div>
+                    <h4 style="color: #ffffff; font-size: 16px; font-weight: 700; margin: 0;">Verified Competitive Moats</h4>
+                    <p style="color: #64748b; font-size: 12px; margin: 0;">What makes you stand out in applicant pools</p>
+                </div>
+            </div>
+            <div id="strengths-list" style="display: flex; flex-direction: column; gap: 12px;">
+                {% for strength in twin.strengths %}
+                <div style="display: flex; align-items: flex-start; gap: 10px; background: rgba(30, 41, 59, 0.4); padding: 12px 14px; border-radius: 10px; border-left: 3px solid #10b981;">
+                    <i data-lucide="check" style="width: 16px; height: 16px; color: #34d399; flex-shrink: 0; margin-top: 2px;"></i>
+                    <span style="font-size: 13px; color: #e2e8f0; line-height: 1.5;">{{ strength }}</span>
+                </div>
+                {% endfor %}
+            </div>
+
+            <!-- Matched Core Benchmarks -->
+            <div style="margin-top: 20px;">
+                <div style="font-size: 11px; text-transform: uppercase; color: #94a3b8; font-weight: 600; letter-spacing: 0.05em; margin-bottom: 8px;">
+                    Validated Benchmark Skills
+                </div>
+                <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+                    {% for bm in twin.matched_benchmarks %}
+                    <span class="tag-bubble tag-bubble-success">
+                        <i data-lucide="check" style="width: 12px; height: 12px;"></i> {{ bm }}
+                    </span>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Critical Placement Gaps & Bottlenecks -->
+        <div class="card" style="padding: 24px; background: rgba(15, 23, 42, 0.7); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 16px;">
+            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 18px;">
+                <div style="width: 32px; height: 32px; border-radius: 8px; background: rgba(239, 68, 68, 0.15); display: flex; align-items: center; justify-content: center; color: #f87171;">
+                    <i data-lucide="alert-triangle" style="width: 18px; height: 18px;"></i>
+                </div>
+                <div>
+                    <h4 style="color: #ffffff; font-size: 16px; font-weight: 700; margin: 0;">Critical Placement Bottlenecks</h4>
+                    <p style="color: #64748b; font-size: 12px; margin: 0;">Gaps preventing selection for top CTC bands</p>
+                </div>
+            </div>
+
+            <!-- Honest Diagnostic Narrative -->
+            <div style="background: rgba(239, 68, 68, 0.08); border: 1px solid rgba(239, 68, 68, 0.2); border-radius: 10px; padding: 14px; margin-bottom: 16px;">
+                <div style="font-size: 11px; text-transform: uppercase; color: #fca5a5; font-weight: 700; margin-bottom: 4px;">
+                    AI Diagnostic Memo
+                </div>
+                <div style="font-size: 13px; color: #fecaca; line-height: 1.5;" id="gap-narrative-text">
+                    {{ twin.critical_gap_narrative }}
+                </div>
+            </div>
+
+            <div id="gaps-list" style="display: flex; flex-direction: column; gap: 12px;">
+                {% for gap in twin.critical_gaps %}
+                <div style="display: flex; align-items: flex-start; gap: 10px; background: rgba(30, 41, 59, 0.4); padding: 12px 14px; border-radius: 10px; border-left: 3px solid #ef4444;">
+                    <i data-lucide="x-circle" style="width: 16px; height: 16px; color: #f87171; flex-shrink: 0; margin-top: 2px;"></i>
+                    <span style="font-size: 13px; color: #e2e8f0; line-height: 1.5;">{{ gap }}</span>
+                </div>
+                {% endfor %}
+            </div>
+
+            <!-- Missing Core Benchmarks -->
+            <div style="margin-top: 20px;">
+                <div style="font-size: 11px; text-transform: uppercase; color: #94a3b8; font-weight: 600; letter-spacing: 0.05em; margin-bottom: 8px;">
+                    Missing Target Benchmarks
+                </div>
+                <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+                    {% for bm in twin.missing_benchmarks %}
+                    <span class="tag-bubble tag-bubble-danger">
+                        <i data-lucide="alert-circle" style="width: 12px; height: 12px;"></i> {{ bm }}
+                    </span>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const refreshBtn = document.getElementById('btn-refresh-twin');
+        const refreshIcon = document.getElementById('refresh-icon');
+
+        if (refreshBtn) {
+            refreshBtn.addEventListener('click', async function() {
+                refreshBtn.disabled = true;
+                refreshIcon.style.animation = 'spin 1s linear infinite';
+
+                try {
+                    const response = await fetch("{{ url_for('student_ai.api_refresh_twin') }}", {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        }
+                    });
+
+                    if (response.ok) {
+                        const data = await response.json();
+                        // Update UI seamlessly
+                        document.getElementById('twin-score-display').textContent = data.overall_score;
+                        document.getElementById('radial-container').style.setProperty('--score', data.overall_score);
+                        document.getElementById('executive-summary-text').textContent = data.executive_summary;
+                        document.getElementById('gap-narrative-text').textContent = data.critical_gap_narrative;
+                        document.getElementById('action-today-text').textContent = data.recommended_action_today;
+                        document.getElementById('sync-timestamp').textContent = data.last_calculated;
+
+                        window.location.reload();
+                    } else {
+                        alert('Could not refresh Twin. Please try again.');
+                    }
+                } catch (e) {
+                    console.error(e);
+                    alert('Error syncing with AI engine.');
+                } finally {
+                    refreshBtn.disabled = false;
+                    refreshIcon.style.animation = 'none';
+                }
+            });
+        }
+    });
+</script>
+<style>
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+@media (max-width: 900px) {
+    .responsive-hero-grid {
+        grid-template-columns: 1fr !important;
+        text-align: center;
+    }
+    .score-circle-container {
+        margin: 0 auto;
+    }
+    .responsive-split-grid {
+        grid-template-columns: 1fr !important;
+    }
+}
+</style>
+{% endblock %}

@@ -1,0 +1,521 @@
+{% extends "base.html" %}
+
+{% block title %}Candidate Pipeline — PlacementIQ AI{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1 class="page-title">Candidate Pipeline</h1>
+        <p class="page-description">
+            Filter applications across {{ company.name if company else 'your company' }}'s active requisitions and advance candidates through recruitment stages.
+        </p>
+    </div>
+    <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
+        <a href="{{ url_for('recruiter_ai.candidate_matching_page', job_id=selected_job_id) }}" class="btn btn-primary btn-sm" style="background: linear-gradient(135deg, #0891b2, #4f46e5); border: none;">
+            <i data-lucide="crosshair" style="width: 15px; height: 15px;"></i>
+            AI Candidate Matcher
+        </a>
+        <a href="{{ url_for('recruiter.post_job_view') }}" class="btn btn-outline btn-sm">
+            <i data-lucide="plus-circle" style="width: 15px; height: 15px;"></i>
+            Post Opportunity
+        </a>
+        <a href="{{ url_for('recruiter.schedule_view') }}" class="btn btn-outline btn-sm">
+            <i data-lucide="calendar-clock" style="width: 15px; height: 15px;"></i>
+            Interview Schedule
+        </a>
+    </div>
+</div>
+
+<!-- Filters Bar -->
+<div class="glass-panel" style="padding: 1.25rem; margin-bottom: 1.5rem;">
+    <form method="GET" action="{{ url_for('recruiter.candidates_view') }}" style="display: flex; gap: 1rem; align-items: center; flex-wrap: wrap;">
+        <!-- Job Filter -->
+        <div style="flex: 1; min-width: 220px;">
+            <label class="form-label" style="font-size: 0.75rem; text-transform: uppercase; margin-bottom: 0.25rem;">Filter by Requisition</label>
+            <select name="job_id" class="form-control" onchange="this.form.submit()" style="padding: 0.5rem 0.85rem; font-size: 0.88rem;">
+                <option value="">All Requisitions ({{ total_candidates_count }})</option>
+                {% for j in jobs %}
+                <option value="{{ j.id }}" {% if selected_job_id == j.id %}selected{% endif %}>
+                    {{ j.title }} ({{ j.applications|length }} applicants)
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <!-- Keyword Search -->
+        <div style="flex: 1.5; min-width: 250px;">
+            <label class="form-label" style="font-size: 0.75rem; text-transform: uppercase; margin-bottom: 0.25rem;">Search Candidates</label>
+            <div style="position: relative;">
+                <input type="text" name="q" value="{{ search_query or '' }}" class="form-control" placeholder="Search by name, roll number, or skill..." style="padding: 0.5rem 0.85rem 0.5rem 2.2rem; font-size: 0.88rem;">
+                <i data-lucide="search" style="position: absolute; left: 0.75rem; top: 50%; transform: translateY(-50%); width: 15px; height: 15px; color: var(--text-dim);"></i>
+            </div>
+        </div>
+
+        <!-- Hidden Stage Preservation -->
+        {% if selected_stage %}
+        <input type="hidden" name="stage" value="{{ selected_stage }}">
+        {% endif %}
+
+        <div style="display: flex; gap: 0.5rem; align-self: flex-end;">
+            <button type="submit" class="btn btn-outline btn-sm" style="padding: 0.55rem 1rem;">
+                <i data-lucide="filter" style="width: 14px; height: 14px;"></i> Filter
+            </button>
+            {% if selected_job_id or selected_stage or search_query %}
+            <a href="{{ url_for('recruiter.candidates_view') }}" class="btn btn-outline btn-sm" style="padding: 0.55rem 0.85rem; color: var(--text-dim);" title="Clear Filters">
+                Reset
+            </a>
+            {% endif %}
+        </div>
+    </form>
+</div>
+
+<!-- Pipeline Stage Tabs -->
+<div class="pipeline-tabs">
+    <a href="{{ url_for('recruiter.candidates_view', job_id=selected_job_id, q=search_query) }}" class="pipeline-tab {% if not selected_stage or selected_stage == 'all' %}active{% endif %}">
+        <span>All Applicants</span>
+        <span class="pipeline-badge">{{ stage_counts.all }}</span>
+    </a>
+    <a href="{{ url_for('recruiter.candidates_view', stage='applied', job_id=selected_job_id, q=search_query) }}" class="pipeline-tab {% if selected_stage == 'applied' %}active{% endif %}">
+        <span>Applied</span>
+        <span class="pipeline-badge">{{ stage_counts.applied }}</span>
+    </a>
+    <a href="{{ url_for('recruiter.candidates_view', stage='eligible', job_id=selected_job_id, q=search_query) }}" class="pipeline-tab {% if selected_stage == 'eligible' %}active{% endif %}">
+        <span>Eligible</span>
+        <span class="pipeline-badge">{{ stage_counts.eligible }}</span>
+    </a>
+    <a href="{{ url_for('recruiter.candidates_view', stage='shortlisted', job_id=selected_job_id, q=search_query) }}" class="pipeline-tab {% if selected_stage == 'shortlisted' %}active{% endif %}">
+        <span>Shortlisted</span>
+        <span class="pipeline-badge">{{ stage_counts.shortlisted }}</span>
+    </a>
+    <a href="{{ url_for('recruiter.candidates_view', stage='interview', job_id=selected_job_id, q=search_query) }}" class="pipeline-tab {% if selected_stage == 'interview' %}active{% endif %}">
+        <span>In Interview</span>
+        <span class="pipeline-badge">{{ stage_counts.interview }}</span>
+    </a>
+    <a href="{{ url_for('recruiter.candidates_view', stage='selected', job_id=selected_job_id, q=search_query) }}" class="pipeline-tab {% if selected_stage == 'selected' %}active{% endif %}">
+        <span>Selected / Offer</span>
+        <span class="pipeline-badge">{{ stage_counts.selected }}</span>
+    </a>
+    <a href="{{ url_for('recruiter.candidates_view', stage='placed', job_id=selected_job_id, q=search_query) }}" class="pipeline-tab {% if selected_stage == 'placed' %}active{% endif %}">
+        <span>Placed</span>
+        <span class="pipeline-badge">{{ stage_counts.placed }}</span>
+    </a>
+    <a href="{{ url_for('recruiter.candidates_view', stage='rejected', job_id=selected_job_id, q=search_query) }}" class="pipeline-tab {% if selected_stage == 'rejected' %}active{% endif %}">
+        <span>Rejected</span>
+        <span class="pipeline-badge">{{ stage_counts.rejected }}</span>
+    </a>
+</div>
+
+<!-- Candidate Table / List -->
+<div class="glass-panel" style="padding: 0; overflow: hidden;">
+    <div class="table-responsive">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th style="width: 28%;">Candidate</th>
+                    <th style="width: 20%;">Requisition</th>
+                    <th style="width: 14%;">Academic / CGPA</th>
+                    <th style="width: 14%;">AI Match Score</th>
+                    <th style="width: 12%;">Stage</th>
+                    <th style="width: 12%; text-align: right;">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for app in applications %}
+                <tr>
+                    <!-- Candidate Info -->
+                    <td>
+                        <div style="display: flex; align-items: center; gap: 0.85rem;">
+                            <div style="width: 38px; height: 38px; border-radius: 50%; background: url('https://api.dicebear.com/7.x/avataaars/svg?seed={{ app.student.roll_number }}') center/cover; border: 2px solid rgba(255,255,255,0.1); flex-shrink: 0;"></div>
+                            <div>
+                                <div style="font-weight: 600; font-size: 0.95rem; color: #fff;">{{ app.student.name }}</div>
+                                <div style="font-size: 0.78rem; color: var(--text-muted);">
+                                    {{ app.student.roll_number }} • {{ app.student.department.code }} (Year {{ app.student.year }})
+                                </div>
+                            </div>
+                        </div>
+                    </td>
+
+                    <!-- Job Requisition -->
+                    <td>
+                        <div style="font-weight: 600; font-size: 0.9rem;">{{ app.job.title }}</div>
+                        <div style="font-size: 0.78rem; color: var(--text-dim);">Applied {{ app.applied_at.strftime('%d %b %Y') }}</div>
+                    </td>
+
+                    <!-- CGPA -->
+                    <td>
+                        {% set student_cgpa = app.student.cgpa or 0.0 %}
+                        {% set job_min_cgpa = app.job.min_cgpa or 0.0 %}
+                        <div style="font-weight: 700; font-size: 0.95rem; {% if student_cgpa >= job_min_cgpa %}color: #34d399;{% else %}color: #f87171;{% endif %}">
+                            {{ "%.2f"|format(student_cgpa) }} CGPA
+                        </div>
+                        <div style="font-size: 0.75rem; color: var(--text-dim);">
+                            {% if student_cgpa >= job_min_cgpa %}
+                                <span style="color: var(--status-success);">✓ Meets min {{ job_min_cgpa }}</span>
+                            {% else %}
+                                <span style="color: var(--status-danger);">✗ Below {{ job_min_cgpa }}</span>
+                            {% endif %}
+                        </div>
+                    </td>
+
+                    <!-- Match Score -->
+                    <td>
+                        <div style="display: flex; align-items: center; justify-content: space-between;">
+                            <span style="font-weight: 800; font-size: 1rem; color: var(--accent-secondary);">
+                                {{ "%.0f"|format(app.match_score or 0) }}%
+                            </span>
+                            <span class="badge" style="background: rgba(6, 182, 212, 0.12); color: var(--accent-secondary); font-size: 0.68rem; padding: 0.15rem 0.4rem;">
+                                Fit Score
+                            </span>
+                        </div>
+                        <div class="score-bar-bg">
+                            <div class="score-bar-fill" style="width: {{ app.match_score or 0 }}%;"></div>
+                        </div>
+                    </td>
+
+                    <!-- Current Stage -->
+                    <td>
+                        <span class="badge badge-{{ app.status }}">
+                            {{ app.status | replace('_', ' ') | capitalize }}
+                        </span>
+                        {% if app.interviews|length > 0 %}
+                        <div style="font-size: 0.72rem; color: var(--accent-secondary); margin-top: 0.25rem;">
+                            {{ app.interviews|length }} round(s)
+                        </div>
+                        {% endif %}
+                    </td>
+
+                    <!-- Stage Advance Actions -->
+                    <td style="text-align: right;">
+                        <div style="display: flex; gap: 0.4rem; justify-content: flex-end; align-items: center;">
+                            <!-- Stage Selector Form -->
+                            <form method="POST" action="{{ url_for('recruiter.update_candidate_status', app_id=app.id) }}" style="display: inline-block;">
+                                <select name="status" class="form-control" onchange="this.form.submit()" style="padding: 0.35rem 0.6rem; font-size: 0.78rem; width: auto; background: rgba(22, 30, 49, 0.9);">
+                                    <option value="" disabled selected>Move Stage...</option>
+                                    <option value="shortlisted" {% if app.status == 'shortlisted' %}disabled{% endif %}>Shortlist</option>
+                                    <option value="interview" {% if app.status == 'interview' %}disabled{% endif %}>Move to Interview</option>
+                                    <option value="selected" {% if app.status == 'selected' %}disabled{% endif %}>Select / Offer</option>
+                                    <option value="placed" {% if app.status == 'placed' %}disabled{% endif %}>Mark Placed</option>
+                                    <option value="rejected" {% if app.status == 'rejected' %}disabled{% endif %}>Reject</option>
+                                </select>
+                            </form>
+
+                            <!-- Direct Schedule Interview Button -->
+                            <a href="{{ url_for('recruiter.schedule_view', candidate_id=app.id) }}" class="btn btn-outline btn-sm" style="padding: 0.35rem 0.6rem;" title="Schedule Interview">
+                                <i data-lucide="calendar" style="width: 14px; height: 14px; color: var(--accent-secondary);"></i>
+                            </a>
+
+                            <!-- AI Screening Dossier Button -->
+                            <button type="button" class="btn btn-primary btn-sm ai-screen-trigger" style="padding: 0.35rem 0.6rem; background: linear-gradient(135deg, #6366f1, #8b5cf6); border: none;"
+                                data-student-id="{{ app.student.id }}"
+                                data-job-id="{{ app.job.id }}"
+                                data-name="{{ app.student.name|e }}"
+                                data-job="{{ app.job.title|e }}"
+                                title="AI Candidate Screening Dossier">
+                                <i data-lucide="sparkles" style="width: 14px; height: 14px;"></i>
+                            </button>
+
+                            <!-- View Profile Button with safe dataset attributes -->
+                            <button type="button" class="btn btn-outline btn-sm candidate-detail-trigger" style="padding: 0.35rem 0.6rem;"
+                                data-student-id="{{ app.student.id }}"
+                                data-name="{{ app.student.name|e }}"
+                                data-roll="{{ app.student.roll_number|e }}"
+                                data-dept="{{ (app.student.department.code if app.student.department else '')|e }}"
+                                data-cgpa="{{ '%.2f'|format(student_cgpa) }}"
+                                data-role="{{ (app.student.target_role or '')|e }}"
+                                data-bio="{{ (app.student.bio or 'No career bio provided.')|e }}"
+                                data-score="{{ '%.0f'|format(app.match_score or 0) }}"
+                                data-job="{{ (app.job.title or '')|e }}"
+                                title="Candidate Details">
+                                <i data-lucide="user" style="width: 14px; height: 14px;"></i>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="6" style="text-align: center; padding: 3rem; color: var(--text-dim);">
+                        <i data-lucide="users" style="width: 40px; height: 40px; margin-bottom: 0.75rem; opacity: 0.35;"></i>
+                        <div style="font-size: 1rem; font-weight: 600; color: var(--text-muted); margin-bottom: 0.25rem;">No candidates match your current filter criteria</div>
+                        <div style="font-size: 0.85rem; margin-bottom: 1rem;">Try clearing the search query or selecting a different pipeline stage tab above.</div>
+                        <a href="{{ url_for('recruiter.candidates_view') }}" class="btn btn-outline btn-sm">Clear All Filters</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Candidate Details Modal -->
+<div class="modal-backdrop" id="candidateModal">
+    <div class="modal-dialog">
+        <div class="modal-header">
+            <div class="modal-title">
+                <i data-lucide="user-check" style="color: var(--accent-primary); width: 20px; height: 20px;"></i>
+                Candidate Profile Assessment
+            </div>
+            <button type="button" class="modal-close-btn" onclick="closeStudentModal()">
+                <i data-lucide="x" style="width: 18px; height: 18px;"></i>
+            </button>
+        </div>
+        <div class="modal-body">
+            <div style="display: flex; gap: 1rem; align-items: center; margin-bottom: 1.25rem;">
+                <div id="modalAvatar" style="width: 52px; height: 52px; border-radius: 50%; background: #1e293b; border: 2px solid var(--accent-primary); flex-shrink: 0;"></div>
+                <div>
+                    <h3 id="modalName" style="font-size: 1.2rem; font-weight: 700; color: #fff;">Candidate Name</h3>
+                    <p id="modalDept" style="font-size: 0.85rem; color: var(--text-muted);">Roll Number • Department</p>
+                </div>
+            </div>
+
+            <div class="kpi-grid" style="grid-template-columns: 1fr 1fr 1fr; gap: 0.75rem; margin-bottom: 1.25rem;">
+                <div class="kpi-card" style="padding: 0.85rem;">
+                    <div class="kpi-title" style="font-size: 0.7rem;">Target Job</div>
+                    <div id="modalJob" style="font-size: 0.95rem; font-weight: 600; color: #fff; margin-top: 0.2rem;">Role</div>
+                </div>
+                <div class="kpi-card" style="padding: 0.85rem;">
+                    <div class="kpi-title" style="font-size: 0.7rem;">CGPA</div>
+                    <div id="modalCgpa" style="font-size: 1.15rem; font-weight: 700; color: var(--status-success); margin-top: 0.2rem;">8.5</div>
+                </div>
+                <div class="kpi-card" style="padding: 0.85rem;">
+                    <div class="kpi-title" style="font-size: 0.7rem;">AI Match</div>
+                    <div id="modalScore" style="font-size: 1.15rem; font-weight: 700; color: var(--accent-secondary); margin-top: 0.2rem;">85%</div>
+                </div>
+            </div>
+
+            <div style="margin-bottom: 1.25rem;">
+                <div style="font-size: 0.8rem; text-transform: uppercase; color: var(--text-dim); font-weight: 600; margin-bottom: 0.35rem;">
+                    Career Bio & Aspiration
+                </div>
+                <p id="modalBio" style="font-size: 0.88rem; color: var(--text-main); background: rgba(255,255,255,0.03); border: 1px solid var(--border-subtle); padding: 0.75rem; border-radius: var(--radius-sm); line-height: 1.5;">
+                    Bio goes here...
+                </p>
+            </div>
+
+            <div style="background: rgba(99, 102, 241, 0.08); border: 1px solid rgba(99, 102, 241, 0.2); padding: 0.85rem 1rem; border-radius: var(--radius-sm);">
+                <div style="font-size: 0.82rem; font-weight: 600; color: var(--accent-secondary); margin-bottom: 0.2rem;">
+                    ⚡ PlacementIQ AI Verdict
+                </div>
+                <div style="font-size: 0.8rem; color: var(--text-muted);">
+                    Candidate satisfies academic eligibility threshold. Skill overlap and domain competencies meet requisition requirements.
+                </div>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-outline btn-sm" onclick="closeStudentModal()">Close</button>
+            <a href="#" id="modalScheduleBtn" class="btn btn-primary btn-sm">
+                <i data-lucide="calendar" style="width: 14px; height: 14px;"></i> Schedule Interview
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- AI Candidate Screening Dossier Modal -->
+<div id="aiScreenModal" class="modal-backdrop">
+    <div class="modal-dialog" style="max-width: 680px; background: rgba(15, 23, 42, 0.95); border: 1px solid rgba(99, 102, 241, 0.4); border-radius: 20px; box-shadow: 0 20px 50px rgba(0,0,0,0.7); backdrop-filter: blur(20px);">
+        <div class="modal-header" style="background: linear-gradient(135deg, rgba(30, 27, 75, 0.5) 0%, rgba(15, 23, 42, 0.9) 100%); border-bottom: 1px solid rgba(255,255,255,0.08); padding: 20px 24px;">
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <div style="width: 36px; height: 36px; border-radius: 10px; background: linear-gradient(135deg, #6366f1, #a855f7); display: flex; align-items: center; justify-content: center; color: #fff;">
+                    <i data-lucide="sparkles" style="width: 18px; height: 18px;"></i>
+                </div>
+                <div>
+                    <h3 style="font-family: 'Outfit', sans-serif; font-size: 18px; font-weight: 700; color: #fff; margin: 0;">
+                        AI Candidate Screening Dossier
+                    </h3>
+                    <div style="font-size: 12px; color: #94a3b8;" id="aiModalSubtitle">Loading screening report...</div>
+                </div>
+            </div>
+            <button type="button" class="btn-close" onclick="closeAiScreenModal()" style="background: transparent; border: none; color: #94a3b8; font-size: 20px; cursor: pointer;">&times;</button>
+        </div>
+
+        <div class="modal-body" style="padding: 24px; max-height: 70vh; overflow-y: auto;">
+            <!-- Loading Indicator -->
+            <div id="aiDossierLoading" style="text-align: center; padding: 40px 0;">
+                <div style="font-size: 14px; color: #818cf8; font-weight: 600;">Generating deep candidate appraisal with Gemini...</div>
+                <div style="font-size: 12px; color: #64748b; margin-top: 6px;">Analyzing academic records, verified skills, and project artifacts.</div>
+            </div>
+
+            <!-- Content Container -->
+            <div id="aiDossierContent" style="display: none;">
+                <!-- Recommendation & Scores -->
+                <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(30, 41, 59, 0.6); padding: 14px 18px; border-radius: 12px; margin-bottom: 16px; border: 1px solid rgba(255,255,255,0.06);">
+                    <div>
+                        <div style="font-size: 11px; text-transform: uppercase; color: #94a3b8; font-weight: 600;">Recruiter Recommendation</div>
+                        <span class="badge" id="aiHiringRecBadge" style="font-size: 13px; padding: 4px 10px; margin-top: 4px; font-weight: 700;">--</span>
+                    </div>
+                    <div style="text-align: right;">
+                        <div style="font-size: 11px; text-transform: uppercase; color: #94a3b8; font-weight: 600;">Job Fit Score</div>
+                        <div style="font-size: 22px; font-weight: 800; color: #818cf8; font-family: 'Outfit';" id="aiFitScore">--%</div>
+                    </div>
+                </div>
+
+                <!-- Executive Dossier -->
+                <div style="margin-bottom: 18px;">
+                    <div style="font-size: 12px; text-transform: uppercase; color: #cbd5e1; font-weight: 700; margin-bottom: 6px;">Executive Evaluation</div>
+                    <p style="font-size: 13.5px; color: #e2e8f0; line-height: 1.6; margin: 0; background: rgba(15, 23, 42, 0.6); padding: 14px; border-radius: 10px; border-left: 3px solid #6366f1;" id="aiExecutiveDossier">
+                    </p>
+                </div>
+
+                <!-- Strengths vs Flags Split -->
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 20px;">
+                    <div style="background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.2); border-radius: 10px; padding: 12px;">
+                        <div style="font-size: 12px; font-weight: 700; color: #34d399; margin-bottom: 8px;">✓ Top Reasons to Hire</div>
+                        <ul id="aiTopReasons" style="margin: 0; padding-left: 18px; font-size: 12px; color: #d1fae5; line-height: 1.5;"></ul>
+                    </div>
+                    <div style="background: rgba(239, 68, 68, 0.08); border: 1px solid rgba(239, 68, 68, 0.2); border-radius: 10px; padding: 12px;">
+                        <div style="font-size: 12px; font-weight: 700; color: #f87171; margin-bottom: 8px;">⚠ Areas to Probe</div>
+                        <ul id="aiConcerns" style="margin: 0; padding-left: 18px; font-size: 12px; color: #fecaca; line-height: 1.5;"></ul>
+                    </div>
+                </div>
+
+                <!-- Tailored Interview Guide -->
+                <div>
+                    <div style="font-size: 12px; text-transform: uppercase; color: #cbd5e1; font-weight: 700; margin-bottom: 8px;">
+                        🎯 Tailored Interview Probing Guide
+                    </div>
+                    <div id="aiInterviewGuideContainer" style="display: flex; flex-direction: column; gap: 10px;"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="modal-footer" style="border-top: 1px solid rgba(255,255,255,0.08); padding: 16px 24px; display: flex; justify-content: flex-end; gap: 10px;">
+            <button type="button" class="btn btn-outline btn-sm" onclick="closeAiScreenModal()">Close Dossier</button>
+        </div>
+    </div>
+</div>
+
+<script>
+function viewStudentModal(studentId, name, roll, dept, cgpa, targetRole, bio, score, jobTitle) {
+    document.getElementById('modalName').textContent = name;
+    document.getElementById('modalDept').textContent = `${roll} • Department: ${dept} • Role: ${targetRole}`;
+    document.getElementById('modalJob').textContent = jobTitle;
+    document.getElementById('modalCgpa').textContent = cgpa;
+    document.getElementById('modalScore').textContent = `${score}%`;
+    document.getElementById('modalBio').textContent = bio;
+    document.getElementById('modalAvatar').style.backgroundImage = `url('https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(roll)}')`;
+    document.getElementById('modalAvatar').style.backgroundSize = 'cover';
+    
+    document.getElementById('modalScheduleBtn').href = `{{ url_for('recruiter.schedule_view') }}?candidate_id=${encodeURIComponent(studentId)}`;
+
+    const modal = document.getElementById('candidateModal');
+    if (modal) {
+        modal.classList.add('show');
+    }
+}
+
+function closeStudentModal() {
+    const modal = document.getElementById('candidateModal');
+    if (modal) {
+        modal.classList.remove('show');
+    }
+}
+
+function closeAiScreenModal() {
+    const modal = document.getElementById('aiScreenModal');
+    if (modal) {
+        modal.classList.remove('show');
+    }
+}
+
+async function openAiScreenModal(studentId, jobId, name, jobTitle) {
+    const modal = document.getElementById('aiScreenModal');
+    document.getElementById('aiModalSubtitle').textContent = `${name} • ${jobTitle}`;
+    document.getElementById('aiDossierLoading').style.display = 'block';
+    document.getElementById('aiDossierContent').style.display = 'none';
+
+    if (modal) modal.classList.add('show');
+
+    try {
+        const res = await fetch(`/recruiter/ai/api/screen/${studentId}/job/${jobId}`);
+        if (res.ok) {
+            const data = await res.json();
+            const screening = data.screening;
+
+            document.getElementById('aiFitScore').textContent = `${data.composite_score}%`;
+            
+            const recBadge = document.getElementById('aiHiringRecBadge');
+            recBadge.textContent = screening.hiring_recommendation;
+            recBadge.className = 'badge badge-' + (screening.hiring_recommendation.includes('Shortlist') ? 'shortlisted' : 'pending');
+
+            document.getElementById('aiExecutiveDossier').textContent = screening.executive_dossier;
+
+            // Reasons
+            const reasonsUl = document.getElementById('aiTopReasons');
+            reasonsUl.innerHTML = '';
+            (screening.top_reasons_to_hire || []).forEach(r => {
+                const li = document.createElement('li');
+                li.textContent = r;
+                reasonsUl.appendChild(li);
+            });
+
+            // Concerns
+            const concernsUl = document.getElementById('aiConcerns');
+            concernsUl.innerHTML = '';
+            (screening.concerns_or_flags || []).forEach(c => {
+                const li = document.createElement('li');
+                li.textContent = c;
+                concernsUl.appendChild(li);
+            });
+
+            // Interview Questions Guide
+            const guideContainer = document.getElementById('aiInterviewGuideContainer');
+            guideContainer.innerHTML = '';
+            (screening.tailored_interview_guide || []).forEach(g => {
+                const card = document.createElement('div');
+                card.style.cssText = 'background: rgba(15, 23, 42, 0.7); border: 1px solid rgba(255,255,255,0.06); border-radius: 8px; padding: 12px;';
+                card.innerHTML = `
+                    <div style="font-size: 11px; font-weight: 700; color: #818cf8; margin-bottom: 4px;">Focus: ${g.focus_area}</div>
+                    <div style="font-size: 13px; color: #ffffff; margin-bottom: 6px; font-weight: 500;">"${g.question}"</div>
+                    <div style="font-size: 11.5px; color: #94a3b8;"><strong style="color: #6ee7b7;">Look for:</strong> ${g.what_to_look_for}</div>
+                `;
+                guideContainer.appendChild(card);
+            });
+
+            document.getElementById('aiDossierLoading').style.display = 'none';
+            document.getElementById('aiDossierContent').style.display = 'block';
+
+            if (window.lucide) window.lucide.createIcons();
+        } else {
+            alert('Failed to generate AI screening dossier.');
+            closeAiScreenModal();
+        }
+    } catch (e) {
+        console.error(e);
+        alert('Network error loading dossier.');
+        closeAiScreenModal();
+    }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    document.querySelectorAll('.candidate-detail-trigger').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const d = this.dataset;
+            viewStudentModal(
+                d.studentId,
+                d.name,
+                d.roll,
+                d.dept,
+                d.cgpa,
+                d.role,
+                d.bio,
+                d.score,
+                d.job
+            );
+        });
+    });
+
+    document.querySelectorAll('.ai-screen-trigger').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const d = this.dataset;
+            openAiScreenModal(d.studentId, d.jobId, d.name, d.job);
+        });
+    });
+});
+
+window.addEventListener('click', (e) => {
+    const modal = document.getElementById('candidateModal');
+    const aiModal = document.getElementById('aiScreenModal');
+    if (e.target === modal) closeStudentModal();
+    if (e.target === aiModal) closeAiScreenModal();
+});
+</script>
+{% endblock %}
