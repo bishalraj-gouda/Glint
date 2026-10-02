@@ -62,6 +62,7 @@
 
   /* Layout & Bento Radii */
   --sidebar-width: 268px;
+  --sidebar-collapsed-width: 72px;
   --header-height: 72px;
   --radius-xs: 8px;
   --radius-sm: 12px;
@@ -137,17 +138,30 @@ body {
   left: 0;
   z-index: 100;
   box-shadow: 2px 0 20px rgba(35, 25, 15, 0.03);
-  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: width 0.28s cubic-bezier(0.4, 0, 0.2, 1), transform 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+  overflow-x: hidden;
 }
 
 .sidebar-header {
   height: var(--header-height);
-  padding: 0 1.5rem;
+  padding: 0 1rem 0 1.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  border-bottom: 1px solid var(--border-subtle);
+  background: #FFFFFF;
+  transition: padding 0.28s ease;
+}
+
+.sidebar-brand-wrapper {
   display: flex;
   align-items: center;
   gap: 0.85rem;
-  border-bottom: 1px solid var(--border-subtle);
-  background: #FFFFFF;
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
 }
 
 .brand-badge {
@@ -369,16 +383,17 @@ body {
   min-width: 0;
   display: flex;
   flex-direction: column;
-  transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: margin-left 0.28s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* Desktop Collapsed Sidebar State */
+/* Desktop Collapsed Sidebar State (ChatGPT-Style Compact Rail) */
 body.sidebar-collapsed .app-sidebar {
-  transform: translateX(-100%);
+  width: var(--sidebar-collapsed-width);
+  transform: none;
 }
 
 body.sidebar-collapsed .app-main {
-  margin-left: 0;
+  margin-left: var(--sidebar-collapsed-width);
 }
 
 .app-header {
@@ -406,40 +421,6 @@ body.sidebar-collapsed .app-main {
   display: flex;
   align-items: center;
   gap: 1rem;
-}
-
-.search-box {
-  background: #FFFFFF;
-  border: 1px solid var(--border-medium);
-  border-radius: var(--radius-full);
-  padding: 0.55rem 1.15rem;
-  display: flex;
-  align-items: center;
-  gap: 0.65rem;
-  width: 320px;
-  color: var(--text-muted);
-  box-shadow: var(--shadow-sm);
-  transition: all 0.2s ease;
-}
-
-.search-box:focus-within {
-  border-color: var(--accent-coral);
-  box-shadow: 0 0 0 3px rgba(231, 111, 81, 0.15);
-  width: 360px;
-}
-
-.search-box input {
-  background: transparent;
-  border: none;
-  outline: none;
-  color: var(--text-main);
-  font-size: 0.88rem;
-  font-weight: 500;
-  width: 100%;
-}
-
-.search-box input::placeholder {
-  color: var(--text-dim);
 }
 
 .page-content {
@@ -1199,7 +1180,7 @@ body.sidebar-collapsed .app-main {
   opacity: 1;
 }
 
-/* Modern 3-Line Hamburger Sidebar Toggle & Backdrop */
+/* Modern 3-Line Hamburger Sidebar Toggle & Internal Collapsible Controls */
 .sidebar-toggle-btn {
   display: inline-flex;
   align-items: center;
@@ -1225,6 +1206,197 @@ body.sidebar-collapsed .app-main {
 
 .sidebar-toggle-btn:active {
   transform: scale(0.95);
+}
+
+/* Sidebar Internal Toggle Button (Merged 3-bar and box-like icon) */
+.sidebar-internal-toggle {
+  width: 36px;
+  height: 36px;
+  background: #FAF7F2;
+  border: 1px solid var(--border-subtle);
+  color: var(--text-dim);
+}
+
+.sidebar-internal-toggle:hover {
+  background: var(--accent-coral-light);
+  border-color: #FCD9CE;
+  color: var(--accent-coral);
+}
+
+.sidebar-internal-toggle .icon-maximized {
+  display: block;
+}
+
+.sidebar-internal-toggle .icon-minimized {
+  display: none;
+}
+
+/* ==========================================================================
+   Collapsed / Minimized Sidebar Visual Styles (ChatGPT Style)
+   ========================================================================== */
+body.sidebar-collapsed .sidebar-header {
+  padding: 0 0.5rem;
+  justify-content: center;
+}
+
+body.sidebar-collapsed .sidebar-brand-wrapper {
+  display: none;
+}
+
+body.sidebar-collapsed .sidebar-internal-toggle {
+  width: 42px;
+  height: 42px;
+  background: #FFFFFF;
+  border: 1.5px solid var(--border-medium);
+  box-shadow: var(--shadow-sm);
+  color: var(--text-main);
+}
+
+body.sidebar-collapsed .sidebar-internal-toggle:hover {
+  background: var(--accent-coral-light);
+  border-color: var(--accent-coral);
+  color: var(--accent-coral);
+  transform: scale(1.05);
+}
+
+body.sidebar-collapsed .sidebar-internal-toggle .icon-maximized {
+  display: none;
+}
+
+body.sidebar-collapsed .sidebar-internal-toggle .icon-minimized {
+  display: block;
+}
+
+body.sidebar-collapsed .sidebar-nav {
+  padding: 0.75rem 0.35rem;
+  gap: 0.35rem;
+  overflow-x: hidden;
+}
+
+body.sidebar-collapsed .nav-item,
+body.sidebar-collapsed .nav-subitem {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 0.45rem 0.2rem;
+  gap: 3px;
+  text-align: center;
+  border-radius: var(--radius-sm);
+  width: 100%;
+  transform: none;
+}
+
+body.sidebar-collapsed .nav-item i,
+body.sidebar-collapsed .nav-subitem i {
+  width: 20px;
+  height: 20px;
+  margin: 0 auto;
+  flex-shrink: 0;
+  display: block;
+}
+
+body.sidebar-collapsed .nav-item span,
+body.sidebar-collapsed .nav-subitem span {
+  display: block;
+  font-size: 0.62rem;
+  font-weight: 600;
+  line-height: 1.15;
+  text-align: center;
+  max-width: 62px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  letter-spacing: -0.2px;
+  color: var(--text-muted);
+}
+
+body.sidebar-collapsed .nav-item:hover,
+body.sidebar-collapsed .nav-subitem:hover {
+  background: var(--bg-primary);
+  color: var(--text-main);
+  transform: translateY(-1px);
+}
+
+body.sidebar-collapsed .nav-item:hover i,
+body.sidebar-collapsed .nav-subitem:hover i {
+  color: var(--accent-coral);
+  transform: scale(1.08);
+}
+
+body.sidebar-collapsed .nav-item:hover span,
+body.sidebar-collapsed .nav-subitem:hover span {
+  color: var(--text-main);
+}
+
+body.sidebar-collapsed .nav-item.active,
+body.sidebar-collapsed .nav-subitem.active {
+  background: var(--accent-coral-light);
+  color: var(--accent-coral);
+}
+
+body.sidebar-collapsed .nav-item.active i,
+body.sidebar-collapsed .nav-subitem.active i {
+  color: var(--accent-coral);
+}
+
+body.sidebar-collapsed .nav-item.active span,
+body.sidebar-collapsed .nav-subitem.active span {
+  color: var(--accent-coral);
+  font-weight: 700;
+}
+
+body.sidebar-collapsed .nav-item.active::before,
+body.sidebar-collapsed .nav-subitem.active::before {
+  left: 2px;
+  top: 15%;
+  bottom: 15%;
+  width: 3px;
+  border-radius: 4px;
+}
+
+body.sidebar-collapsed .nav-subgroup {
+  margin: 0;
+  padding: 0;
+  border-left: none;
+  gap: 0.35rem;
+}
+
+body.sidebar-collapsed .nav-section-title {
+  padding: 0;
+  margin: 0.45rem 0.4rem !important;
+  font-size: 0;
+  height: 1px;
+  background: var(--border-subtle);
+  border: none;
+  overflow: hidden;
+  display: block;
+}
+
+body.sidebar-collapsed .nav-section-title * {
+  display: none !important;
+}
+
+body.sidebar-collapsed .sidebar-footer {
+  padding: 0.75rem 0.35rem;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+body.sidebar-collapsed .user-snippet {
+  justify-content: center;
+  width: 100%;
+}
+
+body.sidebar-collapsed .user-info {
+  display: none;
+}
+
+body.sidebar-collapsed .user-avatar {
+  width: 38px;
+  height: 38px;
+  margin: 0 auto;
 }
 
 .sidebar-close-btn {
@@ -1268,17 +1440,29 @@ body.sidebar-collapsed .app-main {
   pointer-events: auto;
 }
 
+/* Header toggle button hidden on desktop, visible on mobile */
+.header-toggle-btn {
+  display: none;
+}
+
 /* Responsive adjustments */
 @media (max-width: 900px) {
+  .header-toggle-btn {
+    display: inline-flex;
+  }
   .app-sidebar {
-    transform: translateX(-100%);
+    width: var(--sidebar-width) !important;
+    transform: translateX(-100%) !important;
     z-index: 1000;
   }
   .app-sidebar.open {
-    transform: translateX(0);
+    transform: translateX(0) !important;
     box-shadow: 8px 0 32px rgba(35, 25, 15, 0.16);
   }
   .app-main {
+    margin-left: 0 !important;
+  }
+  body.sidebar-collapsed .app-main {
     margin-left: 0 !important;
   }
   .sidebar-backdrop {
@@ -1380,18 +1564,6 @@ body.sidebar-collapsed .app-main {
   background: var(--accent-coral-light);
   color: var(--accent-coral);
   font-weight: 700;
-}
-
-.search-kbd-hint {
-  font-family: monospace;
-  font-size: 0.72rem;
-  font-weight: 700;
-  color: var(--text-dim);
-  background: var(--bg-primary);
-  border: 1px solid var(--border-medium);
-  padding: 1px 6px;
-  border-radius: 4px;
-  margin-left: auto;
 }
 
 /* Clean Status Strip (Non-ad, calm integrated placement status) */

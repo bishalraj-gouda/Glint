@@ -97,7 +97,7 @@ TABLE_METADATA = {
         "singular": "Student",
         "icon": "users",
         "description": "Enrolled student placement profiles, academic records, and CGPA metrics",
-        "columns": ["ID", "Roll Number", "Name", "Department", "CGPA", "Grad Year", "Status", "Actions"]
+        "columns": ["ID", "Roll Number", "Name", "Department", "CGPA", "Grad Year", "Password", "Status", "Actions"]
     },
     "recruiters": {
         "title": "Recruiters",
@@ -225,13 +225,20 @@ def database_view():
             cgpa_val = f"{s.cgpa:.2f}" if s.cgpa is not None else "—"
             status_text = "Placed" if s.placements else ("Eligible" if (s.cgpa or 0) >= 6.5 else "In Progress")
             status_badge = "shortlisted" if s.placements else ("eligible" if (s.cgpa or 0) >= 6.5 else "pending")
+            pwd_val = (s.user.raw_password if (s.user and s.user.raw_password) else "Student@123") if s.user else "—"
+            pwd_cell = f'<div style="display:inline-flex;align-items:center;gap:6px;"><code style="background:#FAF7F2;border:1px solid #EAE3D7;padding:3px 8px;border-radius:6px;font-family:monospace;font-size:0.84rem;color:#1F1C18;font-weight:700;">{pwd_val}</code><button type="button" class="btn-action-icon" style="padding:3px 6px;" onclick="navigator.clipboard.writeText(\'{pwd_val}\');if(window.showGlobalToast)window.showGlobalToast(\'Copied student password: {pwd_val}\');" title="Copy Password"><i data-lucide="copy" style="width:12px;height:12px;"></i></button></div>'
             rows_data.append({
                 "id": s.id,
-                "cells": [s.id, s.roll_number, s.name, dept_code, cgpa_val, s.graduation_year or "—"],
+                "cells": [s.id, s.roll_number, s.name, dept_code, cgpa_val, s.graduation_year or "—", pwd_cell],
                 "badge": {"text": status_text, "class": status_badge},
                 "raw": {
                     "id": s.id, "roll_number": s.roll_number, "name": s.name, "user_id": s.user_id,
-                    "department": dept_code, "cgpa": s.cgpa, "graduation_year": s.graduation_year,
+                    "email": s.user.email if s.user else "",
+                    "password": pwd_val,
+                    "department_id": s.department_id,
+                    "department": dept_code, "cgpa": s.cgpa, "year": s.year,
+                    "graduation_year": s.graduation_year,
+                    "target_role": s.target_role or "",
                     "created_at": s.created_at.isoformat() if hasattr(s, "created_at") and s.created_at else None
                 }
             })
@@ -250,8 +257,9 @@ def database_view():
                 "id": r.id,
                 "cells": [r.id, r.name, comp_name, r.designation or "—", r.phone or "—", email_val, pwd_cell],
                 "raw": {
-                    "id": r.id, "name": r.name, "company": comp_name, "designation": r.designation,
-                    "phone": r.phone, "email": email_val, "password": pwd_val, "user_id": r.user_id
+                    "id": r.id, "name": r.name, "company_id": r.company_id, "company": comp_name,
+                    "designation": r.designation or "",
+                    "phone": r.phone or "", "email": email_val, "password": pwd_val, "user_id": r.user_id
                 }
             })
 
@@ -397,6 +405,9 @@ def database_view():
 
     current_meta = TABLE_METADATA.get(active_table, TABLE_METADATA["students"])
 
+    departments = Department.query.order_by(Department.name).all()
+    companies = Company.query.order_by(Company.name).all()
+
     return render_template(
         "admin/database.html",
         active_page="database",
@@ -408,7 +419,9 @@ def database_view():
         engine_name=engine_name,
         db_size=db_size,
         search_query=search_query,
-        rows=rows_data
+        rows=rows_data,
+        departments=departments,
+        companies=companies
     )
 
 
@@ -424,9 +437,10 @@ def export_table_csv(table_name):
     writer = csv.writer(output)
 
     if table_key == "students":
-        writer.writerow(["ID", "Roll Number", "Name", "Department", "CGPA", "Graduation Year"])
+        writer.writerow(["ID", "Roll Number", "Name", "Department", "CGPA", "Graduation Year", "Password"])
         for s in Student.query.all():
-            writer.writerow([s.id, s.roll_number, s.name, s.department.code if s.department else "", s.cgpa or "", s.graduation_year or ""])
+            pwd_val = (s.user.raw_password if (s.user and s.user.raw_password) else "Student@123") if s.user else ""
+            writer.writerow([s.id, s.roll_number, s.name, s.department.code if s.department else "", s.cgpa or "", s.graduation_year or "", pwd_val])
     elif table_key == "recruiters":
         writer.writerow(["ID", "Name", "Company", "Designation", "Phone", "Email", "Password"])
         for r in Recruiter.query.all():
@@ -644,6 +658,355 @@ def api_create_company():
     except Exception as e:
         db.session.rollback()
         return jsonify({"error": f"Failed to register company: {str(e)}"}), 400
+
+
+@admin_bp.route("/api/database/<table_name>/create", methods=["POST"])
+@admin_bp.route("/api/database/students/create", methods=["POST"])
+@admin_bp.route("/api/database/recruiters/create", methods=["POST"])
+@admin_required
+def api_create_record(table_name="students"):
+    """Provisions a new entity record (student, recruiter, company) from the database manager."""
+    # Determine table_key if routed via explicit alias
+    if request.path.endswith("/students/create"):
+        table_key = "students"
+    elif request.path.endswith("/recruiters/create"):
+        table_key = "recruiters"
+    else:
+        table_key = table_name.lower()
+
+    data = request.get_json(silent=True) or request.form
+
+    if table_key == "students":
+        name = (data.get("name") or "").strip()
+        email = (data.get("email") or "").strip().lower()
+        password = data.get("password") or "Student@123"
+        roll_number = (data.get("roll_number") or "").strip().upper()
+
+        if not name:
+            return jsonify({"error": "Student name is required."}), 400
+        if not email:
+            return jsonify({"error": "Email address is required."}), 400
+        if not roll_number:
+            return jsonify({"error": "Roll number is required."}), 400
+        if len(password) < 6:
+            return jsonify({"error": "Password must be at least 6 characters long."}), 400
+
+        # Uniqueness checks
+        if User.query.filter_by(email=email).first():
+            return jsonify({"error": f"An account with email '{email}' already exists."}), 400
+        if Student.query.filter_by(roll_number=roll_number).first():
+            return jsonify({"error": f"Roll number '{roll_number}' is already registered."}), 400
+
+        try:
+            user = User(email=email, role="STUDENT")
+            user.set_password(password)
+            user.raw_password = password
+            db.session.add(user)
+            db.session.flush()
+
+            dept_id = data.get("department_id")
+            if dept_id:
+                try:
+                    dept_id = int(dept_id)
+                except (ValueError, TypeError):
+                    dept_id = 1
+            else:
+                first_dept = Department.query.first()
+                dept_id = first_dept.id if first_dept else 1
+
+            try:
+                cgpa = float(data.get("cgpa", 7.50)) if data.get("cgpa") not in [None, ""] else 7.50
+            except (ValueError, TypeError):
+                cgpa = 7.50
+
+            try:
+                year = int(data.get("year", 3)) if data.get("year") not in [None, ""] else 3
+            except (ValueError, TypeError):
+                year = 3
+
+            try:
+                grad_year = int(data.get("graduation_year", datetime.now().year + 1)) if data.get("graduation_year") not in [None, ""] else (datetime.now().year + 1)
+            except (ValueError, TypeError):
+                grad_year = datetime.now().year + 1
+
+            target_role = (data.get("target_role") or "Software Engineer").strip()
+            phone = (data.get("phone") or "").strip() or None
+
+            student = Student(
+                user_id=user.id,
+                name=name,
+                roll_number=roll_number,
+                department_id=dept_id,
+                cgpa=cgpa,
+                year=year,
+                graduation_year=grad_year,
+                target_role=target_role,
+                phone=phone,
+                readiness_score=65.0
+            )
+            db.session.add(student)
+            db.session.commit()
+
+            return jsonify({
+                "success": True,
+                "message": f"Student '{student.name}' provisioned successfully.",
+                "record": {
+                    "id": student.id,
+                    "name": student.name,
+                    "roll_number": student.roll_number,
+                    "email": user.email,
+                    "department": student.department.code if student.department else "—",
+                    "cgpa": f"{student.cgpa:.2f}"
+                }
+            }), 201
+
+        except Exception as e:
+            db.session.rollback()
+            return jsonify({"error": f"Failed to provision student: {str(e)}"}), 400
+
+    elif table_key == "recruiters":
+        name = (data.get("name") or "").strip()
+        email = (data.get("email") or "").strip().lower()
+        password = data.get("password") or "Recruiter@123"
+        company_id = data.get("company_id")
+
+        if not name:
+            return jsonify({"error": "Recruiter name is required."}), 400
+        if not email:
+            return jsonify({"error": "Email address is required."}), 400
+        if not company_id:
+            return jsonify({"error": "Please select a partner company."}), 400
+        if len(password) < 6:
+            return jsonify({"error": "Password must be at least 6 characters long."}), 400
+
+        try:
+            company_id = int(company_id)
+        except (ValueError, TypeError):
+            return jsonify({"error": "Invalid company ID provided."}), 400
+
+        company = db.session.get(Company, company_id)
+        if not company:
+            return jsonify({"error": f"Company #{company_id} not found."}), 404
+
+        if User.query.filter_by(email=email).first():
+            return jsonify({"error": f"An account with email '{email}' already exists."}), 400
+
+        try:
+            user = User(email=email, role="RECRUITER")
+            user.set_password(password)
+            user.raw_password = password
+            db.session.add(user)
+            db.session.flush()
+
+            designation = (data.get("designation") or "Talent Acquisition Specialist").strip()
+            phone = (data.get("phone") or "").strip() or None
+
+            recruiter = Recruiter(
+                user_id=user.id,
+                company_id=company.id,
+                name=name,
+                designation=designation,
+                phone=phone
+            )
+            db.session.add(recruiter)
+            db.session.commit()
+
+            return jsonify({
+                "success": True,
+                "message": f"Recruiter '{recruiter.name}' provisioned successfully for {company.name}.",
+                "record": {
+                    "id": recruiter.id,
+                    "name": recruiter.name,
+                    "company": company.name,
+                    "email": user.email,
+                    "designation": recruiter.designation
+                }
+            }), 201
+
+        except Exception as e:
+            db.session.rollback()
+            return jsonify({"error": f"Failed to provision recruiter: {str(e)}"}), 400
+
+    elif table_key == "companies":
+        return api_create_company()
+
+    return jsonify({"error": f"Creation is not supported for table '{table_name}'."}), 400
+
+
+@admin_bp.route("/api/database/<table_name>/<int:record_id>/update", methods=["POST"])
+@admin_required
+def api_update_record(table_name, record_id):
+    """Updates an entity record (students, recruiters, companies) from admin database manager."""
+    table_key = table_name.lower()
+    data = request.get_json(silent=True) or request.form
+
+    if table_key == "students":
+        student = db.session.get(Student, record_id)
+        if not student:
+            return jsonify({"error": f"Student #{record_id} not found."}), 404
+
+        name = (data.get("name") if "name" in data else student.name or "").strip()
+        roll_number = (data.get("roll_number") if "roll_number" in data else student.roll_number or "").strip()
+        existing_email_default = student.user.email if student.user else ""
+        email = (data.get("email") if "email" in data else existing_email_default or "").strip().lower()
+
+        if not name:
+            return jsonify({"error": "Student name is required."}), 400
+        if not roll_number:
+            return jsonify({"error": "Roll number is required."}), 400
+
+        # Check unique roll number
+        existing_roll = Student.query.filter(Student.roll_number == roll_number, Student.id != record_id).first()
+        if existing_roll:
+            return jsonify({"error": f"Roll number '{roll_number}' is already registered to another student."}), 400
+
+        # Update linked User email
+        if email and student.user:
+            existing_email = User.query.filter(User.email == email, User.id != student.user_id).first()
+            if existing_email:
+                return jsonify({"error": f"Email '{email}' is already in use by another user account."}), 400
+            student.user.email = email
+
+        # Optional password update
+        password = data.get("password")
+        if password and student.user:
+            student.user.set_password(password)
+            student.user.raw_password = password
+
+        student.name = name
+        student.roll_number = roll_number
+
+        dept_id = data.get("department_id")
+        if dept_id:
+            try:
+                student.department_id = int(dept_id)
+            except (ValueError, TypeError):
+                pass
+
+        if "cgpa" in data and data.get("cgpa") != "":
+            try:
+                student.cgpa = float(data.get("cgpa"))
+            except (ValueError, TypeError):
+                pass
+
+        if "year" in data and data.get("year") != "":
+            try:
+                student.year = int(data.get("year"))
+            except (ValueError, TypeError):
+                pass
+
+        if "graduation_year" in data and data.get("graduation_year") != "":
+            try:
+                student.graduation_year = int(data.get("graduation_year"))
+            except (ValueError, TypeError):
+                pass
+
+        if "target_role" in data:
+            student.target_role = (data.get("target_role") or "").strip() or student.target_role
+
+        db.session.commit()
+        return jsonify({
+            "success": True,
+            "message": f"Student '{student.name}' updated successfully.",
+            "record": {
+                "id": student.id,
+                "name": student.name,
+                "roll_number": student.roll_number,
+                "email": student.user.email if student.user else "",
+                "department": student.department.code if student.department else "—",
+                "cgpa": f"{student.cgpa:.2f}" if student.cgpa else "—"
+            }
+        })
+
+    elif table_key == "recruiters":
+        recruiter = db.session.get(Recruiter, record_id)
+        if not recruiter:
+            return jsonify({"error": f"Recruiter #{record_id} not found."}), 404
+
+        name = (data.get("name") if "name" in data else recruiter.name or "").strip()
+        existing_email_default = recruiter.user.email if recruiter.user else ""
+        email = (data.get("email") if "email" in data else existing_email_default or "").strip().lower()
+
+        if not name:
+            return jsonify({"error": "Recruiter name is required."}), 400
+
+        # Update linked User email
+        if email and recruiter.user:
+            existing_email = User.query.filter(User.email == email, User.id != recruiter.user_id).first()
+            if existing_email:
+                return jsonify({"error": f"Email '{email}' is already in use by another user account."}), 400
+            recruiter.user.email = email
+
+        # Optional password update
+        password = data.get("password")
+        if password and recruiter.user:
+            recruiter.user.set_password(password)
+            recruiter.user.raw_password = password
+
+        recruiter.name = name
+
+        company_id = data.get("company_id")
+        if company_id:
+            try:
+                recruiter.company_id = int(company_id)
+            except (ValueError, TypeError):
+                pass
+
+        if "designation" in data:
+            recruiter.designation = (data.get("designation") or "").strip() or recruiter.designation
+        if "phone" in data:
+            recruiter.phone = (data.get("phone") or "").strip() or None
+
+        db.session.commit()
+        return jsonify({
+            "success": True,
+            "message": f"Recruiter '{recruiter.name}' updated successfully.",
+            "record": {
+                "id": recruiter.id,
+                "name": recruiter.name,
+                "company": recruiter.company.name if recruiter.company else "—",
+                "email": recruiter.user.email if recruiter.user else "",
+                "designation": recruiter.designation
+            }
+        })
+
+    elif table_key == "companies":
+        company = db.session.get(Company, record_id)
+        if not company:
+            return jsonify({"error": f"Company #{record_id} not found."}), 404
+
+        name = (data.get("name") if "name" in data else company.name or "").strip()
+        if not name:
+            return jsonify({"error": "Company name is required."}), 400
+
+        existing = Company.query.filter(db.func.lower(Company.name) == name.lower(), Company.id != record_id).first()
+        if existing:
+            return jsonify({"error": f"Another partner company named '{name}' already exists."}), 400
+
+        company.name = name
+        if "industry" in data:
+            company.industry = (data.get("industry") or "Technology").strip()
+        if "location" in data:
+            company.location = (data.get("location") or "").strip() or None
+        if "website" in data:
+            company.website = (data.get("website") or "").strip() or None
+        if "description" in data:
+            company.description = (data.get("description") or "").strip() or None
+
+        db.session.commit()
+        return jsonify({
+            "success": True,
+            "message": f"Company '{company.name}' updated successfully.",
+            "record": {
+                "id": company.id,
+                "name": company.name,
+                "industry": company.industry,
+                "location": company.location or "—",
+                "website": company.website or "—"
+            }
+        })
+
+    return jsonify({"error": f"Editing is not supported for table '{table_name}'."}), 400
 
 
 @admin_bp.route("/api/database/<table_name>/<int:record_id>/delete", methods=["POST"])

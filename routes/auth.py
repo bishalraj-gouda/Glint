@@ -17,7 +17,10 @@ def login():
     # When user visits the login screen, delete any previous session so old modules cannot be accessed
     if request.method == "GET":
         logout_user()
+        flashes = session.get("_flashes")
         session.clear()
+        if flashes:
+            session["_flashes"] = flashes
         return render_template("login.html")
 
     if request.method == "POST":
@@ -57,12 +60,12 @@ def login():
         elif role_lower == "recruiter" and user.recruiter_profile:
             session["display_name"] = user.recruiter_profile.name
             session["profile_id"] = user.recruiter_profile.id
-            session["company_name"] = user.recruiter_profile.company.name if user.recruiter_profile.company else ""
         elif role_lower == "admin":
             session["display_name"] = "College Administrator"
         else:
             session["display_name"] = user.email.split("@")[0].replace(".", " ").title()
 
+        session["show_release_notes"] = True
         flash(f"Welcome back, {session['display_name']}!", "success")
 
         next_page = request.args.get("next")
@@ -88,106 +91,9 @@ def login():
 
 @auth_bp.route("/register", methods=["GET", "POST"])
 def register():
-    """Registration for new Students and Recruiters."""
-    if request.method == "GET":
-        logout_user()
-        session.clear()
-
-    departments = Department.query.order_by(Department.code).all()
-    companies = Company.query.order_by(Company.name).all()
-
-    if request.method == "POST":
-        email = request.form.get("email", "").strip().lower()
-        password = request.form.get("password", "")
-        confirm_password = request.form.get("confirm_password", "")
-        role_raw = request.form.get("role", "student")
-        role = role_raw.strip().upper()
-        name = request.form.get("name", "").strip()
-
-        if not email or not password or not name:
-            flash("All mandatory fields must be completed.", "danger")
-            return render_template("register.html", departments=departments, companies=companies)
-
-        if password != confirm_password:
-            flash("Passwords do not match.", "danger")
-            return render_template("register.html", departments=departments, companies=companies)
-
-        if len(password) < 6:
-            flash("Password must be at least 6 characters long.", "danger")
-            return render_template("register.html", departments=departments, companies=companies)
-
-        if User.query.filter_by(email=email).first():
-            flash("An account with this email address already exists.", "danger")
-            return render_template("register.html", departments=departments, companies=companies)
-
-        try:
-            # Create base user
-            user = User(email=email, role=role)
-            user.set_password(password)
-            db.session.add(user)
-            db.session.flush()
-
-            if role == "STUDENT":
-                roll_number = request.form.get("roll_number", "").strip().upper()
-                dept_id = request.form.get("department_id", type=int)
-                target_role = request.form.get("target_role", "Software Engineer").strip()
-                cgpa = float(request.form.get("cgpa", 7.5))
-
-                if not roll_number:
-                    roll_number = f"STU{user.id:04d}"
-
-                if Student.query.filter_by(roll_number=roll_number).first():
-                    db.session.rollback()
-                    flash(f"Roll number {roll_number} is already registered.", "danger")
-                    return render_template("register.html", departments=departments, companies=companies)
-
-                student = Student(
-                    user_id=user.id,
-                    name=name,
-                    roll_number=roll_number,
-                    department_id=dept_id or (departments[0].id if departments else 1),
-                    target_role=target_role,
-                    cgpa=cgpa,
-                    readiness_score=65.0
-                )
-                db.session.add(student)
-
-            elif role == "RECRUITER":
-                company_id = request.form.get("company_id", type=int)
-                new_company_name = (request.form.get("company_name") or request.form.get("new_company_name") or "").strip()
-                designation = request.form.get("designation", "Talent Acquisition").strip()
-                phone = request.form.get("phone", "").strip()
-
-                if not company_id and new_company_name:
-                    company = Company(
-                        name=new_company_name,
-                        industry=request.form.get("industry", "Technology"),
-                        location=request.form.get("location", "Bangalore")
-                    )
-                    db.session.add(company)
-                    db.session.flush()
-                    company_id = company.id
-                elif not company_id and companies:
-                    company_id = companies[0].id
-
-                recruiter = Recruiter(
-                    user_id=user.id,
-                    company_id=company_id or 1,
-                    name=name,
-                    designation=designation,
-                    phone=phone
-                )
-                db.session.add(recruiter)
-
-            db.session.commit()
-            flash("Account registered successfully! Please log in.", "success")
-            return redirect(url_for("auth.login"))
-
-        except Exception as e:
-            db.session.rollback()
-            flash(f"Registration error: {str(e)}", "danger")
-
-    return render_template("register.html", departments=departments, companies=companies)
+    """Public registration has been decommissioned. Accounts are provisioned and managed by administrators."""
+    flash("Public account registration is disabled. Please contact your campus placement administrator or sign in using your verified credentials.", "info")
+    return redirect(url_for("auth.login"))
 
 
 @auth_bp.route("/logout", methods=["GET", "POST"])

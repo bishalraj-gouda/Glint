@@ -9,14 +9,21 @@ document.addEventListener("DOMContentLoaded", () => {
         window.lucide.createIcons();
     }
 
-    // 2. Global 3-Line Hamburger Sidebar Toggle & Backdrop
+    // 2. Global ChatGPT-Style Sidebar Toggle & Backdrop
     const toggleBtn = document.getElementById("sidebar-toggle");
-    const closeBtn = document.getElementById("sidebar-close-btn");
+    const collapseBtn = document.getElementById("sidebar-collapse-btn") || document.getElementById("sidebar-close-btn");
     const sidebar = document.querySelector(".app-sidebar");
     const backdrop = document.getElementById("sidebar-backdrop");
 
     function isMobileView() {
         return window.innerWidth <= 900;
+    }
+
+    function updateToggleTitle() {
+        if (!collapseBtn) return;
+        const isCollapsed = document.body.classList.contains("sidebar-collapsed");
+        collapseBtn.setAttribute("title", isCollapsed ? "Expand Sidebar (Ctrl+B)" : "Collapse Sidebar (Ctrl+B)");
+        collapseBtn.setAttribute("aria-label", isCollapsed ? "Expand sidebar" : "Collapse sidebar");
     }
 
     // Restore desktop collapsed preference
@@ -28,6 +35,7 @@ document.addEventListener("DOMContentLoaded", () => {
         } catch (e) {
             console.warn(e);
         }
+        updateToggleTitle();
     }
 
     function toggleAppSidebar(e) {
@@ -44,6 +52,7 @@ document.addEventListener("DOMContentLoaded", () => {
             try {
                 localStorage.setItem("glint_sidebar_collapsed", isCollapsed ? "true" : "false");
             } catch (err) {}
+            updateToggleTitle();
         }
     }
 
@@ -57,6 +66,7 @@ document.addEventListener("DOMContentLoaded", () => {
             try {
                 localStorage.setItem("glint_sidebar_collapsed", "true");
             } catch (err) {}
+            updateToggleTitle();
         }
     }
 
@@ -64,11 +74,8 @@ document.addEventListener("DOMContentLoaded", () => {
         toggleBtn.addEventListener("click", toggleAppSidebar);
     }
 
-    if (closeBtn) {
-        closeBtn.addEventListener("click", (e) => {
-            e.stopPropagation();
-            closeAppSidebar();
-        });
+    if (collapseBtn) {
+        collapseBtn.addEventListener("click", toggleAppSidebar);
     }
 
     if (backdrop) {
@@ -98,19 +105,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }, 5000);
     });
 
-    // 4. Keyboard Shortcut '/' to focus global search
-    document.addEventListener("keydown", (e) => {
-        if (e.key === "/" && !["INPUT", "TEXTAREA"].includes(document.activeElement.tagName)) {
-            e.preventDefault();
-            const searchInput = document.getElementById("global-search-input");
-            if (searchInput) {
-                searchInput.focus();
-                searchInput.select();
-            }
-        }
-    });
-
-    // 5. Close role switcher menu when clicking outside
+    // 4. Close role switcher menu when clicking outside
     document.addEventListener("click", (e) => {
         const menu = document.getElementById("role-dropdown-menu");
         const toggle = document.getElementById("role-switcher-toggle");

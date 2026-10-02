@@ -61,13 +61,20 @@ def test_password_hashing(app):
 
 
 def test_login_student_success(client):
-    """Test student login and session setup."""
+    """Test student login and session setup, including role-tailored What's New release popup."""
     response = client.post("/login", data={
         "email": "student@demo.com",
         "password": "Student@123"
     }, follow_redirects=True)
     assert response.status_code == 200
     assert b"student" in response.data.lower()
+    # Verify What's New modal presence and auto-open trigger
+    assert b"What&#39;s New in Glint" in response.data or b"What's New in Glint" in response.data
+    assert b"Enhanced Student Interviews" in response.data
+    assert b"Collapsible Sidebar &amp; Navigation" in response.data or b"Collapsible Sidebar & Navigation" in response.data
+    # Verify student does NOT see admin database changes
+    assert b"Admin Database Manager" not in response.data
+    assert b"shouldShowFromServer = true" in response.data
 
 
 def test_login_recruiter_success(client):
@@ -90,52 +97,142 @@ def test_login_invalid_credentials(client):
     assert b"Invalid email or password" in response.data or b"danger" in response.data
 
 
-def test_student_registration_flow(client, app):
-    """Test registering a new student user."""
-    reg_data = {
-        "email": "newstudent@campus.edu",
-        "password": "NewStudent@123",
-        "confirm_password": "NewStudent@123",
+def test_registration_disabled_and_redirects_to_login(client):
+    """Test that public registration endpoint redirects to login since account creation is managed by admin."""
+    # Test GET /register
+    get_resp = client.get("/register", follow_redirects=False)
+    assert get_resp.status_code == 302
+    assert "/login" in get_resp.headers["Location"]
+
+    # Test POST /register
+    post_resp = client.post("/register", data={
+        "email": "intruder@campus.edu",
+        "password": "Password@123",
         "role": "STUDENT",
-        "name": "Jane Doe",
-        "roll_number": "22CS999",
+        "name": "Intruder Doe"
+    }, follow_redirects=True)
+    assert post_resp.status_code == 200
+    assert b"Public account registration is disabled" in post_resp.data or b"disabled" in post_resp.data
+
+
+def test_admin_edit_student_recruiter_company(client, app):
+    """Test admin ability to edit students, recruiters, and companies via database manager API."""
+    # Log in as admin
+    client.post("/login", data={
+        "email": "admin@placementiq.ai",
+        "password": "Admin@123"
+    }, follow_redirects=True)
+
+    with app.app_context():
+        student = Student.query.first()
+        recruiter = Recruiter.query.first()
+        company = Company.query.first()
+        student_id = student.id
+        recruiter_id = recruiter.id
+        company_id = company.id
+
+    # 1. Edit Student
+    resp_student = client.post(f"/admin/api/database/students/{student_id}/update", json={
+        "name": "Updated Student Name",
+        "cgpa": "9.45",
+        "target_role": "Lead Architect",
+        "phone": "+91 99999 88888"
+    })
+    assert resp_student.status_code == 200
+    assert resp_student.get_json()["success"] is True
+
+    # 2. Edit Recruiter
+    resp_recruiter = client.post(f"/admin/api/database/recruiters/{recruiter_id}/update", json={
+        "name": "Updated Recruiter Lead",
+        "designation": "VP of Talent",
+        "phone": "+91 98888 77777"
+    })
+    assert resp_recruiter.status_code == 200
+    assert resp_recruiter.get_json()["success"] is True
+
+    # 3. Edit Company
+    resp_company = client.post(f"/admin/api/database/companies/{company_id}/update", json={
+        "name": "Updated Enterprise Corp",
+        "industry": "Artificial Intelligence",
+        "location": "Hyderabad, India"
+    })
+    assert resp_company.status_code == 200
+    assert resp_company.get_json()["success"] is True
+
+    # Verify changes in DB
+    with app.app_context():
+        updated_s = Student.query.get(student_id)
+        assert updated_s.name == "Updated Student Name"
+        assert updated_s.cgpa == 9.45
+
+        updated_r = Recruiter.query.get(recruiter_id)
+        assert updated_r.name == "Updated Recruiter Lead"
+        assert updated_r.designation == "VP of Talent"
+
+        updated_c = Company.query.get(company_id)
+        assert updated_c.name == "Updated Enterprise Corp"
+        assert updated_c.industry == "Artificial Intelligence"
+
+
+def test_admin_create_student_and_recruiter(client, app):
+    """Test admin ability to provision new student and recruiter accounts and verify their login capability."""
+    # 1. Log in as Admin
+    client.post("/login", data={
+        "email": "admin@placementiq.ai",
+        "password": "Admin@123"
+    }, follow_redirects=True)
+
+    # 2. Provision new Student via Database Manager API
+    student_payload = {
+        "name": "Admin Added Student",
+        "roll_number": "ADMIN_STU_99",
+        "email": "admin_student@campus.edu",
+        "password": "Student@Password123",
         "department_id": 1,
-        "year": 3,
-        "cgpa": 8.9,
-        "target_role": "AI Engineer"
+        "cgpa": "8.85",
+        "year": "4",
+        "graduation_year": "2026",
+        "target_role": "Cloud Architect",
+        "phone": "+91 91111 22222"
     }
-    response = client.post("/register", data=reg_data, follow_redirects=True)
-    assert response.status_code == 200
+    resp_student = client.post("/admin/api/database/students/create", json=student_payload)
+    assert resp_student.status_code == 201
+    assert resp_student.get_json()["success"] is True
 
+    # 3. Provision new Recruiter via Database Manager API
     with app.app_context():
-        user = User.query.filter_by(email="newstudent@campus.edu").first()
-        assert user is not None
-        assert user.role.upper() == ROLE_STUDENT
-        assert user.student_profile is not None
-        assert user.student_profile.name == "Jane Doe"
+        comp = Company.query.first()
+        comp_id = comp.id
 
-
-def test_recruiter_registration_flow(client, app):
-    """Test registering a new recruiter user."""
-    reg_data = {
-        "email": "newrecruiter@techcorp.com",
-        "password": "Recruiter@123",
-        "confirm_password": "Recruiter@123",
-        "role": "RECRUITER",
-        "name": "Alex Smith",
-        "company_name": "TechCorp Innovations",
-        "designation": "Hiring Director",
-        "phone": "+91 91234 56789"
+    recruiter_payload = {
+        "name": "Admin Added Recruiter",
+        "email": "admin_recruiter@partner.com",
+        "password": "Recruiter@Password123",
+        "company_id": comp_id,
+        "designation": "Principal Recruiter",
+        "phone": "+91 93333 44444"
     }
-    response = client.post("/register", data=reg_data, follow_redirects=True)
-    assert response.status_code == 200
+    resp_recruiter = client.post("/admin/api/database/recruiters/create", json=recruiter_payload)
+    assert resp_recruiter.status_code == 201
+    assert resp_recruiter.get_json()["success"] is True
 
-    with app.app_context():
-        user = User.query.filter_by(email="newrecruiter@techcorp.com").first()
-        assert user is not None
-        assert user.role.upper() == ROLE_RECRUITER
-        assert user.recruiter_profile is not None
-        assert user.recruiter_profile.name == "Alex Smith"
+    # 4. Verify the provisioned Student can log in successfully
+    client.get("/logout", follow_redirects=True)
+    login_stu = client.post("/login", data={
+        "email": "admin_student@campus.edu",
+        "password": "Student@Password123"
+    }, follow_redirects=False)
+    assert login_stu.status_code == 302
+    assert "/student" in login_stu.headers["Location"]
+
+    # 5. Verify the provisioned Recruiter can log in successfully
+    client.get("/logout", follow_redirects=True)
+    login_rec = client.post("/login", data={
+        "email": "admin_recruiter@partner.com",
+        "password": "Recruiter@Password123"
+    }, follow_redirects=False)
+    assert login_rec.status_code == 302
+    assert "/recruiter" in login_rec.headers["Location"]
 
 
 def test_unauthorized_redirects_to_login(client):

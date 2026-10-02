@@ -83,7 +83,8 @@ def create_app(config_name: str = None) -> Flask:
             "current_user": user,
             "session_user_role": (user.role.lower() if user and user.role else session.get("user_role", "")),
             "session_display_name": session.get("display_name", user.email if user else "User"),
-            "session_company_name": session.get("company_name", "")
+            "session_company_name": session.get("company_name", ""),
+            "show_release_notes": session.pop("show_release_notes", False)
         }
 
     # Error handling

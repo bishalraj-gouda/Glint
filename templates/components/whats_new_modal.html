@@ -1,0 +1,515 @@
+<!-- What's New Release Notes Modal (Role-Filtered Release Highlights) -->
+<div id="whats-new-modal" class="whats-new-backdrop" style="display: none;" role="dialog" aria-modal="true" aria-labelledby="whats-new-title">
+    <div class="whats-new-dialog">
+        <!-- Top Accent Gradient Line -->
+        <div style="height: 5px; width: 100%; background: linear-gradient(90deg, #E76F51 0%, #F4A261 40%, #2D6A4F 100%);"></div>
+
+        <!-- Modal Header -->
+        <div class="whats-new-header">
+            <div style="display: flex; align-items: flex-start; gap: 14px;">
+                <div class="whats-new-badge">
+                    <i data-lucide="sparkles" style="width: 22px; height: 22px; color: var(--accent-coral, #E76F51);"></i>
+                </div>
+                <div>
+                    <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                        <h2 id="whats-new-title" style="font-family: var(--font-display, 'Outfit'); font-size: 20px; font-weight: 800; color: var(--text-main, #23190F); margin: 0; letter-spacing: -0.3px;">
+                            What's New in Glint
+                        </h2>
+                        <span class="badge" style="background: rgba(231,111,81,0.12); color: var(--accent-coral, #E76F51); font-weight: 800; font-size: 11px; padding: 3px 9px; border-radius: 999px;">
+                            {{ session_user_role|capitalize if session_user_role else 'Workspace' }} Updates
+                        </span>
+                    </div>
+                    <p style="color: var(--text-dim, #5C5248); font-size: 13.5px; margin: 4px 0 0 0;">
+                        {% if session_user_role == 'student' %}
+                        Highlights and newly added capabilities introduced for your Student Workspace.
+                        {% elif session_user_role == 'recruiter' %}
+                        Highlights and newly added capabilities introduced for your Recruiter Studio.
+                        {% elif session_user_role == 'admin' %}
+                        Highlights and newly added capabilities introduced for Institutional Placement Administration.
+                        {% else %}
+                        Overview of newly added capabilities and improvements introduced since the initial release.
+                        {% endif %}
+                    </p>
+                </div>
+            </div>
+            <button type="button" class="whats-new-close-btn" onclick="closeReleaseNotesModal()" aria-label="Close updates dialog">
+                <i data-lucide="x" style="width: 18px; height: 18px;"></i>
+            </button>
+        </div>
+
+        <!-- Scrollable Updates Feed (Filtered for Current Module / Role) -->
+        <div class="whats-new-body">
+
+            {% if session_user_role == 'student' %}
+            <!-- ================= STUDENT-SPECIFIC UPDATES ================= -->
+            
+            <!-- 1. Collapsible Sidebar & Navigation -->
+            <div class="whats-new-card">
+                <div class="whats-new-card-icon" style="background: #EBF3FA; color: #1D3557;">
+                    <i data-lucide="panel-left" style="width: 18px; height: 18px;"></i>
+                </div>
+                <div class="whats-new-card-content">
+                    <div class="whats-new-card-title">
+                        Collapsible Sidebar & Navigation
+                        <span class="whats-new-tag" style="background: #EBF3FA; color: #1D3557;">Navigation</span>
+                    </div>
+                    <ul class="whats-new-list">
+                        <li><strong>Icon-Only Mini Mode</strong>: The left sidebar can now be collapsed into an icon-only view with clean tooltips to give you maximum screen focus.</li>
+                        <li><strong>Merged Smart Toggle</strong>: Shows a 3-bar hamburger icon when minimized and a panel icon when maximized.</li>
+                        <li><strong>Focused Workspace</strong>: Clean, distraction-free header navigation tailored for career preparation.</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- 2. Enhanced Student Interviews & Applications Hub -->
+            <div class="whats-new-card">
+                <div class="whats-new-card-icon" style="background: #EAF4EE; color: #2D6A4F;">
+                    <i data-lucide="calendar" style="width: 18px; height: 18px;"></i>
+                </div>
+                <div class="whats-new-card-content">
+                    <div class="whats-new-card-title">
+                        Enhanced Student Interviews & Applications Hub
+                        <span class="whats-new-tag" style="background: #EAF4EE; color: #2D6A4F;">Student Hub</span>
+                    </div>
+                    <ul class="whats-new-list">
+                        <li><strong>Dedicated Interviews Portal</strong>: Centralized tracker for all upcoming interview rounds, schedules, format details, and company updates.</li>
+                        <li><strong>Separated Application Pipeline</strong>: Dedicated application tracking distinct from general opportunity discovery.</li>
+                        <li><strong>Target Role & Readiness Metrics</strong>: Dynamic career readiness score calculations based on your academic profile and verified skills.</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- 3. Verified Institutional Access -->
+            <div class="whats-new-card">
+                <div class="whats-new-card-icon" style="background: #FFF8E7; color: #D48806;">
+                    <i data-lucide="shield-check" style="width: 18px; height: 18px;"></i>
+                </div>
+                <div class="whats-new-card-content">
+                    <div class="whats-new-card-title">
+                        Verified Student Access & Credentials
+                        <span class="whats-new-tag" style="background: #FFF8E7; color: #B37400;">Security</span>
+                    </div>
+                    <ul class="whats-new-list">
+                        <li><strong>Verified Account Management</strong>: Student accounts are directly provisioned and verified by your campus placement administrator.</li>
+                        <li><strong>Quick Password Visibility</strong>: Administrators can easily verify and reissue credentials when needed.</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- 4. Performance & Visual Polish -->
+            <div class="whats-new-card" style="margin-bottom: 0;">
+                <div class="whats-new-card-icon" style="background: #EFF6FF; color: #2563EB;">
+                    <i data-lucide="sparkles" style="width: 18px; height: 18px;"></i>
+                </div>
+                <div class="whats-new-card-content">
+                    <div class="whats-new-card-title">
+                        Cloud Performance & Design Polish
+                        <span class="whats-new-tag" style="background: #EFF6FF; color: #2563EB;">UI & UX</span>
+                    </div>
+                    <ul class="whats-new-list">
+                        <li><strong>Render Cloud Blueprint</strong>: Native high-availability cloud deployment for responsive performance.</li>
+                        <li><strong>Modern Visual Hierarchy</strong>: Refined contrast palette with <em>Outfit</em> display font and <em>Inter</em> body text.</li>
+                    </ul>
+                </div>
+            </div>
+
+            {% elif session_user_role == 'recruiter' %}
+            <!-- ================= RECRUITER-SPECIFIC UPDATES ================= -->
+
+            <!-- 1. Collapsible Sidebar & Navigation -->
+            <div class="whats-new-card">
+                <div class="whats-new-card-icon" style="background: #EBF3FA; color: #1D3557;">
+                    <i data-lucide="panel-left" style="width: 18px; height: 18px;"></i>
+                </div>
+                <div class="whats-new-card-content">
+                    <div class="whats-new-card-title">
+                        Collapsible Sidebar & Navigation
+                        <span class="whats-new-tag" style="background: #EBF3FA; color: #1D3557;">Navigation</span>
+                    </div>
+                    <ul class="whats-new-list">
+                        <li><strong>Icon-Only Mini Mode</strong>: Minimize the sidebar to an icon-only rail with tooltip labels to maximize screen real estate when screening candidates.</li>
+                        <li><strong>Merged Smart Toggle</strong>: Unified toggle button displaying a 3-bar hamburger icon when minimized and a panel icon when maximized.</li>
+                        <li><strong>Distraction-Free Studio</strong>: Header streamlined for corporate recruitment and candidate reviews.</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- 2. Recruiter Studio & Campus Drives -->
+            <div class="whats-new-card">
+                <div class="whats-new-card-icon" style="background: #F3F0FF; color: #6C5CE7;">
+                    <i data-lucide="briefcase" style="width: 18px; height: 18px;"></i>
+                </div>
+                <div class="whats-new-card-content">
+                    <div class="whats-new-card-title">
+                        Recruiter Studio & Corporate Campus Drives
+                        <span class="whats-new-tag" style="background: #F3F0FF; color: #6C5CE7;">Recruiter</span>
+                    </div>
+                    <ul class="whats-new-list">
+                        <li><strong>Campus Drives Tracking</strong>: Dedicated management of active campus placement drives and candidate pipeline stages.</li>
+                        <li><strong>Corporate Profile Controls</strong>: Dedicated partner company profile settings and recruiter liaison contact management.</li>
+                        <li><strong>Candidate Screening Tools</strong>: Fast filters to match campus applicants against job requisitions.</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- 3. Direct Enterprise Access -->
+            <div class="whats-new-card">
+                <div class="whats-new-card-icon" style="background: #FFF8E7; color: #D48806;">
+                    <i data-lucide="shield-check" style="width: 18px; height: 18px;"></i>
+                </div>
+                <div class="whats-new-card-content">
+                    <div class="whats-new-card-title">
+                        Institutional Governance & Partner Verification
+                        <span class="whats-new-tag" style="background: #FFF8E7; color: #B37400;">Security</span>
+                    </div>
+                    <ul class="whats-new-list">
+                        <li><strong>Direct Institutional Provisioning</strong>: Recruiter accounts are directly coordinated and provisioned in partnership with placement administration.</li>
+                        <li><strong>1-Click Instant Demo Profiles</strong>: Seamless demo logins for rapid evaluation of recruitment studio tools.</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- 4. Performance & Visual Polish -->
+            <div class="whats-new-card" style="margin-bottom: 0;">
+                <div class="whats-new-card-icon" style="background: #EFF6FF; color: #2563EB;">
+                    <i data-lucide="sparkles" style="width: 18px; height: 18px;"></i>
+                </div>
+                <div class="whats-new-card-content">
+                    <div class="whats-new-card-title">
+                        Cloud Performance & Design Polish
+                        <span class="whats-new-tag" style="background: #EFF6FF; color: #2563EB;">UI & UX</span>
+                    </div>
+                    <ul class="whats-new-list">
+                        <li><strong>Render Cloud Blueprint</strong>: Native high-availability cloud deployment for responsive candidate screening.</li>
+                        <li><strong>Refined Contrast & Typography</strong>: Clean aesthetic with <em>Outfit</em> display font and <em>Inter</em> body text.</li>
+                    </ul>
+                </div>
+            </div>
+
+            {% else %}
+            <!-- ================= ADMIN / INSTITUTIONAL UPDATES ================= -->
+
+            <!-- 1. Database Manager & Centralized Provisioning -->
+            <div class="whats-new-card">
+                <div class="whats-new-card-icon" style="background: #FFF0EB; color: #E76F51;">
+                    <i data-lucide="database" style="width: 18px; height: 18px;"></i>
+                </div>
+                <div class="whats-new-card-content">
+                    <div class="whats-new-card-title">
+                        Admin Database Manager & Centralized Provisioning
+                        <span class="whats-new-tag" style="background: #EDF7F2; color: #2D6A4F;">Database</span>
+                    </div>
+                    <ul class="whats-new-list">
+                        <li><strong>In-Place Editing</strong>: Admins can directly edit Students, Recruiters, and Partner Companies with automatic user credentials synchronization.</li>
+                        <li><strong>Directory Provisioning</strong>: Dedicated <code>+ Add Student</code> and <code>+ Add Recruiter</code> action buttons located directly above their respective directory tabs.</li>
+                        <li><strong>Live Student Passwords</strong>: View student credentials inside the directory table with a 1-click clipboard copy button.</li>
+                        <li><strong>CSV Relational Exports</strong>: Download instant, comprehensive CSV spreadsheets across all campus tables.</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- 2. Collapsible Sidebar & Navigation -->
+            <div class="whats-new-card">
+                <div class="whats-new-card-icon" style="background: #EBF3FA; color: #1D3557;">
+                    <i data-lucide="panel-left" style="width: 18px; height: 18px;"></i>
+                </div>
+                <div class="whats-new-card-content">
+                    <div class="whats-new-card-title">
+                        Collapsible Sidebar & Navigation
+                        <span class="whats-new-tag" style="background: #EBF3FA; color: #1D3557;">Navigation</span>
+                    </div>
+                    <ul class="whats-new-list">
+                        <li><strong>Icon-Only Mini Mode</strong>: Left sidebar collapses into an icon-only rail with floating tooltips to maximize workspace area.</li>
+                        <li><strong>Merged Smart Toggle</strong>: Unified toggle displaying a 3-bar hamburger icon when minimized and a panel icon when maximized.</li>
+                        <li><strong>Decluttered Command Bar</strong>: Clean, distraction-free header navigation tailored for institutional operations.</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- 3. Institutional Governance & Security -->
+            <div class="whats-new-card">
+                <div class="whats-new-card-icon" style="background: #FFF8E7; color: #D48806;">
+                    <i data-lucide="shield-check" style="width: 18px; height: 18px;"></i>
+                </div>
+                <div class="whats-new-card-content">
+                    <div class="whats-new-card-title">
+                        Institutional Governance & 1-Click Demo Profiles
+                        <span class="whats-new-tag" style="background: #FFF8E7; color: #B37400;">Security</span>
+                    </div>
+                    <ul class="whats-new-list">
+                        <li><strong>Centralized Account Management</strong>: Decommissioned public self-registration; all accounts are securely provisioned and managed by administrators.</li>
+                        <li><strong>1-Click Instant Demo Profiles</strong>: Pre-configured demo logins on the sign-in page for instant evaluation of Student, Recruiter, and Admin portals.</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- 4. Production Cloud Blueprint & UI Polish -->
+            <div class="whats-new-card" style="margin-bottom: 0;">
+                <div class="whats-new-card-icon" style="background: #EFF6FF; color: #2563EB;">
+                    <i data-lucide="cloud" style="width: 18px; height: 18px;"></i>
+                </div>
+                <div class="whats-new-card-content">
+                    <div class="whats-new-card-title">
+                        Production Cloud Blueprint & UI Polish
+                        <span class="whats-new-tag" style="background: #EFF6FF; color: #2563EB;">DevOps</span>
+                    </div>
+                    <ul class="whats-new-list">
+                        <li><strong>Render Blueprint Integration</strong>: Native deployment configurations with <code>render.yaml</code>, <code>build.sh</code>, <code>Procfile</code>, and <code>wsgi.py</code>.</li>
+                        <li><strong>Refined Contrast & Typography</strong>: Clean contrast palette with <em>Outfit</em> display font, <em>Inter</em> body text, and responsive layout polish.</li>
+                    </ul>
+                </div>
+            </div>
+
+            {% endif %}
+
+        </div>
+
+        <!-- Modal Footer -->
+        <div class="whats-new-footer">
+            <label style="display: inline-flex; align-items: center; gap: 8px; font-size: 13px; color: var(--text-dim, #5C5248); cursor: pointer; user-select: none;">
+                <input type="checkbox" id="dont-show-whats-new" style="accent-color: var(--accent-coral, #E76F51); cursor: pointer; width: 16px; height: 16px;">
+                <span>Don't show automatically on next login</span>
+            </label>
+
+            <button type="button" class="btn btn-primary btn-sm" onclick="closeReleaseNotesModal()" style="display: inline-flex; align-items: center; gap: 7px; padding: 9px 20px; font-weight: 700; border-radius: 999px;">
+                <span>Explore Workspace</span>
+                <i data-lucide="arrow-right" style="width: 15px; height: 15px;"></i>
+            </button>
+        </div>
+    </div>
+</div>
+
+<style>
+/* What's New Release Notes Styling */
+.whats-new-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(18, 14, 11, 0.65);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    z-index: 10000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    animation: wnFadeIn 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.whats-new-dialog {
+    background: var(--bg-surface, #FFFFFF);
+    border-radius: 20px;
+    max-width: 680px;
+    width: 100%;
+    max-height: 88vh;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 25px 60px -12px rgba(26, 18, 12, 0.35), 0 0 1px 1px rgba(234, 227, 215, 0.7);
+    border: 1px solid var(--border-subtle, #EAE3D7);
+    overflow: hidden;
+    animation: wnSlideUp 0.26s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.whats-new-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    padding: 22px 24px 18px;
+    border-bottom: 1px solid var(--border-subtle, #EAE3D7);
+    background: var(--bg-surface, #FFFFFF);
+}
+
+.whats-new-badge {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    background: #FFF0EB;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    box-shadow: 0 4px 12px rgba(231, 111, 81, 0.15);
+}
+
+.whats-new-close-btn {
+    background: none;
+    border: none;
+    width: 34px;
+    height: 34px;
+    border-radius: 8px;
+    color: var(--text-dim, #8C8278);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.18s ease;
+}
+
+.whats-new-close-btn:hover {
+    background: var(--bg-primary, #FAF7F2);
+    color: var(--text-main, #23190F);
+}
+
+.whats-new-body {
+    padding: 20px 24px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    background: #FAF8F5;
+}
+
+.whats-new-card {
+    background: #FFFFFF;
+    border-radius: 14px;
+    padding: 16px 18px;
+    border: 1px solid var(--border-subtle, #EAE3D7);
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    transition: transform 0.18s ease, box-shadow 0.18s ease;
+}
+
+.whats-new-card:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.04);
+}
+
+.whats-new-card-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    margin-top: 2px;
+}
+
+.whats-new-card-content {
+    flex: 1;
+}
+
+.whats-new-card-title {
+    font-family: var(--font-display, 'Outfit');
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--text-main, #23190F);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 6px;
+}
+
+.whats-new-tag {
+    font-size: 10.5px;
+    font-weight: 700;
+    padding: 2px 7px;
+    border-radius: 6px;
+    letter-spacing: 0.3px;
+    text-transform: uppercase;
+}
+
+.whats-new-list {
+    margin: 0;
+    padding-left: 18px;
+    color: var(--text-dim, #5C5248);
+    font-size: 12.8px;
+    line-height: 1.55;
+}
+
+.whats-new-list li {
+    margin-bottom: 4px;
+}
+
+.whats-new-list li:last-child {
+    margin-bottom: 0;
+}
+
+.whats-new-list code {
+    background: #FAF7F2;
+    border: 1px solid #EAE3D7;
+    padding: 1px 5px;
+    border-radius: 4px;
+    font-family: monospace;
+    font-size: 11.5px;
+    color: #1F1C18;
+}
+
+.whats-new-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 24px;
+    border-top: 1px solid var(--border-subtle, #EAE3D7);
+    background: #FFFFFF;
+}
+
+@keyframes wnFadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes wnSlideUp {
+    from {
+        opacity: 0;
+        transform: translateY(16px) scale(0.98);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+@media (max-width: 640px) {
+    .whats-new-footer {
+        flex-direction: column-reverse;
+        gap: 12px;
+        align-items: stretch;
+    }
+    .whats-new-footer button {
+        width: 100%;
+        justify-content: center;
+    }
+}
+</style>
+
+<script>
+    function openReleaseNotesModal() {
+        const modal = document.getElementById('whats-new-modal');
+        if (modal) {
+            modal.style.display = 'flex';
+            if (window.lucide && typeof window.lucide.createIcons === 'function') {
+                window.lucide.createIcons();
+            }
+        }
+    }
+
+    function closeReleaseNotesModal() {
+        const modal = document.getElementById('whats-new-modal');
+        if (modal) {
+            modal.style.display = 'none';
+        }
+        const dontShow = document.getElementById('dont-show-whats-new');
+        if (dontShow && dontShow.checked) {
+            try {
+                localStorage.setItem('glint_release_v2_dismissed', 'true');
+            } catch (e) {}
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        const shouldShowFromServer = {{ 'true' if show_release_notes else 'false' }};
+        let isPermanentlyDismissed = false;
+        try {
+            isPermanentlyDismissed = localStorage.getItem('glint_release_v2_dismissed') === 'true';
+        } catch (e) {}
+
+        if (shouldShowFromServer && !isPermanentlyDismissed) {
+            setTimeout(openReleaseNotesModal, 350);
+        }
+    });
+</script>
