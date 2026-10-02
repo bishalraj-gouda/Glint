@@ -17,7 +17,26 @@ def dashboard():
     user = get_current_user()
     student = user.student_profile if user else None
     
-    if not student:
+    if not student and user:
+        # Gracefully auto-provision base profile if student record wasn't created yet
+        try:
+            from models.department import Department
+            dept = Department.query.first()
+            student = Student(
+                user_id=user.id,
+                name=user.email.split("@")[0].replace(".", " ").title(),
+                roll_number=f"STU{user.id:04d}",
+                department_id=dept.id if dept else 1,
+                target_role="Software Engineer",
+                cgpa=7.5,
+                readiness_score=70.0
+            )
+            db.session.add(student)
+            db.session.commit()
+        except Exception:
+            db.session.rollback()
+            return redirect(url_for("auth.login"))
+    elif not student:
         return redirect(url_for("auth.login"))
 
     # Fetch applications count and latest interviews for shell display
@@ -244,50 +263,75 @@ def applications_view():
     """Student applications history view."""
     user = get_current_user()
     student = user.student_profile
+    if not student:
+        return redirect(url_for("auth.login"))
+
     apps = Application.query.filter_by(student_id=student.id).order_by(Application.applied_at.desc()).all()
     upcoming_interviews = (
         Interview.query.join(Application)
         .filter(Application.student_id == student.id, Interview.status == "scheduled")
         .order_by(Interview.scheduled_date.asc())
-        .limit(3)
         .all()
     )
-    active_jobs = Job.query.filter_by(status="active").order_by(Job.id.desc()).all()
+    completed_interviews = (
+        Interview.query.join(Application)
+        .filter(Application.student_id == student.id, Interview.status != "scheduled")
+        .order_by(Interview.scheduled_date.desc())
+        .all()
+    )
+    upcoming_count = len(upcoming_interviews)
+    applications_count = len(apps)
+    shortlisted_or_selected_count = sum(1 for a in apps if a.status in ("shortlisted", "interview", "selected", "placed"))
+
     return render_template(
-        "student/dashboard.html",
+        "student/interviews.html",
         student=student,
-        recent_apps=apps,
         upcoming_interviews=upcoming_interviews,
-        active_jobs=active_jobs,
-        recommended_jobs=active_jobs,
-        active_page="applications",
-        applications=apps
+        completed_interviews=completed_interviews,
+        applications=apps,
+        upcoming_count=upcoming_count,
+        applications_count=applications_count,
+        shortlisted_or_selected_count=shortlisted_or_selected_count,
+        active_page="applications"
     )
 
 
 @student_bp.route("/interviews")
 @student_required
 def interviews_view():
-    """Student interviews calendar view."""
+    """Student dedicated interviews and application pipeline view."""
     user = get_current_user()
     student = user.student_profile
-    interviews = (
+    if not student:
+        return redirect(url_for("auth.login"))
+
+    upcoming_interviews = (
         Interview.query.join(Application)
-        .filter(Application.student_id == student.id)
+        .filter(Application.student_id == student.id, Interview.status == "scheduled")
         .order_by(Interview.scheduled_date.asc())
         .all()
     )
-    recent_apps = Application.query.filter_by(student_id=student.id).order_by(Application.applied_at.desc()).limit(5).all()
-    active_jobs = Job.query.filter_by(status="active").order_by(Job.id.desc()).all()
+    completed_interviews = (
+        Interview.query.join(Application)
+        .filter(Application.student_id == student.id, Interview.status != "scheduled")
+        .order_by(Interview.scheduled_date.desc())
+        .all()
+    )
+    apps = Application.query.filter_by(student_id=student.id).order_by(Application.applied_at.desc()).all()
+    upcoming_count = len(upcoming_interviews)
+    applications_count = len(apps)
+    shortlisted_or_selected_count = sum(1 for a in apps if a.status in ("shortlisted", "interview", "selected", "placed"))
+
     return render_template(
-        "student/dashboard.html",
+        "student/interviews.html",
         student=student,
-        recent_apps=recent_apps,
-        upcoming_interviews=interviews,
-        active_jobs=active_jobs,
-        recommended_jobs=active_jobs,
-        active_page="interviews",
-        interviews=interviews
+        upcoming_interviews=upcoming_interviews,
+        completed_interviews=completed_interviews,
+        applications=apps,
+        upcoming_count=upcoming_count,
+        applications_count=applications_count,
+        shortlisted_or_selected_count=shortlisted_or_selected_count,
+        active_page="interviews"
     )
 
 
@@ -347,12 +391,18 @@ def skill_gaps_page():
     return render_gaps()
 
 
+@student_bp.route("/interview-prep", methods=["GET", "POST"])
+@student_bp.route("/ai/interview-prep", methods=["GET", "POST"])
 @student_bp.route("/ai/interview-simulator", methods=["GET", "POST"])
 @student_bp.route("/interview-simulator", methods=["GET", "POST"])
 @student_required
-def interview_simulator_page():
-    """Redirects to student dashboard."""
-    return redirect(url_for("student.dashboard"))
+def interview_prep_page():
+    """Explicit student navigation route for Interview Prep."""
+    from routes.ai.student_ai import interview_prep_page as render_prep
+    return render_prep()
+
+# Alias for backwards compatibility
+interview_simulator_page = interview_prep_page
 
 
 @student_bp.route("/ai/resume-intelligence", methods=["GET", "POST"])

@@ -5,8 +5,10 @@ Resume Intelligence, Project Generator, and contextual Career Copilot chat.
 """
 from flask import Blueprint, render_template, request, jsonify, redirect, url_for, flash
 from utils.auth import student_required, get_current_user
+from extensions import db
 from models.student import Student
 from models.job import Job
+from models.ai_interview_session import AIInterviewSession
 from services.ai.career_twin_service import CareerTwinService
 from services.ai.skill_gap_service import SkillGapService
 from services.ai.career_roadmap_service import CareerRoadmapService
@@ -98,12 +100,43 @@ def roadmap_page():
     return skill_gaps_page()
 
 
-@student_ai_bp.route("/interview", methods=["GET", "POST"])
-@student_ai_bp.route("/interview-simulator", methods=["GET", "POST"])
+@student_ai_bp.route("/interview-prep", methods=["GET"])
+@student_ai_bp.route("/interview", methods=["GET"])
+@student_ai_bp.route("/interview-simulator", methods=["GET"])
 @student_required
-def interview_simulator_page():
-    """Redirects to student dashboard."""
-    return redirect(url_for("student.dashboard"))
+def interview_prep_page():
+    """Renders the AI Interview Prep Studio with role- and recruitment-specific prep."""
+    student = _get_active_student()
+    if not student:
+        return redirect(url_for("auth.login"))
+
+    # Active campus drive jobs for recruitment-specific mock interviews
+    active_jobs = Job.query.filter_by(status="active").order_by(Job.created_at.desc()).all()
+
+    # Pre-select job if passed via query parameter (e.g. from jobs.html)
+    selected_job_id = request.args.get("job_id", type=int)
+    selected_job = db.session.get(Job, selected_job_id) if selected_job_id else None
+
+    # Fetch recent mock interview sessions for this student
+    past_sessions = (
+        AIInterviewSession.query.filter_by(student_id=student.id)
+        .order_by(AIInterviewSession.created_at.desc())
+        .limit(10)
+        .all()
+    )
+
+    return render_template(
+        "student/interview_simulator.html",
+        student=student,
+        active_jobs=active_jobs,
+        selected_job=selected_job,
+        selected_job_id=selected_job_id,
+        past_sessions=past_sessions,
+        active_page="interview_prep"
+    )
+
+# Alias for backwards compatibility with any existing reference
+interview_simulator_page = interview_prep_page
 
 
 @student_ai_bp.route("/resume", methods=["GET", "POST"])
@@ -349,6 +382,18 @@ def api_submit_interview_answer():
     if not session_id or not answer:
         return jsonify({"error": "session_id and answer are required"}), 400
     return jsonify(InterviewAIService.submit_answer(session_id, answer))
+
+
+@student_ai_bp.route("/api/interview/submit-batch", methods=["POST"])
+@student_required
+def api_submit_batch_interview():
+    """Evaluates all interview questions at once with topics to cover, LeetCode links, and resources."""
+    data = request.get_json() or {}
+    session_id = data.get("session_id")
+    answers = data.get("answers", [])
+    if not session_id:
+        return jsonify({"error": "session_id is required"}), 400
+    return jsonify(InterviewAIService.submit_all_answers(session_id, answers))
 
 
 @student_ai_bp.route("/api/resume/audit", methods=["POST"])

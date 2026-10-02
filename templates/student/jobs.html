@@ -423,7 +423,7 @@
             </div>
 
             <!-- Interactive Action Buttons -->
-            <div style="display: flex; align-items: center; gap: 0.55rem;">
+            <div style="display: flex; align-items: center; gap: 0.55rem; flex-wrap: wrap;">
                 <button type="button" 
                         class="btn btn-outline btn-sm btn-pill" 
                         onclick="openJobFitModal({{ job.id }}, '{{ job.title|replace('\'', '\\\'') }}', '{{ job.company.name|replace('\'', '\\\'') }}')"
@@ -432,6 +432,14 @@
                     <i data-lucide="sparkles" style="width: 14px; height: 14px; color: var(--accent-coral);"></i>
                     Check Fit & Gaps
                 </button>
+
+                <a href="{{ url_for('student_ai.interview_prep_page', job_id=job.id) }}" 
+                   class="btn btn-outline btn-sm btn-pill" 
+                   style="border-color: rgba(6, 182, 212, 0.4); color: #0891b2; font-weight: 700; font-size: 0.8rem; gap: 0.35rem; display: inline-flex; align-items: center;"
+                   title="Role-specific AI interview prep for {{ job.company.name }} — {{ job.title }}">
+                    <i data-lucide="clipboard-check" style="width: 14px; height: 14px; color: #0891b2;"></i>
+                    Interview Prep
+                </a>
 
                 <div id="apply-container-{{ job.id }}">
                     {% if is_applied %}
@@ -938,10 +946,16 @@ async function openJobFitModal(jobId, jobTitle, companyName) {
         const isAlreadyApplied = card && card.getAttribute('data-applied') === 'true';
         const modalApplySlot = document.getElementById('modal-apply-btn-slot');
         
+        const prepBtnHtml = `
+            <a href="/student/ai/interview-prep?job_id=${jobId}" class="btn btn-outline btn-sm btn-pill" style="border-color: rgba(6, 182, 212, 0.4); color: #0891b2; font-weight: 700; font-size: 0.8rem; gap: 0.35rem; display: inline-flex; align-items: center;">
+                <i data-lucide="clipboard-check" style="width: 14px; height: 14px; color: #0891b2;"></i> Interview Prep
+            </a>
+        `;
         if (isAlreadyApplied) {
-            modalApplySlot.innerHTML = `<span class="btn-applied"><i data-lucide="check-check" style="width: 14px; height: 14px;"></i> Applied</span>`;
+            modalApplySlot.innerHTML = `${prepBtnHtml}<span class="btn-applied"><i data-lucide="check-check" style="width: 14px; height: 14px;"></i> Applied</span>`;
         } else {
             modalApplySlot.innerHTML = `
+                ${prepBtnHtml}
                 <button type="button" class="btn btn-primary btn-sm btn-pill" onclick="quickApply(${jobId}, '${data.job_title.replace(/'/g, "\\'")}', '${data.company_name.replace(/'/g, "\\'")}'); closeJobFitModal();">
                     <i data-lucide="zap" style="width: 14px; height: 14px;"></i> Quick Apply to Drive
                 </button>

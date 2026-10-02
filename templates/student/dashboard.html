@@ -54,7 +54,7 @@
             </div>
             <h1 class="page-title" style="margin-bottom: 0.25rem;">{{ student.name }}</h1>
             <p class="page-description" style="margin-bottom: 0;">
-                Targeting <strong>{{ student.target_role }}</strong> • {{ student.department.name }} ({{ student.department.code }}) • Class of {{ student.graduation_year or 2026 }}
+                Targeting <strong>{{ student.target_role }}</strong> • {{ student.department_name }} ({{ student.department_code }}) • Class of {{ student.graduation_year or 2026 }}
             </p>
         </div>
         <div style="display: flex; gap: 0.65rem; align-items: center; flex-wrap: wrap;">
@@ -108,7 +108,7 @@
                 <span style="font-size: 0.78rem; color: var(--text-dim);">Academic Standing: <strong style="color: var(--text-main);">CGPA {{ "%.2f"|format(student.cgpa) }}</strong></span>
             </div>
             <div style="font-size: 0.92rem; font-weight: 700; color: var(--text-main);">
-                {{ active_jobs|length }} campus opportunities currently accepting applications for {{ student.department.code }} students.
+                {{ active_jobs|length }} campus opportunities currently accepting applications for {{ student.department_code }} students.
             </div>
         </div>
     </div>

@@ -2,7 +2,7 @@ import os
 import io
 import csv
 from datetime import datetime
-from flask import Blueprint, render_template, session, redirect, url_for, jsonify, request, Response, current_app
+from flask import Blueprint, render_template, session, redirect, url_for, jsonify, request, Response, current_app, flash
 from extensions import db
 from models.user import User
 from models.student import Student
@@ -466,6 +466,184 @@ def export_table_csv(table_name):
         mimetype="text/csv",
         headers={"Content-Disposition": f"attachment; filename=glint_{table_key}_export_{datetime.now().strftime('%Y%m%d')}.csv"}
     )
+
+
+# ==============================================================================
+# 2b. CORPORATE PARTNER ONBOARDING & MANAGEMENT
+# ==============================================================================
+
+@admin_bp.route("/companies/add", methods=["GET", "POST"])
+@admin_bp.route("/companies/new", methods=["GET", "POST"])
+@admin_required
+def add_company_view():
+    """Onboards a new corporate partner company with optional recruiter provisioning."""
+    if request.method == "POST":
+        data = request.get_json(silent=True) or request.form
+
+        name = (data.get("name") or "").strip()
+        industry = (data.get("industry") or "Technology").strip()
+        location = (data.get("location") or "").strip() or None
+        website = (data.get("website") or "").strip() or None
+        logo_url = (data.get("logo_url") or "").strip() or None
+        description = (data.get("description") or "").strip() or None
+
+        is_json = request.is_json or request.headers.get("X-Requested-With") == "XMLHttpRequest"
+
+        if not name:
+            error_msg = "Company name is required."
+            if is_json:
+                return jsonify({"error": error_msg}), 400
+            flash(error_msg, "danger")
+            return render_template("admin/add_company.html", active_page="add_company")
+
+        # Case-insensitive duplicate check
+        existing = Company.query.filter(db.func.lower(Company.name) == name.lower()).first()
+        if existing:
+            error_msg = f"A partner company named '{name}' already exists (ID #{existing.id})."
+            if is_json:
+                return jsonify({"error": error_msg}), 400
+            flash(error_msg, "danger")
+            return render_template("admin/add_company.html", active_page="add_company")
+
+        try:
+            company = Company(
+                name=name,
+                industry=industry,
+                location=location,
+                website=website,
+                logo_url=logo_url,
+                description=description
+            )
+            db.session.add(company)
+            db.session.flush()
+
+            # Optional Recruiter Liaison creation
+            create_rec = data.get("create_recruiter")
+            if create_rec in [True, "true", "on", "1", 1]:
+                rec_name = (data.get("recruiter_name") or "").strip()
+                rec_email = (data.get("recruiter_email") or "").strip().lower()
+                rec_desig = (data.get("recruiter_designation") or "Talent Acquisition Specialist").strip()
+                rec_phone = (data.get("recruiter_phone") or "").strip() or None
+                rec_pwd = data.get("recruiter_password") or "Recruiter@123"
+
+                if rec_name and rec_email:
+                    if User.query.filter_by(email=rec_email).first():
+                        db.session.rollback()
+                        error_msg = f"User account with email '{rec_email}' already exists."
+                        if is_json:
+                            return jsonify({"error": error_msg}), 400
+                        flash(error_msg, "danger")
+                        return render_template("admin/add_company.html", active_page="add_company")
+
+                    rec_user = User(email=rec_email, role="RECRUITER")
+                    rec_user.set_password(rec_pwd)
+                    db.session.add(rec_user)
+                    db.session.flush()
+
+                    recruiter = Recruiter(
+                        user_id=rec_user.id,
+                        company_id=company.id,
+                        name=rec_name,
+                        designation=rec_desig,
+                        phone=rec_phone
+                    )
+                    db.session.add(recruiter)
+
+            db.session.commit()
+
+            success_msg = f"Partner company '{company.name}' onboarded successfully!"
+            if is_json:
+                return jsonify({
+                    "success": True,
+                    "message": success_msg,
+                    "company": company.to_dict()
+                }), 201
+
+            flash(success_msg, "success")
+            return redirect(url_for("admin.database_view", table="companies"))
+
+        except Exception as e:
+            db.session.rollback()
+            error_msg = f"Failed to register company: {str(e)}"
+            if is_json:
+                return jsonify({"error": error_msg}), 400
+            flash(error_msg, "danger")
+            return render_template("admin/add_company.html", active_page="add_company")
+
+    # GET request
+    return render_template(
+        "admin/add_company.html",
+        active_page="add_company"
+    )
+
+
+@admin_bp.route("/api/companies/create", methods=["POST"])
+@admin_required
+def api_create_company():
+    """API endpoint to quickly add a partner company via AJAX modal."""
+    data = request.get_json(silent=True) or request.form
+    name = (data.get("name") or "").strip()
+    industry = (data.get("industry") or "Technology").strip()
+    location = (data.get("location") or "").strip() or None
+    website = (data.get("website") or "").strip() or None
+    logo_url = (data.get("logo_url") or "").strip() or None
+    description = (data.get("description") or "").strip() or None
+
+    if not name:
+        return jsonify({"error": "Company name is required."}), 400
+
+    existing = Company.query.filter(db.func.lower(Company.name) == name.lower()).first()
+    if existing:
+        return jsonify({"error": f"A partner company named '{name}' already exists (ID #{existing.id})."}), 400
+
+    try:
+        company = Company(
+            name=name,
+            industry=industry,
+            location=location,
+            website=website,
+            logo_url=logo_url,
+            description=description
+        )
+        db.session.add(company)
+        db.session.flush()
+
+        create_rec = data.get("create_recruiter")
+        if create_rec in [True, "true", "on", "1", 1]:
+            rec_name = (data.get("recruiter_name") or "").strip()
+            rec_email = (data.get("recruiter_email") or "").strip().lower()
+            rec_desig = (data.get("recruiter_designation") or "Talent Acquisition Specialist").strip()
+            rec_phone = (data.get("recruiter_phone") or "").strip() or None
+            rec_pwd = data.get("recruiter_password") or "Recruiter@123"
+
+            if rec_name and rec_email:
+                if User.query.filter_by(email=rec_email).first():
+                    db.session.rollback()
+                    return jsonify({"error": f"User account with email '{rec_email}' already exists."}), 400
+
+                rec_user = User(email=rec_email, role="RECRUITER")
+                rec_user.set_password(rec_pwd)
+                db.session.add(rec_user)
+                db.session.flush()
+
+                recruiter = Recruiter(
+                    user_id=rec_user.id,
+                    company_id=company.id,
+                    name=rec_name,
+                    designation=rec_desig,
+                    phone=rec_phone
+                )
+                db.session.add(recruiter)
+
+        db.session.commit()
+        return jsonify({
+            "success": True,
+            "message": f"Partner company '{company.name}' onboarded successfully!",
+            "company": company.to_dict()
+        }), 201
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"error": f"Failed to register company: {str(e)}"}), 400
 
 
 @admin_bp.route("/api/database/<table_name>/<int:record_id>/delete", methods=["POST"])

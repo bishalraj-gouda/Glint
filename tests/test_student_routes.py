@@ -170,11 +170,12 @@ def test_roadmap_task_toggle_and_proof_submission(authenticated_student):
 
 
 def test_interview_simulator_page_and_api(authenticated_student):
-    """Test AI Mock Interview Studio and session lifecycle."""
+    """Test AI Interview Prep Studio and session lifecycle."""
     resp = authenticated_student.get("/student/ai/interview-simulator")
-    assert resp.status_code == 302
+    assert resp.status_code == 200
+    assert b"Interview Prep" in resp.data or b"Mock Interview" in resp.data
 
-    # Start session
+    # Start session with role and track
     start_resp = authenticated_student.post("/student/ai/api/interview/start", json={
         "role_title": "Full Stack Developer",
         "interview_type": "technical"
@@ -206,11 +207,123 @@ def test_resume_intelligence_page(authenticated_student):
 
 
 def test_student_jobs_opportunities_view(authenticated_student):
-    """Test that clicking Opportunities on sidebar shows dedicated Ongoing Campus Drives."""
+    """Test that clicking Opportunities on sidebar shows dedicated Ongoing Campus Drives with Interview Prep CTA."""
     resp = authenticated_student.get("/student/jobs")
     assert resp.status_code == 200
     assert b"Ongoing Campus Drives &amp; Opportunities" in resp.data or b"Ongoing Campus Drives & Opportunities" in resp.data
     assert b"Active Campus Recruitment Drives" in resp.data
     assert b"Check Fit &amp; Gaps" in resp.data or b"Check Fit & Gaps" in resp.data
+    assert b"Interview Prep" in resp.data or b"Practice Interview" in resp.data
     assert b"Quick Apply" in resp.data
+
+
+def test_recruitment_specific_mock_interview(authenticated_student):
+    """Test that student can start an interview prep session calibrated to an active campus recruitment drive."""
+    from models.job import Job
+    job = Job.query.first()
+    assert job is not None
+
+    # Visit simulator with job_id pre-selected
+    resp = authenticated_student.get(f"/student/ai/interview-simulator?job_id={job.id}")
+    assert resp.status_code == 200
+    assert b"Target Campus Recruitment Drive" in resp.data
+
+    # Start session with specific job_id
+    start_resp = authenticated_student.post("/student/ai/api/interview/start", json={
+        "role_title": job.title,
+        "interview_type": "technical",
+        "job_id": job.id
+    })
+    assert start_resp.status_code == 200
+    data = start_resp.get_json()
+    assert data.get("session_id") is not None
+    assert data.get("job_id") == job.id
+    assert data.get("company_name") == job.company.name
+    assert "current_question" in data
+    assert "questions" in data
+    assert len(data["questions"]) >= 3
+
+
+def test_interview_prep_batch_evaluation_and_recommendations(authenticated_student):
+    """Test multi-question batch submission, scoring, topics to cover, LeetCode links, and online resources."""
+    # 1. Start interview prep session
+    start_resp = authenticated_student.post("/student/ai/api/interview/start", json={
+        "role_title": "Software Engineer",
+        "interview_type": "technical"
+    })
+    assert start_resp.status_code == 200
+    session_data = start_resp.get_json()
+    session_id = session_data["session_id"]
+    questions = session_data["questions"]
+    assert len(questions) >= 3
+
+    # 2. Submit all answers in a single batch
+    answers_payload = [
+        {
+            "question_index": idx,
+            "answer": f"For {q['category']}, we use optimal algorithmic patterns such as two pointers and sliding window to achieve O(N) time with O(1) space."
+        }
+        for idx, q in enumerate(questions)
+    ]
+    batch_resp = authenticated_student.post("/student/ai/api/interview/submit-batch", json={
+        "session_id": session_id,
+        "answers": answers_payload
+    })
+    assert batch_resp.status_code == 200
+    batch_data = batch_resp.get_json()
+
+    assert batch_data["completed"] is True
+    assert "composite_score" in batch_data
+    assert "metrics" in batch_data
+    assert "readiness_verdict" in batch_data
+
+    # Verify suggested topics to cover
+    assert "topics_to_cover" in batch_data
+    topics = batch_data["topics_to_cover"]
+    assert len(topics) >= 2
+    assert "topic" in topics[0]
+    assert "priority" in topics[0]
+    assert "reason" in topics[0]
+
+    # Verify direct LeetCode links
+    assert "leetcode_links" in batch_data
+    leetcode = batch_data["leetcode_links"]
+    assert len(leetcode) >= 2
+    assert "title" in leetcode[0]
+    assert "difficulty" in leetcode[0]
+    assert "pattern" in leetcode[0]
+    assert leetcode[0]["url"].startswith("https://leetcode.com/problems/")
+
+    # Verify curated online resources
+    assert "online_resources" in batch_data
+    resources = batch_data["online_resources"]
+    assert len(resources) >= 2
+    assert "title" in resources[0]
+    assert "url" in resources[0]
+    assert "category" in resources[0]
+
+
+def test_student_interviews_and_applications_view(authenticated_student):
+    """Verify student interviews and applications page renders cleanly with meeting links and redirection hub."""
+    # Test GET /student/interviews
+    resp = authenticated_student.get("/student/interviews")
+    assert resp.status_code == 200
+    html = resp.get_data(as_text=True)
+
+    # Verify dedicated interview sections exist
+    assert "Upcoming Scheduled Interviews" in html
+    assert "Applications Applied & Real-Time Status" in html
+    assert "Quick Navigation & Career Tools" in html
+
+    # Verify redirection links are present
+    assert "Campus Drives" in html
+    assert "AI Interview Prep" in html
+    assert "Resume Studio" in html
+    assert "Skill Gap & Roadmap" in html
+
+    # Test GET /student/applications
+    app_resp = authenticated_student.get("/student/applications")
+    assert app_resp.status_code == 200
+    app_html = app_resp.get_data(as_text=True)
+    assert "Applications Applied & Real-Time Status" in app_html
 

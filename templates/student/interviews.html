@@ -1,0 +1,859 @@
+{% extends "base.html" %}
+
+{% block title %}My Interviews & Applications — PlacementIQ{% endblock %}
+
+{% block extra_css %}
+<style>
+/* Header & Hero */
+.interviews-hero {
+    background: #FFFDFC;
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-lg);
+    padding: 1.5rem 1.75rem;
+    margin-bottom: 1.5rem;
+    box-shadow: var(--shadow-sm);
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    flex-wrap: wrap;
+    gap: 1.25rem;
+}
+
+.kpi-pipeline-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+    gap: 1.15rem;
+    margin-bottom: 2rem;
+}
+
+.pipeline-kpi-card {
+    background: #FFFFFF;
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-md);
+    padding: 1.25rem 1.4rem;
+    box-shadow: var(--shadow-sm);
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.pipeline-kpi-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+}
+
+.pipeline-kpi-icon {
+    width: 46px;
+    height: 46px;
+    border-radius: var(--radius-md);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+/* Section Containers */
+.pipeline-section {
+    margin-bottom: 2.75rem;
+}
+
+.pipeline-section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    margin-bottom: 1.25rem;
+    padding-bottom: 0.65rem;
+    border-bottom: 2px solid var(--border-subtle);
+}
+
+.section-badge-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 0.28rem 0.85rem;
+    border-radius: var(--radius-full);
+    font-size: 0.82rem;
+    font-weight: 700;
+}
+
+/* Upcoming Interview Cards */
+.interview-card {
+    background: #FFFFFF;
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-sm);
+    margin-bottom: 1.25rem;
+    overflow: hidden;
+    transition: all 0.2s ease;
+    position: relative;
+}
+
+.interview-card:hover {
+    box-shadow: 0 8px 24px rgba(35, 25, 15, 0.08);
+    border-color: #E2D9CF;
+}
+
+.interview-card.highlight-upcoming {
+    border-left: 6px solid var(--accent-coral);
+    background: linear-gradient(180deg, #FFFAF8 0%, #FFFFFF 100%);
+}
+
+.interview-card-body {
+    padding: 1.5rem 1.75rem;
+}
+
+.interview-main-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    flex-wrap: wrap;
+    gap: 1.25rem;
+}
+
+.company-avatar-box {
+    width: 52px;
+    height: 52px;
+    border-radius: var(--radius-md);
+    background: #FFF0EB;
+    border: 1px solid #FCD9CE;
+    color: var(--accent-coral);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.35rem;
+    font-weight: 800;
+    flex-shrink: 0;
+}
+
+.interview-meta-pills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.65rem;
+    margin: 0.85rem 0 1.25rem 0;
+}
+
+.interview-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: #FAF7F2;
+    border: 1px solid var(--border-subtle);
+    padding: 0.35rem 0.75rem;
+    border-radius: var(--radius-full);
+    font-size: 0.82rem;
+    color: var(--text-main);
+    font-weight: 600;
+}
+
+.interview-actions-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 0.85rem;
+    padding-top: 1.15rem;
+    border-top: 1px solid var(--border-subtle);
+    background: #FCFAF7;
+    margin: 0 -1.75rem -1.5rem -1.75rem;
+    padding-left: 1.75rem;
+    padding-right: 1.75rem;
+    padding-bottom: 1.15rem;
+}
+
+/* Applications Table / Cards */
+.apps-container {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.application-item-card {
+    background: #FFFFFF;
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-md);
+    padding: 1.35rem 1.5rem;
+    box-shadow: var(--shadow-sm);
+    transition: all 0.2s ease;
+}
+
+.application-item-card:hover {
+    box-shadow: var(--shadow-md);
+    border-color: #DDD4C8;
+}
+
+.application-status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 0.32rem 0.85rem;
+    border-radius: var(--radius-full);
+    font-size: 0.78rem;
+    font-weight: 700;
+    text-transform: capitalize;
+}
+
+.status-applied {
+    background: #E8F0FE;
+    color: #1A73E8;
+    border: 1px solid #D2E3FC;
+}
+
+.status-shortlisted {
+    background: #F3E8FD;
+    color: #9333EA;
+    border: 1px solid #E9D5FF;
+}
+
+.status-interview {
+    background: #FFF0EB;
+    color: var(--accent-coral);
+    border: 1px solid #FCD9CE;
+}
+
+.status-selected, .status-placed {
+    background: #EAF6ED;
+    color: #2D6A4F;
+    border: 1px solid #CDE7D8;
+}
+
+.status-rejected {
+    background: #FEECEB;
+    color: #D90429;
+    border: 1px solid #FCD5D3;
+}
+
+/* Stepper Tracker for Applications */
+.app-pipeline-stepper {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    margin-top: 1rem;
+    padding-top: 0.85rem;
+    border-top: 1px dashed var(--border-subtle);
+    gap: 0.5rem;
+}
+
+.step-node {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.76rem;
+    font-weight: 600;
+    color: var(--text-dim);
+}
+
+.step-node.active-step {
+    color: var(--accent-coral);
+    font-weight: 700;
+}
+
+.step-node.completed-step {
+    color: var(--accent-sage);
+}
+
+.step-circle {
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: #E9ECEF;
+    color: #6C757D;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.68rem;
+}
+
+.active-step .step-circle {
+    background: var(--accent-coral);
+    color: #FFFFFF;
+}
+
+.completed-step .step-circle {
+    background: var(--accent-sage);
+    color: #FFFFFF;
+}
+
+.step-divider {
+    flex: 1;
+    height: 2px;
+    background: #E9ECEF;
+}
+
+.step-divider.filled {
+    background: var(--accent-sage);
+}
+
+/* Redirection Hub Cards */
+.redirect-hub-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 1.15rem;
+}
+
+.redirect-card {
+    background: #FFFFFF;
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-md);
+    padding: 1.25rem 1.35rem;
+    box-shadow: var(--shadow-sm);
+    text-decoration: none;
+    color: inherit;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+}
+
+.redirect-card:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-md);
+    border-color: var(--accent-coral);
+}
+
+.redirect-card::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: transparent;
+    transition: background 0.2s ease;
+}
+
+.redirect-card:hover::after {
+    background: var(--accent-coral);
+}
+
+/* Empty State Box */
+.empty-pipeline-box {
+    background: #FFFDFC;
+    border: 1px dashed var(--border-subtle);
+    border-radius: var(--radius-lg);
+    padding: 3rem 2rem;
+    text-align: center;
+    box-shadow: var(--shadow-sm);
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Page Hero Banner -->
+<div class="interviews-hero">
+    <div>
+        <div style="display: inline-flex; align-items: center; gap: 0.5rem; background: #FFF0EB; border: 1px solid #FCD9CE; padding: 0.25rem 0.85rem; border-radius: var(--radius-full); font-size: 0.78rem; font-weight: 700; color: var(--accent-coral); margin-bottom: 0.5rem;">
+            <i data-lucide="video" style="width: 14px; height: 14px;"></i> Interview Command Center
+        </div>
+        <h1 class="page-title" style="margin-bottom: 0.35rem;">My Interviews & Applications</h1>
+        <p class="page-description" style="margin-bottom: 0;">
+            Track scheduled interview rounds with direct meeting links, monitor your active application states, and prep with AI.
+        </p>
+    </div>
+    <div style="display: flex; gap: 0.65rem; align-items: center; flex-wrap: wrap;">
+        <a href="{{ url_for('student_ai.interview_prep_page') }}" class="btn btn-outline btn-sm">
+            <i data-lucide="bot" style="width: 14px; height: 14px;"></i> Practice AI Mock Interview
+        </a>
+        <a href="{{ url_for('student.jobs_view') }}" class="btn btn-primary btn-sm">
+            <i data-lucide="briefcase" style="width: 14px; height: 14px;"></i> View Open Drives
+        </a>
+    </div>
+</div>
+
+<!-- KPI Summary Metric Cards -->
+<div class="kpi-pipeline-grid">
+    <div class="pipeline-kpi-card" style="border-left: 4px solid var(--accent-coral);">
+        <div class="pipeline-kpi-icon" style="background: #FFF0EB; color: var(--accent-coral);">
+            <i data-lucide="calendar" style="width: 22px; height: 22px;"></i>
+        </div>
+        <div>
+            <div style="font-size: 0.78rem; color: var(--text-dim); font-weight: 600; text-transform: uppercase;">Upcoming Interviews</div>
+            <div style="font-size: 1.65rem; font-weight: 800; color: var(--text-main); line-height: 1.2;">{{ upcoming_count }}</div>
+        </div>
+    </div>
+
+    <div class="pipeline-kpi-card" style="border-left: 4px solid #3B82F6;">
+        <div class="pipeline-kpi-icon" style="background: #EFF6FF; color: #3B82F6;">
+            <i data-lucide="send" style="width: 22px; height: 22px;"></i>
+        </div>
+        <div>
+            <div style="font-size: 0.78rem; color: var(--text-dim); font-weight: 600; text-transform: uppercase;">Applications Submitted</div>
+            <div style="font-size: 1.65rem; font-weight: 800; color: var(--text-main); line-height: 1.2;">{{ applications_count }}</div>
+        </div>
+    </div>
+
+    <div class="pipeline-kpi-card" style="border-left: 4px solid #8B5CF6;">
+        <div class="pipeline-kpi-icon" style="background: #F5F3FF; color: #8B5CF6;">
+            <i data-lucide="award" style="width: 22px; height: 22px;"></i>
+        </div>
+        <div>
+            <div style="font-size: 0.78rem; color: var(--text-dim); font-weight: 600; text-transform: uppercase;">In Active Rounds</div>
+            <div style="font-size: 1.65rem; font-weight: 800; color: var(--text-main); line-height: 1.2;">{{ shortlisted_or_selected_count }}</div>
+        </div>
+    </div>
+
+    <div class="pipeline-kpi-card" style="border-left: 4px solid var(--accent-sage);">
+        <div class="pipeline-kpi-icon" style="background: var(--accent-sage-light); color: var(--accent-sage);">
+            <i data-lucide="check-circle" style="width: 22px; height: 22px;"></i>
+        </div>
+        <div>
+            <div style="font-size: 0.78rem; color: var(--text-dim); font-weight: 600; text-transform: uppercase;">Candidate Profile</div>
+            <div style="font-size: 1rem; font-weight: 700; color: var(--accent-sage); line-height: 1.2;">CGPA {{ "%.2f"|format(student.cgpa) }}</div>
+        </div>
+    </div>
+</div>
+
+<!-- =========================================================================
+     SECTION 1: UPCOMING SCHEDULED INTERVIEWS (PRIORITY)
+     ========================================================================= -->
+<section id="interviews-section" class="pipeline-section">
+    <div class="pipeline-section-header">
+        <div style="display: flex; align-items: center; gap: 0.75rem;">
+            <div style="width: 32px; height: 32px; border-radius: var(--radius-sm); background: #FFF0EB; color: var(--accent-coral); display: flex; align-items: center; justify-content: center;">
+                <i data-lucide="video" style="width: 18px; height: 18px;"></i>
+            </div>
+            <div>
+                <h2 style="font-size: 1.25rem; font-weight: 800; margin: 0; color: var(--text-main);">
+                    Upcoming Scheduled Interviews
+                </h2>
+                <div style="font-size: 0.82rem; color: var(--text-dim);">Live virtual rooms, timing, and direct meeting links</div>
+            </div>
+        </div>
+        <span class="section-badge-pill" style="background: #FFF0EB; color: var(--accent-coral); border: 1px solid #FCD9CE;">
+            {{ upcoming_interviews|length }} Scheduled
+        </span>
+    </div>
+
+    {% if upcoming_interviews %}
+        {% for interview in upcoming_interviews %}
+            {% set app = interview.application %}
+            {% set job = app.job if app else None %}
+            {% set company = job.company if job else None %}
+            
+            <div class="interview-card highlight-upcoming">
+                <div class="interview-card-body">
+                    <div class="interview-main-row">
+                        <!-- Left Details: Company & Role -->
+                        <div style="display: flex; gap: 1rem; align-items: flex-start; flex: 1; min-width: 280px;">
+                            <div class="company-avatar-box">
+                                {{ company.name[0] if company else 'C' }}
+                            </div>
+                            <div>
+                                <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 0.25rem;">
+                                    <span style="font-size: 0.85rem; font-weight: 700; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.5px;">
+                                        {{ company.name if company else 'Recruiting Partner' }}
+                                    </span>
+                                    <span class="sticker-tag" style="background: #FFF0EB; border-color: #FCD9CE; color: var(--accent-coral); font-size: 0.72rem; padding: 0.15rem 0.55rem;">
+                                        Round {{ interview.round_number }} • {{ interview.interview_type|capitalize }}
+                                    </span>
+                                </div>
+                                <h3 style="font-size: 1.2rem; font-weight: 800; margin: 0 0 0.4rem 0; color: var(--text-main);">
+                                    {{ job.title if job else 'Interview Round' }}
+                                </h3>
+                                <div style="font-size: 0.85rem; color: var(--text-dim); display: flex; align-items: center; gap: 0.5rem;">
+                                    <span>{{ job.role_category if job else 'Engineering' }}</span>
+                                    •
+                                    <span>{{ job.salary_formatted if job else 'Competitive' }}</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Right Details: Status & Timing Badge -->
+                        <div style="text-align: right; min-width: 200px;">
+                            <div style="display: inline-flex; align-items: center; gap: 6px; background: #EAF6ED; color: #2D6A4F; border: 1px solid #CDE7D8; padding: 0.35rem 0.85rem; border-radius: var(--radius-full); font-size: 0.82rem; font-weight: 700; margin-bottom: 0.5rem;">
+                                <span style="width: 8px; height: 8px; border-radius: 50%; background: #2D6A4F; display: inline-block;"></span>
+                                Confirmed & Scheduled
+                            </div>
+                            <div style="font-size: 0.85rem; color: var(--text-dim);">
+                                Interviewer: <strong style="color: var(--text-main);">{{ interview.interviewer_name }}</strong>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Timing & Venue Pills -->
+                    <div class="interview-meta-pills">
+                        <div class="interview-pill" style="background: #FFF5F2; border-color: #FCD9CE; color: var(--accent-coral);">
+                            <i data-lucide="calendar" style="width: 15px; height: 15px;"></i>
+                            <span>{{ interview.scheduled_date.strftime('%A, %b %d, %Y') if interview.scheduled_date else 'Date TBA' }}</span>
+                        </div>
+                        <div class="interview-pill" style="background: #F0FDF4; border-color: #DCFCE7; color: #166534;">
+                            <i data-lucide="clock" style="width: 15px; height: 15px;"></i>
+                            <span>{{ interview.scheduled_time or '10:00 AM IST' }}</span>
+                        </div>
+                        <div class="interview-pill">
+                            <i data-lucide="user-check" style="width: 15px; height: 15px; color: var(--text-dim);"></i>
+                            <span>Interviewer: {{ interview.interviewer_name }}</span>
+                        </div>
+                        <div class="interview-pill">
+                            <i data-lucide="video" style="width: 15px; height: 15px; color: var(--accent-coral);"></i>
+                            <span>Virtual Interview (Google Meet / Webex)</span>
+                        </div>
+                    </div>
+
+                    <!-- Direct Action Bar with Links -->
+                    <div class="interview-actions-bar">
+                        <div style="display: flex; gap: 0.65rem; align-items: center; flex-wrap: wrap;">
+                            <!-- PRIMARY: JOIN INTERVIEW LINK -->
+                            {% set meeting_url = interview.meeting_link_or_venue %}
+                            {% if not meeting_url or not meeting_url.startswith('http') %}
+                                {% set meeting_url = 'https://meet.google.com/placementiq-interview' %}
+                            {% endif %}
+                            
+                            <a href="{{ meeting_url }}" target="_blank" rel="noopener noreferrer" class="btn btn-primary btn-sm" style="background: var(--accent-coral); border-color: var(--accent-coral); font-weight: 700; box-shadow: 0 4px 12px rgba(231, 111, 81, 0.25);">
+                                <i data-lucide="video" style="width: 15px; height: 15px;"></i>
+                                Join Interview Room
+                            </a>
+
+                            <!-- ADD TO GOOGLE CALENDAR LINK -->
+                            {% if interview.google_calendar_url %}
+                                <a href="{{ interview.google_calendar_url }}" target="_blank" rel="noopener noreferrer" class="btn btn-outline btn-sm" title="Add to your personal Google Calendar">
+                                    <i data-lucide="calendar-plus" style="width: 14px; height: 14px;"></i>
+                                    Add to Calendar
+                                </a>
+                            {% endif %}
+                        </div>
+
+                        <!-- ROLE-SPECIFIC AI SIMULATOR PREP -->
+                        <div style="display: flex; gap: 0.5rem; align-items: center;">
+                            <a href="{{ url_for('student_ai.interview_prep_page') }}" class="btn btn-outline btn-sm btn-pill" style="border-color: #3B82F6; color: #2563EB;">
+                                <i data-lucide="sparkles" style="width: 13px; height: 13px;"></i>
+                                Practice Mock for this Role
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+    {% else %}
+        <!-- Clean Empty State for Upcoming Interviews -->
+        <div class="empty-pipeline-box">
+            <div style="width: 64px; height: 64px; border-radius: 50%; background: #FAF7F2; border: 1px solid var(--border-subtle); color: var(--accent-coral); display: inline-flex; align-items: center; justify-content: center; margin-bottom: 1.25rem;">
+                <i data-lucide="calendar-check" style="width: 32px; height: 32px;"></i>
+            </div>
+            <h3 style="font-size: 1.15rem; font-weight: 800; margin-bottom: 0.4rem; color: var(--text-main);">
+                No Upcoming Interviews Scheduled Right Now
+            </h3>
+            <p style="font-size: 0.88rem; color: var(--text-dim); max-width: 520px; margin: 0 auto 1.5rem auto; line-height: 1.6;">
+                Once campus recruiters review and shortlist your applications, your scheduled technical, coding, or HR rounds with direct video meeting links will appear right here.
+            </p>
+            <div style="display: inline-flex; gap: 0.75rem; flex-wrap: wrap; justify-content: center;">
+                <a href="{{ url_for('student.jobs_view') }}" class="btn btn-primary btn-sm">
+                    <i data-lucide="briefcase" style="width: 14px; height: 14px;"></i> Browse Open Campus Drives
+                </a>
+                <a href="{{ url_for('student_ai.interview_prep_page') }}" class="btn btn-outline btn-sm">
+                    <i data-lucide="bot" style="width: 14px; height: 14px;"></i> Start AI Mock Interview
+                </a>
+            </div>
+        </div>
+    {% endif %}
+
+    <!-- Completed / Past Interviews Collapsible/History if any -->
+    {% if completed_interviews %}
+        <div style="margin-top: 1.5rem;">
+            <div style="font-size: 0.95rem; font-weight: 700; color: var(--text-main); margin-bottom: 0.85rem; display: flex; align-items: center; gap: 6px;">
+                <i data-lucide="history" style="width: 16px; height: 16px; color: var(--text-dim);"></i> Past / Completed Interview Rounds ({{ completed_interviews|length }})
+            </div>
+            {% for past_int in completed_interviews %}
+                {% set p_app = past_int.application %}
+                {% set p_job = p_app.job if p_app else None %}
+                <div style="background: #FAF7F2; border: 1px solid var(--border-subtle); border-radius: var(--radius-md); padding: 1rem 1.25rem; margin-bottom: 0.65rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.75rem;">
+                    <div>
+                        <strong>{{ p_job.company.name if p_job and p_job.company else 'Company' }}</strong> — {{ p_job.title if p_job else 'Role' }}
+                        <div style="font-size: 0.78rem; color: var(--text-dim);">
+                            Round {{ past_int.round_number }} ({{ past_int.interview_type|capitalize }}) • Date: {{ past_int.scheduled_date }}
+                        </div>
+                    </div>
+                    <div>
+                        <span class="badge" style="background: #E5E7EB; color: #374151; font-size: 0.75rem; text-transform: uppercase;">
+                            {{ past_int.status }}
+                        </span>
+                        {% if past_int.score %}
+                            <span class="badge badge-eligible" style="font-size: 0.75rem; margin-left: 0.4rem;">
+                                Score: {{ past_int.score }}/100
+                            </span>
+                        {% endif %}
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+</section>
+
+<!-- =========================================================================
+     SECTION 2: APPLICATIONS APPLIED (SEPARATED FROM INTERVIEWS)
+     ========================================================================= -->
+<section id="applications-section" class="pipeline-section">
+    <div class="pipeline-section-header">
+        <div style="display: flex; align-items: center; gap: 0.75rem;">
+            <div style="width: 32px; height: 32px; border-radius: var(--radius-sm); background: #EFF6FF; color: #3B82F6; display: flex; align-items: center; justify-content: center;">
+                <i data-lucide="file-check-2" style="width: 18px; height: 18px;"></i>
+            </div>
+            <div>
+                <h2 style="font-size: 1.25rem; font-weight: 800; margin: 0; color: var(--text-main);">
+                    Applications Applied & Real-Time Status
+                </h2>
+                <div style="font-size: 0.82rem; color: var(--text-dim);">Full history of jobs you applied for with recruitment stage tracking</div>
+            </div>
+        </div>
+        <span class="section-badge-pill" style="background: #EFF6FF; color: #3B82F6; border: 1px solid #D2E3FC;">
+            {{ applications|length }} Total Applications
+        </span>
+    </div>
+
+    {% if applications %}
+        <div class="apps-container">
+            {% for app in applications %}
+                {% set job = app.job %}
+                {% set company = job.company if job else None %}
+                
+                <div class="application-item-card">
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 1rem;">
+                        <!-- Company & Role Header -->
+                        <div style="display: flex; gap: 0.85rem; align-items: flex-start;">
+                            <div style="width: 44px; height: 44px; border-radius: var(--radius-sm); background: #FAF7F2; border: 1px solid var(--border-subtle); display: flex; align-items: center; justify-content: center; font-weight: 800; color: var(--text-main); font-size: 1.15rem; flex-shrink: 0;">
+                                {{ company.name[0] if company else 'C' }}
+                            </div>
+                            <div>
+                                <div style="font-size: 0.8rem; font-weight: 700; color: var(--text-dim); text-transform: uppercase;">
+                                    {{ company.name if company else 'Recruiting Partner' }}
+                                </div>
+                                <h4 style="font-size: 1.05rem; font-weight: 800; margin: 0.15rem 0 0.35rem 0; color: var(--text-main);">
+                                    {{ job.title if job else 'Position' }}
+                                </h4>
+                                <div style="display: flex; align-items: center; gap: 0.65rem; font-size: 0.8rem; color: var(--text-dim); flex-wrap: wrap;">
+                                    <span><i data-lucide="map-pin" style="width: 12px; height: 12px; vertical-align: middle;"></i> {{ job.location if job else 'Pan-India' }}</span>
+                                    •
+                                    <span><i data-lucide="banknote" style="width: 12px; height: 12px; vertical-align: middle;"></i> {{ job.salary_formatted if job else 'Competitive' }}</span>
+                                    •
+                                    <span><i data-lucide="clock" style="width: 12px; height: 12px; vertical-align: middle;"></i> Applied: {{ app.applied_at.strftime('%b %d, %Y') if app.applied_at else 'Recently' }}</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Right Status Badge & Match -->
+                        <div style="text-align: right; display: flex; flex-direction: column; align-items: flex-end; gap: 0.4rem;">
+                            <!-- Application State -->
+                            {% if app.status == 'applied' %}
+                                <span class="application-status-badge status-applied">
+                                    <i data-lucide="check" style="width: 13px; height: 13px;"></i> Application Submitted
+                                </span>
+                            {% elif app.status == 'shortlisted' %}
+                                <span class="application-status-badge status-shortlisted">
+                                    <i data-lucide="user-check" style="width: 13px; height: 13px;"></i> Shortlisted for Screening
+                                </span>
+                            {% elif app.status == 'interview' %}
+                                <span class="application-status-badge status-interview">
+                                    <i data-lucide="video" style="width: 13px; height: 13px;"></i> Interview Stage Active
+                                </span>
+                            {% elif app.status in ('selected', 'placed') %}
+                                <span class="application-status-badge status-selected">
+                                    <i data-lucide="award" style="width: 13px; height: 13px;"></i> Selected / Offer Received
+                                </span>
+                            {% elif app.status == 'rejected' %}
+                                <span class="application-status-badge status-rejected">
+                                    <i data-lucide="x-circle" style="width: 13px; height: 13px;"></i> Not Selected
+                                </span>
+                            {% else %}
+                                <span class="application-status-badge status-applied">
+                                    {{ app.status|capitalize }}
+                                </span>
+                            {% endif %}
+
+                            <!-- Match Score if available -->
+                            {% if app.match_score and app.match_score > 0 %}
+                                <span class="sticker-tag" style="font-size: 0.72rem; padding: 0.15rem 0.5rem; background: #FAF7F2; border-color: var(--border-subtle);">
+                                    AI Fit Match: <strong style="color: var(--accent-sage);">{{ "%.0f"|format(app.match_score) }}%</strong>
+                                </span>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- 4-Step Pipeline Visual Tracker -->
+                    {% set is_interview = (app.status == 'interview') %}
+                    {% set is_shortlisted = (app.status in ('shortlisted', 'interview', 'selected', 'placed')) %}
+                    {% set is_decision = (app.status in ('selected', 'placed', 'rejected')) %}
+                    
+                    <div class="app-pipeline-stepper">
+                        <div class="step-node completed-step">
+                            <span class="step-circle"><i data-lucide="check" style="width: 10px; height: 10px;"></i></span>
+                            <span>Submitted</span>
+                        </div>
+                        <div class="step-divider {% if is_shortlisted %}filled{% endif %}"></div>
+                        
+                        <div class="step-node {% if app.status == 'shortlisted' %}active-step{% elif is_shortlisted %}completed-step{% endif %}">
+                            <span class="step-circle">{% if is_shortlisted and app.status != 'shortlisted' %}<i data-lucide="check" style="width: 10px; height: 10px;"></i>{% else %}2{% endif %}</span>
+                            <span>Shortlisting</span>
+                        </div>
+                        <div class="step-divider {% if is_interview or is_decision %}filled{% endif %}"></div>
+
+                        <div class="step-node {% if is_interview %}active-step{% elif is_decision %}completed-step{% endif %}">
+                            <span class="step-circle">{% if is_decision %}<i data-lucide="check" style="width: 10px; height: 10px;"></i>{% else %}3{% endif %}</span>
+                            <span>Interview Rounds</span>
+                        </div>
+                        <div class="step-divider {% if is_decision %}filled{% endif %}"></div>
+
+                        <div class="step-node {% if is_decision %}active-step{% endif %}">
+                            <span class="step-circle">{% if is_decision %}<i data-lucide="award" style="width: 10px; height: 10px;"></i>{% else %}4{% endif %}</span>
+                            <span>Decision</span>
+                        </div>
+                    </div>
+
+                    <!-- Bottom Quick Links per Application -->
+                    {% if app.interviews %}
+                        <div style="margin-top: 0.85rem; padding-top: 0.65rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem; font-size: 0.82rem;">
+                            <span style="color: var(--accent-coral); font-weight: 700; display: inline-flex; align-items: center; gap: 4px;">
+                                <i data-lucide="calendar" style="width: 13px; height: 13px;"></i>
+                                {{ app.interviews|length }} interview round(s) scheduled for this application
+                            </span>
+                            <a href="#interviews-section" class="btn btn-outline btn-sm" style="font-size: 0.74rem; padding: 0.2rem 0.65rem;">
+                                View Interview Above <i data-lucide="arrow-up" style="width: 12px; height: 12px;"></i>
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <!-- Empty State for Applications -->
+        <div class="empty-pipeline-box">
+            <div style="width: 64px; height: 64px; border-radius: 50%; background: #FAF7F2; border: 1px solid var(--border-subtle); color: #3B82F6; display: inline-flex; align-items: center; justify-content: center; margin-bottom: 1.25rem;">
+                <i data-lucide="file-question" style="width: 32px; height: 32px;"></i>
+            </div>
+            <h3 style="font-size: 1.15rem; font-weight: 800; margin-bottom: 0.4rem; color: var(--text-main);">
+                No Applications Submitted Yet
+            </h3>
+            <p style="font-size: 0.88rem; color: var(--text-dim); max-width: 480px; margin: 0 auto 1.5rem auto; line-height: 1.6;">
+                You haven't applied for any campus recruitment drives yet. Explore active listings, verify eligibility, and submit applications.
+            </p>
+            <a href="{{ url_for('student.jobs_view') }}" class="btn btn-primary btn-sm">
+                <i data-lucide="search" style="width: 14px; height: 14px;"></i> Explore Campus Drives Now
+            </a>
+        </div>
+    {% endif %}
+</section>
+
+<!-- =========================================================================
+     SECTION 3: REDIRECTION LINKS TO RELEVANT TABS (AT THE END OF THE PAGE)
+     ========================================================================= -->
+<section id="career-hub-redirection" class="pipeline-section" style="margin-bottom: 1.5rem;">
+    <div class="pipeline-section-header">
+        <div style="display: flex; align-items: center; gap: 0.75rem;">
+            <div style="width: 32px; height: 32px; border-radius: var(--radius-sm); background: #FAF7F2; border: 1px solid var(--border-subtle); color: var(--accent-coral); display: flex; align-items: center; justify-content: center;">
+                <i data-lucide="compass" style="width: 18px; height: 18px;"></i>
+            </div>
+            <div>
+                <h2 style="font-size: 1.25rem; font-weight: 800; margin: 0; color: var(--text-main);">
+                    Quick Navigation & Career Tools
+                </h2>
+                <div style="font-size: 0.82rem; color: var(--text-dim);">Jump directly to other relevant modules in your student placement workspace</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="redirect-hub-grid">
+        <!-- 1. Campus Drives & Opportunities -->
+        <a href="{{ url_for('student.jobs_view') }}" class="redirect-card">
+            <div>
+                <div style="width: 40px; height: 40px; border-radius: var(--radius-sm); background: #FFF0EB; color: var(--accent-coral); display: flex; align-items: center; justify-content: center; margin-bottom: 0.85rem;">
+                    <i data-lucide="briefcase" style="width: 20px; height: 20px;"></i>
+                </div>
+                <h4 style="font-size: 1rem; font-weight: 800; margin: 0 0 0.35rem 0; color: var(--text-main);">
+                    Campus Drives
+                </h4>
+                <p style="font-size: 0.82rem; color: var(--text-dim); margin: 0; line-height: 1.5;">
+                    Explore ongoing hiring drives, filter by salary/role, and submit applications.
+                </p>
+            </div>
+            <div style="margin-top: 1rem; font-size: 0.8rem; font-weight: 700; color: var(--accent-coral); display: flex; align-items: center; gap: 4px;">
+                Open Opportunities <i data-lucide="arrow-right" style="width: 13px; height: 13px;"></i>
+            </div>
+        </a>
+
+        <!-- 2. AI Interview Prep & Simulator -->
+        <a href="{{ url_for('student_ai.interview_prep_page') }}" class="redirect-card">
+            <div>
+                <div style="width: 40px; height: 40px; border-radius: var(--radius-sm); background: #EFF6FF; color: #2563EB; display: flex; align-items: center; justify-content: center; margin-bottom: 0.85rem;">
+                    <i data-lucide="bot" style="width: 20px; height: 20px;"></i>
+                </div>
+                <h4 style="font-size: 1rem; font-weight: 800; margin: 0 0 0.35rem 0; color: var(--text-main);">
+                    AI Interview Prep
+                </h4>
+                <p style="font-size: 0.82rem; color: var(--text-dim); margin: 0; line-height: 1.5;">
+                    Practice technical & behavioral questions with real-time AI scoring and speech.
+                </p>
+            </div>
+            <div style="margin-top: 1rem; font-size: 0.8rem; font-weight: 700; color: #2563EB; display: flex; align-items: center; gap: 4px;">
+                Start Practice Simulator <i data-lucide="arrow-right" style="width: 13px; height: 13px;"></i>
+            </div>
+        </a>
+
+        <!-- 3. Resume Studio & ATS Intelligence -->
+        <a href="{{ url_for('student_ai.resume_intelligence_page') }}" class="redirect-card">
+            <div>
+                <div style="width: 40px; height: 40px; border-radius: var(--radius-sm); background: #F5F3FF; color: #7C3AED; display: flex; align-items: center; justify-content: center; margin-bottom: 0.85rem;">
+                    <i data-lucide="file-text" style="width: 20px; height: 20px;"></i>
+                </div>
+                <h4 style="font-size: 1rem; font-weight: 800; margin: 0 0 0.35rem 0; color: var(--text-main);">
+                    Resume Studio
+                </h4>
+                <p style="font-size: 0.82rem; color: var(--text-dim); margin: 0; line-height: 1.5;">
+                    Optimize your resume against ATS benchmarks and recruiter expectations.
+                </p>
+            </div>
+            <div style="margin-top: 1rem; font-size: 0.8rem; font-weight: 700; color: #7C3AED; display: flex; align-items: center; gap: 4px;">
+                Analyze Resume <i data-lucide="arrow-right" style="width: 13px; height: 13px;"></i>
+            </div>
+        </a>
+
+        <!-- 4. Skill Gap & Career Roadmap -->
+        <a href="{{ url_for('student_ai.skill_gaps_page') }}" class="redirect-card">
+            <div>
+                <div style="width: 40px; height: 40px; border-radius: var(--radius-sm); background: #ECFDF5; color: #059669; display: flex; align-items: center; justify-content: center; margin-bottom: 0.85rem;">
+                    <i data-lucide="target" style="width: 20px; height: 20px;"></i>
+                </div>
+                <h4 style="font-size: 1rem; font-weight: 800; margin: 0 0 0.35rem 0; color: var(--text-main);">
+                    Skill Gap & Roadmap
+                </h4>
+                <p style="font-size: 0.82rem; color: var(--text-dim); margin: 0; line-height: 1.5;">
+                    Diagnose missing skills for dream roles and follow step-by-step milestones.
+                </p>
+            </div>
+            <div style="margin-top: 1rem; font-size: 0.8rem; font-weight: 700; color: #059669; display: flex; align-items: center; gap: 4px;">
+                View Skill Roadmap <i data-lucide="arrow-right" style="width: 13px; height: 13px;"></i>
+            </div>
+        </a>
+
+        <!-- 5. Profile & GitHub Portfolio -->
+        <a href="{{ url_for('student.profile_view') }}" class="redirect-card">
+            <div>
+                <div style="width: 40px; height: 40px; border-radius: var(--radius-sm); background: #FAF7F2; border: 1px solid var(--border-subtle); color: var(--text-main); display: flex; align-items: center; justify-content: center; margin-bottom: 0.85rem;">
+                    <i data-lucide="user-check" style="width: 20px; height: 20px;"></i>
+                </div>
+                <h4 style="font-size: 1rem; font-weight: 800; margin: 0 0 0.35rem 0; color: var(--text-main);">
+                    Career Profile
+                </h4>
+                <p style="font-size: 0.82rem; color: var(--text-dim); margin: 0; line-height: 1.5;">
+                    Manage your verified skills, projects, GitHub sync, and academic bio.
+                </p>
+            </div>
+            <div style="margin-top: 1rem; font-size: 0.8rem; font-weight: 700; color: var(--text-main); display: flex; align-items: center; gap: 4px;">
+                Update Profile <i data-lucide="arrow-right" style="width: 13px; height: 13px;"></i>
+            </div>
+        </a>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    if (window.lucide) {
+        window.lucide.createIcons();
+    }
+});
+</script>
+{% endblock %}

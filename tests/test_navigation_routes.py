@@ -105,16 +105,23 @@ def test_student_skill_gap_routes(client):
 
 
 def test_student_interview_simulator_routes(client):
-    """Verify /student/ai/interview-simulator and /student/interview-simulator redirect cleanly to dashboard."""
+    """Verify /student/ai/interview-simulator, /student/ai/interview-prep, and /student/interview-prep render properly for authenticated students."""
     login_student(client)
 
-    # Test /student/ai/interview-simulator (GET) redirects
+    # Test /student/ai/interview-simulator (GET)
     res1 = client.get("/student/ai/interview-simulator")
-    assert res1.status_code == 302
+    assert res1.status_code == 200
+    assert b"Interview Prep" in res1.data or b"Mock Interview" in res1.data
 
-    # Test /student/interview-simulator (GET) redirects
-    res2 = client.get("/student/interview-simulator")
-    assert res2.status_code == 302
+    # Test /student/ai/interview-prep (GET)
+    res_prep = client.get("/student/ai/interview-prep")
+    assert res_prep.status_code == 200
+    assert b"Interview Prep" in res_prep.data
+
+    # Test /student/interview-prep (GET)
+    res2 = client.get("/student/interview-prep")
+    assert res2.status_code == 200
+    assert b"Interview Prep" in res2.data
 
 
 def test_student_resume_intelligence_routes(client):

@@ -95,11 +95,15 @@
         </div>
 
         <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+            <a href="{{ url_for('admin.add_company_view') }}" class="btn btn-primary" style="display: inline-flex; align-items: center; gap: 6px;" title="Onboard new corporate partner company">
+                <i data-lucide="building-2" style="width: 15px; height: 15px;"></i>
+                <span>Add Partner Company</span>
+            </a>
             <a href="{{ url_for('admin.database_view') }}" class="btn btn-outline" style="display: inline-flex; align-items: center; gap: 6px;" title="Manage entire relational database">
                 <i data-lucide="database" style="width: 15px; height: 15px;"></i>
                 <span>Database Manager</span>
             </a>
-            <a href="{{ url_for('admin.analytics_view') }}" class="btn btn-primary" style="display: inline-flex; align-items: center; gap: 6px;" title="Deep dive placement analytics">
+            <a href="{{ url_for('admin.analytics_view') }}" class="btn btn-secondary" style="display: inline-flex; align-items: center; gap: 6px;" title="Deep dive placement analytics">
                 <i data-lucide="bar-chart-3" style="width: 15px; height: 15px;"></i>
                 <span>Placement Analytics</span>
             </a>
@@ -146,7 +150,12 @@
                     <i data-lucide="building"></i>
                 </div>
             </div>
-            <div class="kpi-value">{{ kpis.active_companies }}</div>
+            <div class="kpi-value" style="display: flex; justify-content: space-between; align-items: baseline;">
+                <span>{{ kpis.active_companies }}</span>
+                <a href="{{ url_for('admin.add_company_view') }}" onclick="event.stopPropagation();" class="badge" style="background: #FFF0EB; color: var(--accent-coral, #E76F51); border: 1px solid rgba(231,111,81,0.3); font-size: 11px; text-decoration: none; font-weight: 700; padding: 3px 8px;" title="Add New Partner Company">
+                    + Add New
+                </a>
+            </div>
             <div class="kpi-subtext" style="display: flex; justify-content: space-between; align-items: center;">
                 <span>{{ kpis.active_recruiters }} Registered Recruiters</span>
                 <i data-lucide="arrow-right" style="width: 13px; height: 13px; opacity: 0.6;"></i>

@@ -8,8 +8,13 @@ load_dotenv(BASE_DIR / ".env")
 
 def _resolve_database_uri() -> tuple:
     """Resolves database URI from environment with resilient fallback to local SQLite."""
-    db_path = BASE_DIR / "instance" / "placementiq.db"
-    db_path.parent.mkdir(parents=True, exist_ok=True)
+    db_dir = BASE_DIR / "instance"
+    try:
+        db_dir.mkdir(parents=True, exist_ok=True)
+        db_path = db_dir / "placementiq.db"
+    except OSError:
+        # Fallback to /tmp in read-only serverless environments (Vercel / AWS Lambda)
+        db_path = Path("/tmp") / "placementiq.db"
     sqlite_fallback = f"sqlite:///{db_path}"
 
     raw_url = os.getenv("DATABASE_URL", "").strip()
@@ -55,6 +60,7 @@ class Config:
     # Session security
     SESSION_COOKIE_HTTPONLY = True
     SESSION_COOKIE_SAMESITE = "Lax"
+    SESSION_COOKIE_SECURE = os.getenv("FLASK_ENV") == "production" or bool(os.getenv("VERCEL"))
 
 
 class DevelopmentConfig(Config):

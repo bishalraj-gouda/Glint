@@ -104,7 +104,12 @@ def api_screen_candidate(student_id: int, job_id: int):
 def api_evaluation_summary():
     """Generates an AI evaluation summary for candidate interview scorecards."""
     data = request.get_json(silent=True) or request.form
-    interview_id = data.get("interview_id", type=int)
+    raw_id = data.get("interview_id")
+    try:
+        interview_id = int(raw_id) if raw_id is not None else None
+    except (ValueError, TypeError):
+        interview_id = None
+
     score = data.get("score")
     draft_notes = data.get("draft_notes", "")
 

@@ -31,6 +31,8 @@ from models.student import Student
 from models.recruiter import Recruiter
 from models.company import Company
 from models.job import Job
+from models.application import Application
+from models.interview import Interview
 from models.role import Role, ROLE_STUDENT, ROLE_RECRUITER, ROLE_ADMIN
 from data.seed_data import seed_database
 
@@ -129,6 +131,41 @@ def seed(override_url: str = None):
             student_user.role = ROLE_STUDENT
             db.session.commit()
             print("  [+] Verified demo student account: student@demo.com")
+
+        # Ensure demo student has an active application in interview stage and a scheduled interview
+        if student_user and student_user.student_profile:
+            sp = student_user.student_profile
+            active_job = Job.query.first()
+            if active_job:
+                app = Application.query.filter_by(student_id=sp.id, job_id=active_job.id).first()
+                if not app:
+                    app = Application(
+                        job_id=active_job.id,
+                        student_id=sp.id,
+                        status="interview",
+                        match_score=92.0,
+                        match_breakdown_json='{"technical": 48, "projects": 20, "experience": 14, "education": 10}'
+                    )
+                    db.session.add(app)
+                    db.session.flush()
+                else:
+                    app.status = "interview"
+
+                interview = Interview.query.filter_by(application_id=app.id, status="scheduled").first()
+                if not interview:
+                    import datetime
+                    interview = Interview(
+                        application_id=app.id,
+                        scheduled_date=datetime.date.today() + datetime.timedelta(days=2),
+                        scheduled_time="11:00 AM",
+                        interview_type="technical",
+                        round_number=1,
+                        meeting_link_or_venue="https://meet.google.com/nex-fullstack-2026",
+                        interviewer_name="Vikram Sharma (Staff Principal Engineer)",
+                        status="scheduled"
+                    )
+                    db.session.add(interview)
+                db.session.commit()
 
         # 2. Recruiter Demo Account
         recruiter_user = User.query.filter_by(email="recruiter@demo.com").first()

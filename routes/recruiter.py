@@ -404,6 +404,7 @@ def schedule_view():
         recruiter=recruiter,
         company=recruiter.company,
         interviews=interviews,
+        total_interviews_count=len(all_company_interviews),
         upcoming_count=upcoming_count,
         completed_count=completed_count,
         eligible_candidates=eligible_candidates,

@@ -15,6 +15,13 @@ def create_app(config_name: str = None) -> Flask:
     app = Flask(__name__)
     app.config.from_object(config_by_name.get(config_name, config_by_name["default"]))
 
+    # Reverse proxy support (Vercel, Render, AWS Lambda) for SSL/HTTPS and IP forwarding
+    try:
+        from werkzeug.middleware.proxy_fix import ProxyFix
+        app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1, x_prefix=1)
+    except Exception:
+        pass
+
     # Initialize extensions
     db.init_app(app)
     login_manager.init_app(app)

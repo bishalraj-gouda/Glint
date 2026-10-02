@@ -95,7 +95,7 @@
                                 {{ interview.application.student.name }}
                             </div>
                             <div style="font-size: 0.82rem; color: var(--text-muted);">
-                                {{ interview.application.job.title }} • {{ interview.application.student.department.code }} (CGPA: {{ "%.2f"|format(interview.application.student.cgpa or 0.0) }})
+                                {{ interview.application.job.title }} • {{ interview.application.student.department_code }} (CGPA: {{ "%.2f"|format(interview.application.student.cgpa or 0.0) }})
                             </div>
                         </div>
                     </div>

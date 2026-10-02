@@ -58,14 +58,23 @@ def login():
             session["display_name"] = user.recruiter_profile.name
             session["profile_id"] = user.recruiter_profile.id
             session["company_name"] = user.recruiter_profile.company.name if user.recruiter_profile.company else ""
-        else:
+        elif role_lower == "admin":
             session["display_name"] = "College Administrator"
+        else:
+            session["display_name"] = user.email.split("@")[0].replace(".", " ").title()
 
         flash(f"Welcome back, {session['display_name']}!", "success")
 
         next_page = request.args.get("next")
         if next_page and next_page.startswith("/") and not next_page.startswith("/login"):
-            return redirect(next_page)
+            # Ensure destination URL role matches user's authenticated role to avoid 403 Forbidden
+            is_mismatched = (
+                (role_lower == "student" and (next_page.startswith("/recruiter") or next_page.startswith("/admin"))) or
+                (role_lower == "recruiter" and (next_page.startswith("/student") or next_page.startswith("/admin"))) or
+                (role_lower == "admin" and (next_page.startswith("/student") or next_page.startswith("/recruiter")))
+            )
+            if not is_mismatched:
+                return redirect(next_page)
 
         if role_lower == "student":
             return redirect(url_for("student.dashboard"))

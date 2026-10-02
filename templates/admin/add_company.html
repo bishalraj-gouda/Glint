@@ -1,0 +1,576 @@
+{% extends "base.html" %}
+
+{% block title %}Register Partner Company — PlacementIQ Admin{% endblock %}
+
+{% block extra_css %}
+<style>
+    .add-company-container {
+        max-width: 1200px;
+        margin: 0 auto;
+    }
+    .form-section-card {
+        background: var(--bg-card, #FFFDFC);
+        border: 1px solid var(--border-subtle, #EAE3D7);
+        border-radius: 18px;
+        padding: 26px 28px;
+        margin-bottom: 22px;
+        box-shadow: var(--shadow-sm, 0 1px 3px rgba(35, 25, 15, 0.04));
+        transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+    .form-section-card:hover {
+        border-color: rgba(231, 111, 81, 0.3);
+    }
+    .form-section-title {
+        font-family: var(--font-display, 'Outfit', sans-serif);
+        font-size: 17px;
+        font-weight: 800;
+        color: var(--text-main, #23190F);
+        margin-bottom: 6px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+    .form-section-desc {
+        font-size: 13px;
+        color: var(--text-dim, #5C5248);
+        margin-bottom: 20px;
+    }
+    .input-field-group {
+        margin-bottom: 18px;
+    }
+    .input-field-label {
+        display: block;
+        font-size: 13px;
+        font-weight: 700;
+        color: var(--text-main, #23190F);
+        margin-bottom: 7px;
+    }
+    .input-field-label span.req {
+        color: var(--accent-coral, #E76F51);
+        margin-left: 3px;
+    }
+    .input-wrapper {
+        position: relative;
+        display: flex;
+        align-items: center;
+    }
+    .input-icon-left {
+        position: absolute;
+        left: 14px;
+        color: var(--text-dim, #8C8278);
+        width: 16px;
+        height: 16px;
+        pointer-events: none;
+    }
+    .input-styled {
+        width: 100%;
+        padding: 11px 14px 11px 40px;
+        border: 1px solid var(--border-subtle, #EAE3D7);
+        border-radius: 10px;
+        font-size: 13.5px;
+        background: #FFFFFF;
+        color: var(--text-main, #23190F);
+        font-family: inherit;
+        transition: all 0.18s ease;
+    }
+    .input-styled-noicon {
+        padding-left: 14px;
+    }
+    .input-styled:focus {
+        outline: none;
+        border-color: var(--accent-coral, #E76F51);
+        box-shadow: 0 0 0 3px rgba(231, 111, 81, 0.14);
+        background: #FFFFFF;
+    }
+    .industry-chip-scroller {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 7px;
+        margin-top: 10px;
+    }
+    .industry-chip {
+        padding: 5px 11px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 600;
+        background: var(--bg-surface, #FAF7F2);
+        border: 1px solid var(--border-subtle, #EAE3D7);
+        color: var(--text-dim, #5C5248);
+        cursor: pointer;
+        transition: all 0.15s ease;
+        user-select: none;
+    }
+    .industry-chip:hover {
+        background: #FFF0EB;
+        border-color: var(--accent-coral, #E76F51);
+        color: var(--accent-coral, #E76F51);
+    }
+    .industry-chip.selected {
+        background: var(--accent-coral, #E76F51);
+        border-color: var(--accent-coral, #E76F51);
+        color: #FFFFFF;
+    }
+    .live-preview-card {
+        background: var(--bg-card, #FFFDFC);
+        border: 1px solid var(--border-subtle, #EAE3D7);
+        border-radius: 18px;
+        padding: 24px;
+        box-shadow: 0 4px 20px rgba(35, 25, 15, 0.05);
+        position: sticky;
+        top: 24px;
+    }
+    .preview-badge-status {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        padding: 3px 9px;
+        border-radius: 20px;
+        font-size: 11px;
+        font-weight: 700;
+        background: #EDF7F2;
+        color: #2D6A4F;
+    }
+    .preview-logo-placeholder {
+        width: 58px;
+        height: 58px;
+        border-radius: 14px;
+        background: linear-gradient(135deg, #FFF0EB 0%, #FAF7F2 100%);
+        border: 1px solid var(--border-subtle, #EAE3D7);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-family: var(--font-display, 'Outfit');
+        font-size: 24px;
+        font-weight: 800;
+        color: var(--accent-coral, #E76F51);
+        overflow: hidden;
+        flex-shrink: 0;
+    }
+    .preview-logo-placeholder img {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+    }
+    .custom-switch-label {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        cursor: pointer;
+        user-select: none;
+    }
+    .custom-switch {
+        position: relative;
+        display: inline-block;
+        width: 44px;
+        height: 24px;
+        flex-shrink: 0;
+    }
+    .custom-switch input {
+        opacity: 0;
+        width: 0;
+        height: 0;
+    }
+    .slider-track {
+        position: absolute;
+        cursor: pointer;
+        top: 0; left: 0; right: 0; bottom: 0;
+        background-color: #E2D9CC;
+        transition: .25s;
+        border-radius: 24px;
+    }
+    .slider-track:before {
+        position: absolute;
+        content: "";
+        height: 18px;
+        width: 18px;
+        left: 3px;
+        bottom: 3px;
+        background-color: white;
+        transition: .25s;
+        border-radius: 50%;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+    }
+    input:checked + .slider-track {
+        background-color: var(--accent-coral, #E76F51);
+    }
+    input:checked + .slider-track:before {
+        transform: translateX(20px);
+    }
+    @media (max-width: 960px) {
+        .add-company-layout {
+            grid-template-columns: 1fr !important;
+        }
+        .live-preview-card {
+            position: static;
+            margin-top: 24px;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="add-company-container">
+    <!-- Breadcrumb & Header Bar -->
+    <div style="margin-bottom: 24px;">
+        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px; font-size: 13px; color: var(--text-dim, #8C8278);">
+            <a href="{{ url_for('admin.dashboard') }}" style="color: inherit; text-decoration: none;">Dashboard</a>
+            <span>/</span>
+            <a href="{{ url_for('admin.database_view', table='companies') }}" style="color: inherit; text-decoration: none;">Corporate Partners</a>
+            <span>/</span>
+            <span style="color: var(--accent-coral, #E76F51); font-weight: 700;">Add Partner Company</span>
+        </div>
+
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 16px;">
+            <div>
+                <h1 style="font-family: var(--font-display, 'Outfit'); font-size: 28px; font-weight: 800; color: var(--text-main, #23190F); margin: 0;">
+                    Onboard Partner Company
+                </h1>
+                <p style="color: var(--text-dim, #5C5248); font-size: 14px; margin-top: 4px;">
+                    Register institutional hiring partners, specify industry domains, and optionally establish talent recruiter liaison profiles.
+                </p>
+            </div>
+
+            <div style="display: flex; gap: 10px; align-items: center;">
+                <a href="{{ url_for('admin.database_view', table='companies') }}" class="btn btn-outline" style="display: inline-flex; align-items: center; gap: 6px;">
+                    <i data-lucide="arrow-left" style="width: 15px; height: 15px;"></i>
+                    <span>View All Companies</span>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- 2-Column Responsive Layout -->
+    <div class="add-company-layout" style="display: grid; grid-template-columns: 1.4fr 1fr; gap: 28px; align-items: start;">
+        <!-- Left: Form -->
+        <form method="POST" action="{{ url_for('admin.add_company_view') }}" id="add-company-form">
+            <!-- Card 1: Core Company Profile -->
+            <div class="form-section-card">
+                <div class="form-section-title">
+                    <div style="width: 32px; height: 32px; border-radius: 9px; background: #FFF0EB; display: flex; align-items: center; justify-content: center; color: var(--accent-coral, #E76F51);">
+                        <i data-lucide="building" style="width: 17px; height: 17px;"></i>
+                    </div>
+                    <span>Company Fundamentals</span>
+                </div>
+                <div class="form-section-desc">
+                    Primary organizational details displayed on student job boards and placement drives.
+                </div>
+
+                <div class="input-field-group">
+                    <label class="input-field-label" for="name">Company Name <span class="req">*</span></label>
+                    <div class="input-wrapper">
+                        <i data-lucide="building-2" class="input-icon-left"></i>
+                        <input type="text" name="name" id="name" required placeholder="e.g. Acme Innovations, Microsoft, Razorpay" class="input-styled" oninput="updateLivePreview()" autofocus>
+                    </div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                    <div class="input-field-group">
+                        <label class="input-field-label" for="industry">Industry Sector <span class="req">*</span></label>
+                        <div class="input-wrapper">
+                            <i data-lucide="briefcase" class="input-icon-left"></i>
+                            <input type="text" name="industry" id="industry" required placeholder="e.g. SaaS & Cloud, Fintech" class="input-styled" value="Technology" oninput="updateLivePreview()">
+                        </div>
+                    </div>
+
+                    <div class="input-field-group">
+                        <label class="input-field-label" for="location">Headquarters / Location</label>
+                        <div class="input-wrapper">
+                            <i data-lucide="map-pin" class="input-icon-left"></i>
+                            <input type="text" name="location" id="location" placeholder="e.g. Bangalore, Mumbai, Remote" class="input-styled" oninput="updateLivePreview()">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Quick Pick Industry Sector Chips -->
+                <div>
+                    <label style="font-size: 11.5px; font-weight: 700; color: var(--text-dim, #8C8278); text-transform: uppercase; letter-spacing: 0.04em;">
+                        Quick Pick Industry
+                    </label>
+                    <div class="industry-chip-scroller">
+                        <span class="industry-chip selected" onclick="selectIndustry('Technology', this)">Technology</span>
+                        <span class="industry-chip" onclick="selectIndustry('Artificial Intelligence', this)">Artificial Intelligence</span>
+                        <span class="industry-chip" onclick="selectIndustry('SaaS & Cloud', this)">SaaS & Cloud</span>
+                        <span class="industry-chip" onclick="selectIndustry('Fintech & Banking', this)">Fintech</span>
+                        <span class="industry-chip" onclick="selectIndustry('Healthtech & Bio', this)">Healthtech</span>
+                        <span class="industry-chip" onclick="selectIndustry('E-Commerce & Retail', this)">E-Commerce</span>
+                        <span class="industry-chip" onclick="selectIndustry('Cybersecurity', this)">Cybersecurity</span>
+                        <span class="industry-chip" onclick="selectIndustry('Core Engineering', this)">Core Engineering</span>
+                        <span class="industry-chip" onclick="selectIndustry('Consulting & Analytics', this)">Consulting</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Card 2: Brand & Web Presence -->
+            <div class="form-section-card">
+                <div class="form-section-title">
+                    <div style="width: 32px; height: 32px; border-radius: 9px; background: #EDF7F2; display: flex; align-items: center; justify-content: center; color: #2D6A4F;">
+                        <i data-lucide="globe" style="width: 17px; height: 17px;"></i>
+                    </div>
+                    <span>Digital Presence & Description</span>
+                </div>
+                <div class="form-section-desc">
+                    Web addresses, branding logos, and institutional overview for students.
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                    <div class="input-field-group">
+                        <label class="input-field-label" for="website">Official Website URL</label>
+                        <div class="input-wrapper">
+                            <i data-lucide="external-link" class="input-icon-left"></i>
+                            <input type="url" name="website" id="website" placeholder="https://example.com" class="input-styled" oninput="updateLivePreview()">
+                        </div>
+                    </div>
+
+                    <div class="input-field-group">
+                        <label class="input-field-label" for="logo_url">Brand Logo URL</label>
+                        <div class="input-wrapper">
+                            <i data-lucide="image" class="input-icon-left"></i>
+                            <input type="url" name="logo_url" id="logo_url" placeholder="https://.../logo.png" class="input-styled" oninput="updateLivePreview()">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="input-field-group" style="margin-bottom: 0;">
+                    <label class="input-field-label" for="description">Company Overview & Campus Profile</label>
+                    <textarea name="description" id="description" rows="4" placeholder="Brief summary of company culture, technology stack, hiring domains, and campus drive focus..." class="input-styled input-styled-noicon" style="resize: vertical;" oninput="updateLivePreview()"></textarea>
+                </div>
+            </div>
+
+            <!-- Card 3: Optional Recruiter Account Creation -->
+            <div class="form-section-card">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                    <div class="form-section-title" style="margin-bottom: 0;">
+                        <div style="width: 32px; height: 32px; border-radius: 9px; background: #EEF2FF; display: flex; align-items: center; justify-content: center; color: #6366F1;">
+                            <i data-lucide="user-plus" style="width: 17px; height: 17px;"></i>
+                        </div>
+                        <span>Corporate Recruiter Liaison</span>
+                    </div>
+
+                    <label class="custom-switch-label">
+                        <span style="font-size: 13px; font-weight: 700; color: var(--text-dim, #5C5248);">Provision Account</span>
+                        <div class="custom-switch">
+                            <input type="checkbox" name="create_recruiter" id="create_recruiter" onchange="toggleRecruiterSection(this.checked)">
+                            <span class="slider-track"></span>
+                        </div>
+                    </label>
+                </div>
+
+                <div class="form-section-desc">
+                    Optionally create an active corporate recruiter login account for campus drive liaison.
+                </div>
+
+                <!-- Collapsible Recruiter Credentials -->
+                <div id="recruiter-fields-box" style="display: none; padding-top: 14px; border-top: 1px dashed var(--border-subtle, #EAE3D7);">
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                        <div class="input-field-group">
+                            <label class="input-field-label" for="recruiter_name">Recruiter Full Name</label>
+                            <div class="input-wrapper">
+                                <i data-lucide="user" class="input-icon-left"></i>
+                                <input type="text" name="recruiter_name" id="recruiter_name" placeholder="e.g. Priya Sharma" class="input-styled" oninput="updateLivePreview()">
+                            </div>
+                        </div>
+
+                        <div class="input-field-group">
+                            <label class="input-field-label" for="recruiter_email">Work Email Address</label>
+                            <div class="input-wrapper">
+                                <i data-lucide="mail" class="input-icon-left"></i>
+                                <input type="email" name="recruiter_email" id="recruiter_email" placeholder="e.g. p.sharma@company.com" class="input-styled" oninput="updateLivePreview()">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                        <div class="input-field-group">
+                            <label class="input-field-label" for="recruiter_designation">Designation / Role</label>
+                            <div class="input-wrapper">
+                                <i data-lucide="award" class="input-icon-left"></i>
+                                <input type="text" name="recruiter_designation" id="recruiter_designation" placeholder="e.g. University Talent Lead" value="Talent Acquisition Specialist" class="input-styled">
+                            </div>
+                        </div>
+
+                        <div class="input-field-group">
+                            <label class="input-field-label" for="recruiter_phone">Phone Number</label>
+                            <div class="input-wrapper">
+                                <i data-lucide="phone" class="input-icon-left"></i>
+                                <input type="tel" name="recruiter_phone" id="recruiter_phone" placeholder="e.g. +91 98765 43210" class="input-styled">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="input-field-group" style="margin-bottom: 0;">
+                        <label class="input-field-label" for="recruiter_password">Initial Temporary Password</label>
+                        <div class="input-wrapper">
+                            <i data-lucide="lock" class="input-icon-left"></i>
+                            <input type="text" name="recruiter_password" id="recruiter_password" value="Recruiter@123" class="input-styled">
+                        </div>
+                        <div style="font-size: 11.5px; color: var(--text-dim, #8C8278); margin-top: 5px;">
+                            Recruiter will be assigned the <code>RECRUITER</code> role and can change this password after signing in.
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Action Controls -->
+            <div style="display: flex; gap: 12px; align-items: center; justify-content: flex-end; margin-top: 24px;">
+                <a href="{{ url_for('admin.database_view', table='companies') }}" class="btn btn-secondary">
+                    Cancel
+                </a>
+                <button type="submit" class="btn btn-primary" id="btn-submit-company" style="display: inline-flex; align-items: center; gap: 8px; padding: 11px 24px; font-size: 14px; font-weight: 700;">
+                    <i data-lucide="plus-circle" style="width: 17px; height: 17px;"></i>
+                    <span>Register Partner Company</span>
+                </button>
+            </div>
+        </form>
+
+        <!-- Right: Live Card Preview & Info Bento -->
+        <div>
+            <!-- Live Preview -->
+            <div class="live-preview-card">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px;">
+                    <span style="font-size: 11.5px; text-transform: uppercase; font-weight: 700; color: var(--text-dim, #8C8278); letter-spacing: 0.05em;">
+                        Live Card Preview
+                    </span>
+                    <span class="preview-badge-status">
+                        <i data-lucide="shield-check" style="width: 12px; height: 12px;"></i> Verified Partner
+                    </span>
+                </div>
+
+                <div style="display: flex; align-items: center; gap: 16px; margin-bottom: 16px;">
+                    <div class="preview-logo-placeholder" id="preview-logo-box">
+                        <span id="preview-logo-initial">C</span>
+                    </div>
+                    <div>
+                        <div id="preview-company-name" style="font-family: var(--font-display, 'Outfit'); font-size: 20px; font-weight: 800; color: var(--text-main, #23190F); line-height: 1.2;">
+                            Company Name
+                        </div>
+                        <div style="display: flex; gap: 6px; align-items: center; margin-top: 4px; flex-wrap: wrap;">
+                            <span class="badge" id="preview-industry" style="background: #FFF0EB; color: var(--accent-coral, #E76F51); font-weight: 700; font-size: 11.5px;">
+                                Technology
+                            </span>
+                            <span id="preview-location-wrap" style="display: inline-flex; align-items: center; gap: 4px; font-size: 12px; color: var(--text-dim, #5C5248);">
+                                <i data-lucide="map-pin" style="width: 12px; height: 12px;"></i>
+                                <span id="preview-location">Location</span>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
+                <p id="preview-description" style="font-size: 13px; color: var(--text-dim, #5C5248); line-height: 1.5; margin-bottom: 18px; min-height: 40px;">
+                    Company profile description will appear here as you type.
+                </p>
+
+                <div style="padding-top: 14px; border-top: 1px solid var(--border-subtle, #EAE3D7); display: flex; justify-content: space-between; align-items: center; font-size: 12.5px;">
+                    <a id="preview-website-link" href="#" target="_blank" style="color: var(--accent-coral, #E76F51); text-decoration: none; font-weight: 600; display: inline-flex; align-items: center; gap: 4px;">
+                        <i data-lucide="globe" style="width: 13px; height: 13px;"></i>
+                        <span id="preview-website-text">Visit Website</span>
+                    </a>
+                    <span style="color: var(--text-dim, #8C8278); font-size: 12px;">0 Active Drives</span>
+                </div>
+
+                <!-- Recruiter Liaison Attachment Preview -->
+                <div id="preview-recruiter-badge" style="display: none; margin-top: 14px; padding: 10px 12px; background: #FAF7F2; border-radius: 10px; border: 1px solid var(--border-subtle, #EAE3D7);">
+                    <div style="font-size: 10.5px; text-transform: uppercase; font-weight: 700; color: var(--text-dim, #8C8278);">Designated Liaison</div>
+                    <div style="display: flex; align-items: center; gap: 8px; margin-top: 4px;">
+                        <div style="width: 24px; height: 24px; border-radius: 50%; background: #EEF2FF; color: #6366F1; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 800;">
+                            <span id="preview-rec-initial">R</span>
+                        </div>
+                        <div>
+                            <div id="preview-rec-name" style="font-size: 12.5px; font-weight: 700; color: var(--text-main, #23190F);">Recruiter Name</div>
+                            <div id="preview-rec-email" style="font-size: 11px; color: var(--text-dim, #8C8278);">email@company.com</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Benefits / Info Callout -->
+            <div style="background: linear-gradient(135deg, #FFF0EB 0%, #FFFDFC 100%); border: 1px solid rgba(231, 111, 81, 0.25); border-radius: 18px; padding: 22px; margin-top: 20px;">
+                <div style="font-family: var(--font-display, 'Outfit'); font-size: 16px; font-weight: 800; color: var(--text-main, #23190F); margin-bottom: 8px; display: flex; align-items: center; gap: 8px;">
+                    <i data-lucide="sparkles" style="width: 17px; height: 17px; color: var(--accent-coral, #E76F51);"></i>
+                    <span>Partner Integration Perks</span>
+                </div>
+                <ul style="margin: 0; padding-left: 20px; font-size: 12.5px; color: var(--text-dim, #5C5248); line-height: 1.6;">
+                    <li>Enables targeted campus placement and internship requisition drives.</li>
+                    <li>Automatic inclusion in institutional CTC & compensation telemetry.</li>
+                    <li>Pre-links to AI Candidate Matcher for student resume ranking.</li>
+                    <li>Direct recruiter credentials facilitate self-service interview slot scheduling.</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    function selectIndustry(val, chipEl) {
+        document.getElementById('industry').value = val;
+        document.querySelectorAll('.industry-chip').forEach(c => c.classList.remove('selected'));
+        if (chipEl) chipEl.classList.add('selected');
+        updateLivePreview();
+    }
+
+    function toggleRecruiterSection(isChecked) {
+        const box = document.getElementById('recruiter-fields-box');
+        const previewBadge = document.getElementById('preview-recruiter-badge');
+        if (isChecked) {
+            box.style.display = 'block';
+            previewBadge.style.display = 'block';
+        } else {
+            box.style.display = 'none';
+            previewBadge.style.display = 'none';
+        }
+        updateLivePreview();
+    }
+
+    function updateLivePreview() {
+        const name = document.getElementById('name').value.trim() || 'Company Name';
+        const industry = document.getElementById('industry').value.trim() || 'Technology';
+        const location = document.getElementById('location').value.trim() || 'Location';
+        const website = document.getElementById('website').value.trim();
+        const logoUrl = document.getElementById('logo_url').value.trim();
+        const desc = document.getElementById('description').value.trim() || 'Company profile description will appear here as you type.';
+
+        document.getElementById('preview-company-name').textContent = name;
+        document.getElementById('preview-industry').textContent = industry;
+        document.getElementById('preview-location').textContent = location;
+        document.getElementById('preview-description').textContent = desc;
+
+        // Logo
+        const logoBox = document.getElementById('preview-logo-box');
+        if (logoUrl) {
+            logoBox.innerHTML = `<img src="${logoUrl}" alt="${name}" onerror="this.onerror=null;this.parentNode.innerHTML='<span>${name.charAt(0).toUpperCase()}</span>'">`;
+        } else {
+            logoBox.innerHTML = `<span>${name.charAt(0).toUpperCase()}</span>`;
+        }
+
+        // Website
+        const webLink = document.getElementById('preview-website-link');
+        const webText = document.getElementById('preview-website-text');
+        if (website) {
+            webLink.href = website;
+            try {
+                const urlObj = new URL(website.startsWith('http') ? website : 'https://' + website);
+                webText.textContent = urlObj.hostname;
+            } catch(e) {
+                webText.textContent = 'Visit Website';
+            }
+        } else {
+            webLink.href = '#';
+            webText.textContent = 'Website not set';
+        }
+
+        // Recruiter Preview
+        const recName = document.getElementById('recruiter_name').value.trim() || 'Recruiter Name';
+        const recEmail = document.getElementById('recruiter_email').value.trim() || 'email@company.com';
+        document.getElementById('preview-rec-name').textContent = recName;
+        document.getElementById('preview-rec-email').textContent = recEmail;
+        document.getElementById('preview-rec-initial').textContent = recName.charAt(0).toUpperCase() || 'R';
+
+        if (window.lucide) window.lucide.createIcons();
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        updateLivePreview();
+    });
+</script>
+{% endblock %}

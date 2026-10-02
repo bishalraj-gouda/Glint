@@ -74,6 +74,10 @@
                             <i data-lucide="target"></i>
                             <span>Skill Gap</span>
                         </a>
+                        <a href="{{ url_for('student_ai.interview_prep_page') }}" class="nav-subitem {% if active_page in ('interview_prep', 'interview_simulator') %}active{% endif %}">
+                            <i data-lucide="clipboard-check"></i>
+                            <span>Interview Prep</span>
+                        </a>
                         <a href="{{ url_for('student_ai.roadmap_page') }}#roadmap-section" class="nav-subitem {% if active_page == 'roadmap' or is_roadmap %}active{% endif %}">
                             <i data-lucide="map"></i>
                             <span>Roadmap</span>
@@ -118,6 +122,10 @@
                     <a href="{{ url_for('admin.database_view') }}" class="nav-item {% if active_page == 'database' %}active{% endif %}">
                         <i data-lucide="database"></i>
                         <span>Database Manager</span>
+                    </a>
+                    <a href="{{ url_for('admin.add_company_view') }}" class="nav-item {% if active_page == 'add_company' %}active{% endif %}">
+                        <i data-lucide="building-2"></i>
+                        <span>Add Partner Company</span>
                     </a>
                     <a href="{{ url_for('admin.analytics_view') }}" class="nav-item {% if active_page == 'analytics' %}active{% endif %}">
                         <i data-lucide="bar-chart-3"></i>
@@ -202,6 +210,11 @@
                     <a href="{{ url_for('recruiter.post_job_view') }}" class="btn btn-primary btn-sm btn-pill" title="Post Opportunity">
                         <i data-lucide="plus" style="width: 14px; height: 14px;"></i>
                         <span style="font-size: 0.8rem;">Post Job</span>
+                    </a>
+                    {% elif session_user_role == 'admin' %}
+                    <a href="{{ url_for('admin.add_company_view') }}" class="btn btn-primary btn-sm btn-pill" title="Onboard Partner Company">
+                        <i data-lucide="plus" style="width: 14px; height: 14px;"></i>
+                        <span style="font-size: 0.8rem;">Add Partner Company</span>
                     </a>
                     {% endif %}
 
